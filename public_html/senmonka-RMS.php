@@ -80,7 +80,7 @@ function get_when_selected_time_mail_data($year,$month){
 #######endofdunction########################################################
 ?>
 <body>
-<form method="post" name="form" action="create_bill.php">
+<form method="post" name="form" action="../create_bill.php">
 <select name="year" onChange="getvalidreqdata()">
 <?php 
 $now_year =date("Y");
