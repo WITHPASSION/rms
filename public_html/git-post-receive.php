@@ -18,7 +18,6 @@ $update = '';
 
 error_log("test");
 var_dump($_POST);
-
 if (!isset($_POST['payload'])) {
 	error_log("github invalid access.", 0);
 	return;
