@@ -32,6 +32,7 @@ else {
 	$update = 'all';
 }
 $result = "no action";
+
 if ($update != '') {
 	if ($update === 'develop' || $update == 'all') {
 		if (file_exists("/usr/local/test.rms_system/rms")) {
