@@ -17,7 +17,7 @@ function syscall ($cmd, $cwd) {
 $update = '';
 
 error_log("test");
-error_log($_POST, 0);
+var_dump($_POST);
 
 if (!isset($_POST['payload'])) {
 	error_log("github invalid access.", 0);
