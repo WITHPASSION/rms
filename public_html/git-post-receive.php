@@ -33,14 +33,9 @@ else {
 }
 $result = "no action";
 
-error_log("github ref:[".$payload->ref."]", 0);
-error_log("github update:[".$update."]", 0);
-
 if ($update != '') {
 	if ($update === 'develop' || $update == 'all') {
-error_log("github here1", 0);
 		if (file_exists("/usr/local/test.rms_system/rms")) {
-error_log("github here2", 0);
 			$result = syscall('git pull origin develop', '/usr/local/test.rms_system/rms');
 		}
 	}
