@@ -15,6 +15,7 @@ function syscall ($cmd, $cwd) {
 	}
 }
 $update = '';
+
 print_r("test");
 print_r($_POST);
 if (!isset($_POST['ref'])) {
