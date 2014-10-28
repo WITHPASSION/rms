@@ -16,8 +16,8 @@ function syscall ($cmd, $cwd) {
 }
 $update = '';
 
-print_r("test");
-print_r($_POST);
+error_log("test");
+error_log($_POST, 0);
 if (!isset($_POST['ref'])) {
 	error_log("github invalid access.", 0);
 	return;
