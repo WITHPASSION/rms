@@ -20,6 +20,7 @@ if (!isset($_POST['payload'])) {
 	error_log("github invalid access.", 0);
 	return;
 }
+
 error_log("github payload:[".$_POST['payload']."]", 0);
 $payload = json_decode($_POST['payload']);
 if ($payload->ref === 'refs/heads/develop') {
