@@ -14,8 +14,6 @@ function syscall ($cmd, $cwd) {
 		return $output;
 	}
 }
-
-// Parse data from Bitbucket hook payload
 error_log("github payload:[".$_POST['payload']."]", 0);
 $update = '';
 $secret = 'kunihiro';
