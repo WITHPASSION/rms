@@ -16,8 +16,7 @@ function syscall ($cmd, $cwd) {
 }
 error_log("github payload:[".$_POST['payload']."]", 0);
 $update = '';
-$secret = 'kunihiro';
-if (!isset($_GET['key']) || $_GET['key'] !== $secret || !isset($_POST['payload'])) {
+if (!isset($_POST['payload'])) {
 	error_log("github invalid access.", 0);
 	return;
 }
