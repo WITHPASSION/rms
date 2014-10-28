@@ -16,16 +16,16 @@ function syscall ($cmd, $cwd) {
 }
 
 $update = '';
-if (!isset($_POST['payload'])) {
+if (!isset($_POST['ref'])) {
 	error_log("github invalid access.", 0);
 	return;
 }
-error_log("github payload:[".$_POST['payload']."]", 0);
-$payload = json_decode($_POST['payload']);
-if ($payload->ref === 'refs/heads/develop') {
+error_log("github ref:[".$_POST['ref']."]", 0);
+$ref = json_decode($_POST['ref']);
+if ($ref === 'refs/heads/develop') {
 	$update = 'develop';
 }
-else if ($payload->ref === 'refs/heads/master') {
+else if ($ref === 'refs/heads/master') {
 	$update = 'master';
 }
 else {
