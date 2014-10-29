@@ -1,10 +1,33 @@
 <?php
 #データベース接続処理
+#db接続データの参照
+$path = parse_ini_file("../rms.cnf");		
+foreach($path as $key => $db_path){
+		$configs =parse_ini_file($db_path);
+}
+foreach($configs as $key =>$value){
+		if($key =="db_portal"){
+						$db_portal = $value;
+				}
+		if($key == "db_req"){
+						$db_req = $value;
+				}
+		if($key =="host"){
+						$host = $value;
+				}	
+		if($key =="name"){
+						$name = $value;
+				}
+		if($key =="pass"){
+						$pass = $value;
+				}
+}
+
 $pdo =null;
 $reviser=null;
-$dsn ='mysql:dbname=smk_request_data;host=localhost';
-$user = 'suzukikunihiro';
-$pass = 'pikoro';
+$dsn ="mysql:dbname=$db_req;host=$host";
+$user = "$name";
+$pass = "$pass";
 try{	
 		$pdo = new PDO($dsn,$user,$pass);
 }catch(PDOException $e){
@@ -48,10 +71,25 @@ function get_each_ad_data($id,$year,$month){
 		$sheet_num =0;
 		$stmt = $pdo->query("SELECT * FROM ad_monthly_valid_call WHERE req_id=$id AND year=$year AND month=$month");
 		$req_mvc_data = $stmt->fetch(PDO::FETCH_ASSOC);
+				#問題毎コール数の取得
+		$shakkin_call = $req_mvc_data['valid_call_shakkin'];
+		$souzoku_call = $req_mvc_data['valid_call_souzoku'];
+		$koutsujiko_call = $req_mvc_data['valid_call_koutsujiko'];
+		$ninibaikyaku_call = $req_mvc_data['valid_call_ninibaikyaku'];
+		$meigihenkou_call = $req_mvc_data['valid_call_meigihenkou'];
+		$setsuritsu_call = $req_mvc_data['valid_call_setsuritsu'];
+		$keijijiken_call = $req_mvc_data['valid_call_keijijiken'];
 		####課金メール数請求内容データの取得
 		$stmt2 = $pdo->query("SELECT * FROM ad_monthly_mail_num WHERE req_id=$id AND year=$year AND month=$month");
 		$req_mail_data = $stmt2->fetch(PDO::FETCH_ASSOC);
-
+				#問題ごとメール数の取得
+		$shakkin_mail = $req_mail_data['mail_shakkin'];
+		$souzoku_mail = $req_mail_data['mail_souzoku'];
+		$koutsujiko_mail = $req_mail_data['mail_koutsujiko'];
+		$ninibaikyaku_mail = $req_mail_data['mail_ninibaikyaku'];
+		$meigihenkou_mail = $req_mail_data['mail_meigihenkou'];
+		$setsuritsu_mail = $req_mail_data['mail_setsuritsu'];
+	
 		#####事務所情報データの取得
 		$stmt3 = $pdo->query("SELECT * FROM ad_req_data WHERE req_id=$id");
 		$ad_data = $stmt3->fetch(PDO::FETCH_ASSOC);
@@ -72,92 +110,92 @@ function get_each_ad_data($id,$year,$month){
 		$i=18;
 		$reviser->addNumber($sheet_num,$i,0,"1");
 		#借金問題
-		if($req_mvc_data['valid_call_shakkin']>0 OR $req_mail_data['mail_shakkin']>0){
+		if($shakkin_call>0 OR $shakkin_mail>0){
 				#月
 				$reviser->addNumber($sheet_num,$i,1,"$month");	
 				#商品名
 				$reviser->addString($sheet_num,$i,2,"月成果料金(借金問題)");
 				#数量
-				$reviser->addNumber($sheet_num,$i,3,$req_mvc_data['valid_call_shakkin']+$req_mail_data['mail_shakkin']);
+				$reviser->addNumber($sheet_num,$i,3,$shakkin_call+$shakkin_mail);
 				#単価
 				$reviser->addNumber($sheet_num,$i,4,10000);
 				#合計金額
-				$sum = ($req_mvc_data['valid_call_shakkin']+$req_mail_data['mail_shakkin'])*10000;
+				$sum = ($shakkin_call+$shakkin_mail)*10000;
 				$reviser->addNumber($sheet_num,$i,5,$sum);
 				$i=$i+1;
 		}
 		#相続
-		if($req_mvc_data['valid_call_souzoku']>0 OR $req_mail_data['mail_souzoku']>0){
+		if($souzoku_call>0 OR $souzoku_mail>0){
 				#月
 				$reviser->addNumber($sheet_num,$i,1,"$month");	
 				#商品名
 				$reviser->addString($sheet_num,$i,2,"月成果料金(相続)");
 				#数量
-				$reviser->addNumber($sheet_num,$i,3,$req_mvc_data['valid_call_souzoku']+$req_mail_data['mail_souzoku']);
+				$reviser->addNumber($sheet_num,$i,3,$souzoku_call+$souzoku_mail);
 				#単価
 				$reviser->addNumber($sheet_num,$i,4,5000);
 				#合計金額
-				$sum = ($req_mvc_data['valid_call_souzoku']+$req_mail_data['mail_souzoku'])*5000;
+				$sum = ($souzoku_call + $souzoku_mail)*5000;
 				$reviser->addNumber($sheet_num,$i,5,$sum);
 				$i=$i+1;
 		}
 		#交通事故
-		if($req_mvc_data['valid_call_koutsujiko']>0 OR $req_mail_data['mail_koutsujiko']>0){
+		if($koutsujiko_call>0 OR $koutsujiko_mail>0){
 				#月
 				$reviser->addNumber($sheet_num,$i,1,"$month");	
 				#商品名
 				$reviser->addString($sheet_num,$i,2,"月成果料金(交通事故)");
 				#数量
-				$reviser->addNumber($sheet_num,$i,3,$req_mvc_data['valid_call_koutsujiko']+$req_mail_data['mail_koutsujiko']);
+				$reviser->addNumber($sheet_num,$i,3,$koutsujiko_call+$koutsujiko_mail);
 				#単価
 				$reviser->addNumber($sheet_num,$i,4,10000);
 				#合計金額
-				$sum = ($req_mvc_data['valid_call_koutsujiko']+$req_mail_data['mail_koutsujiko'])*10000;
+				$sum = ($koutsujiko_call+$koutsujiko_mail)*10000;
 				$reviser->addNumber($sheet_num,$i,5,$sum);
 				$i=$i+1;
 		}
 		#名義変更
-		if($req_mvc_data['valid_call_meigihenkou']>0 OR $req_mail_data['mail_meigihenkou']>0){
+		if($meigihenkou_call>0 OR $meigihenkou_mail>0){
 				#月
 				$reviser->addNumber($sheet_num,$i,1,"$month");	
 				#商品名
 				$reviser->addString($sheet_num,$i,2,"月成果料金(名義変更)");
 				#数量
-				$reviser->addNumber($sheet_num,$i,3,$req_mvc_data['valid_call_meigihenkou']+$req_mail_data['mail_meigihenkou']);
+				$reviser->addNumber($sheet_num,$i,3,$meigihenkou_call+$meigihenkou_mail);
 				#単価
 				$reviser->addNumber($sheet_num,$i,4,5000);
 				#合計金額
-				$sum = ($req_mvc_data['valid_call_meigihenkou']+$req_mail_data['mail_meigihenkou'])*5000;
+				$sum = ($meigihenkou_call+$meigihenkou_mail)*5000;
 				$reviser->addNumber($sheet_num,$i,5,$sum);
 				$i=$i+1;
 		}
 		#会社設立
-		if($req_mvc_data['valid_call_setsuritsu']>0 OR $req_mail_data['mail_setsuritsu']>0){
+		if($setsuritsu_call>0 OR $setsuritsu_mail>0){
 				#月
 				$reviser->addNumber($sheet_num,$i,1,"$month");	
 				#商品名
 				$reviser->addString($sheet_num,$i,2,"月成果料金(会社設立)");
 				#数量
-				$reviser->addNumber($sheet_num,$i,3,$req_mvc_data['valid_call_setsuritsu']+$req_mail_data['mail_setsuritsu']);
+				$reviser->addNumber($sheet_num,$i,3,$setsuritsu_call+$setsuritsu_mail);
 				#単価
 				$reviser->addNumber($sheet_num,$i,4,5000);
 				#合計金額
-				$sum =($req_mvc_data['valid_call_setsuritsu']+$req_mail_data['mail_setsuritsu'])*5000;
+				$sum =($setsurtisu_call + $setsuritsu_mail)*5000;
 				$reviser->addNumber($sheet_num,$i,5,$sum);
 				$i=$i+1;
 		}
 		#刑事事件
-		if($req_mvc_data['valid_call_keijijiken']>0){
+		if($keijijiken_call>0){
 				#月
 				$reviser->addNumber($sheet_num,$i,1,"$month");	
 				#商品名
 				$reviser->addString($sheet_num,$i,2,"月成果料金(刑事事件)");
 				#数量
-				$reviser->addNumber($sheet_num,$i,3,$req_mvc_data['valid_call_keijijiken']);
+				$reviser->addNumber($sheet_num,$i,3,$keijijiken_call);
 				#単価
 				$reviser->addNumber($sheet_num,$i,4,10000);
 				#合計金額
-				$sum =($req_mvc_data['valid_call_keijijiken'])*10000;
+				$sum =($keijijiken_call)*10000;
 				$reviser->addNumber($sheet_num,$i,5,$sum);
 				$i=$i+1;
 		}
@@ -186,19 +224,37 @@ function get_each_ad_data($id,$year,$month){
 			$reviser->addNumber($sheet_num,$i,5,$sum);
 		}
 		#メール内容の書き込み
-		/*
+		
 		$sheet_num =1;
-		$reviser->addString($sheet_num,0,0,"先生
+		#問題毎のメールテンプレート文
+		#借金
+		if($shakkin_call!=null && $shakkin_mail!=null){
+				$shakkin_tmp ="借金問題サイトで".$shakkin_call."件の電話と".$shakkin_mail."件のメール";
+		}elseif($shakkin_call!=null && $shakkin_mail==null){
+				$shakkin_tmp ="借金問題サイトで".$shakkin_call."件の電話";
+		}elseif($shakkin_call ==null && $shakkin_mail !=null){
+				$shakkin_tmp ="借金問題サイトで".$shakkin_mail."件のメール";
+		}
+		else{
+				$shakkin_tmp ="";
+		}
+		#相続
+		if($req_mvc_data['valid_call_souzoku']>0){
+				$souzoku_call_tmp ="借金問題サイトで".$req_mvc_data['valid_call_souzoku']."県の電話があります";
+		}else{
+				$souzoku_call_tmp ="";
+		}
+		#template本文
+		$reviser->addString($sheet_num,0,0,$c_name."様
 				
 		いつもお世話になっております。
-		
 		ウィズパッションの土田です。
 		
-		月文分の請求書を添付されていただきます。
+		".$month."月分の請求書を添付させていただきます。
 		
-		月は、
-		");
-		 */
+		"
+		.$shakkin_tmp
+		);
 		#テンプレを読み込み、出力する
 		$readfile = "./template.xls";	
 		$outfile="$year$month$req_ad_name.xls";

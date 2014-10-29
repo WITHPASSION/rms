@@ -7,8 +7,11 @@ foreach($path as $key => $db_path){
 		$configs =parse_ini_file($db_path);
 }
 foreach($configs as $key =>$value){
-		if($key =="db"){
-				$db = $value;
+		if($key =="db_portal"){
+				$db_portal = $value;
+		}
+		if($key == "db_req"){
+				$do_req = $value;
 		}
 		if($key =="host"){
 				$host = $value;
@@ -18,10 +21,10 @@ foreach($configs as $key =>$value){
 		}
 		if($key =="pass"){
 				$pass = $value;
-		}	
+		}
 }
 #smk_portal_dataへの接続
-$dsn = "mysql:dbname=smk_portal;host=$host";
+$dsn = "mysql:dbname=$db_portal;host=$host";
 $user = "$name";
 $pass = "$pass";
 try{
@@ -36,7 +39,7 @@ if(!$stmt){
 }
 #smk_request_dataへの接続
 
-$dsn2 = "mysql:dbname=$db;host=$host";
+$dsn2 = "mysql:dbname=$db_req;host=$host";
 $user2= "$name";
 $pass2= "$pass";
 try{
