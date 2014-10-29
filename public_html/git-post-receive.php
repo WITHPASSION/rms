@@ -4,15 +4,15 @@ ignore_user_abort(true);
 
 function syscall ($cmd, $cwd) {
 	$descriptorspec = array(
-		1 => array('pipe', 'w')
-	);
+			1 => array('pipe', 'w')
+		);
 	$resource = proc_open($cmd, $descriptorspec, $pipes, $cwd);
 	if (is_resource($resource)) {
-		$output = stream_get_contents($pipes[1]);
-		fclose($pipes[1]);
-		proc_close($resource);
-		return $output;
-	}
+			$output = stream_get_contents($pipes[1]);
+			fclose($pipes[1]);
+			proc_close($resource);
+			return $output;
+		}
 }
 
 $update = '';
@@ -30,7 +30,7 @@ else if ($payload->ref === 'refs/heads/master') {
 	$update = 'master';
 }
 else {
-	$update = 'all';
+$update = 'all';
 }
 $result = "no action";
 
@@ -47,3 +47,6 @@ if ($update != '') {
 	}
 }
 error_log("github result:[".$result."]", 0);
+
+
+?>
