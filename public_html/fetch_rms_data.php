@@ -7,7 +7,7 @@ foreach($path as $key => $db_path){
 		$configs =parse_ini_file($db_path);
 }
 foreach($configs as $key =>$value){
-		if($key =="db_portal"){
+		if($key =="db_cdr"){
 				$db_portal = $value;
 		}
 		if($key == "db_req"){

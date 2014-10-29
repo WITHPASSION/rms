@@ -36,7 +36,7 @@ function connect_db(){
 				if($key =="db_req"){
 				$db_req = $value;
 				}
-				if($key =="db_portal"){
+				if($key =="db_cdr"){
 				$db_portal = $value;
 				}
 				if($key =="host"){
