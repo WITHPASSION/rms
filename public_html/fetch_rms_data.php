@@ -11,7 +11,7 @@ foreach($configs as $key =>$value){
 				$db_portal = $value;
 		}
 		if($key == "db_req"){
-				$do_req = $value;
+				$db_req = $value;
 		}
 		if($key =="host"){
 				$host = $value;
@@ -56,7 +56,7 @@ if(!$stmt){
 $stmt = $pdo2->query("SELECT count(*) from ad_req_data");
 $repeat_times = $stmt->fetchcolumn();
 //取得月の設定
-$year_month = 201405;
+$year_month = 201409;
 $year =substr($year_month,0,4);
 $month =substr($year_month,4,2);
 
@@ -268,8 +268,9 @@ for($i=0;$i<=$repeat_times;$i=$i+1){
 				}
 		}
 		if(!empty($shakkin)||!empty($souzoku)||!empty($koutsujiko)||!empty($ninibaikyaku)||!empty($meigihenkou)||!empty($setsuritsu)||!empty($keijijiken)){
-				$stmt = $pdo2->prepare("INSERT INTO ad_monthly_valid_call VALUES(?,?,?,?,?,?,?,?,?,?,?,?)");
-				$result = $stmt->execute(array($reqid,$year,$month,$shakkin,$souzoku,$koutsujiko,$ninibaikyaku,$meigihenkou,$setsuritsu,$keijijiken,$result_call_charge,$count_freedial));
+				$call_sum = $shakkin+$souzoku+$koutsujiko+$ninibaikyaku+$meigihenkou+$setsuritsu+$keijijiken;
+				$stmt = $pdo2->prepare("INSERT INTO ad_monthly_valid_call VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+				$result = $stmt->execute(array($reqid,$year,$month,$shakkin,$souzoku,$koutsujiko,$ninibaikyaku,$meigihenkou,$setsuritsu,$keijijiken,$result_call_charge,$count_freedial,$call_sum));
 			}
 }
 echo"コールデータの取得に成功しました";
@@ -314,10 +315,11 @@ foreach($arr_adid as $r){
 						$m_meigihenkou = $mail_num;
 				}
 		}
-}
+}		
 		if(!empty($m_shakkin)||!empty($m_souzoku)||!empty($m_koutsujiko)||!empty($m_ninibaikyaku)||!empty($m_meigihenkou)||!empty($m_setsuritsu)){
-			$stmt = $pdo2->prepare("INSERT INTO ad_monthly_mail_num VALUES(?,?,?,?,?,?,?,?,?)");
-			$result  = $stmt->execute(array($reqid,$year,$month,$m_shakkin,$m_souzoku,$m_koutsujiko,$m_ninibaikyaku,$m_meigihenkou,$m_setsuritsu));
+			$mail_sum =	$m_shakkin+$m_souzoku+$m_koutsujiko+$m_ninibaikyaku+$m_meigihenkou+$m_setsuritsu;
+			$stmt = $pdo2->prepare("INSERT INTO ad_monthly_mail_num VALUES(?,?,?,?,?,?,?,?,?,?)");
+			$result  = $stmt->execute(array($reqid,$year,$month,$m_shakkin,$m_souzoku,$m_koutsujiko,$m_ninibaikyaku,$m_meigihenkou,$m_setsuritsu,$mail_sum));
 		}
 }
 echo "メールデータの取得に成功しました";

@@ -79,6 +79,7 @@ function get_each_ad_data($id,$year,$month){
 		$meigihenkou_call = $req_mvc_data['valid_call_meigihenkou'];
 		$setsuritsu_call = $req_mvc_data['valid_call_setsuritsu'];
 		$keijijiken_call = $req_mvc_data['valid_call_keijijiken'];
+		$call_sum = $req_mvc_data['call_sum'];
 		####課金メール数請求内容データの取得
 		$stmt2 = $pdo->query("SELECT * FROM ad_monthly_mail_num WHERE req_id=$id AND year=$year AND month=$month");
 		$req_mail_data = $stmt2->fetch(PDO::FETCH_ASSOC);
@@ -89,7 +90,9 @@ function get_each_ad_data($id,$year,$month){
 		$ninibaikyaku_mail = $req_mail_data['mail_ninibaikyaku'];
 		$meigihenkou_mail = $req_mail_data['mail_meigihenkou'];
 		$setsuritsu_mail = $req_mail_data['mail_setsuritsu'];
-	
+		$mail_sum = $req_mail_data['mail_sum'];
+		#請求合計数の取得
+		$all_sum = $call_sum+$mail_sum;
 		#####事務所情報データの取得
 		$stmt3 = $pdo->query("SELECT * FROM ad_req_data WHERE req_id=$id");
 		$ad_data = $stmt3->fetch(PDO::FETCH_ASSOC);
@@ -239,10 +242,66 @@ function get_each_ad_data($id,$year,$month){
 				$shakkin_tmp ="";
 		}
 		#相続
-		if($req_mvc_data['valid_call_souzoku']>0){
-				$souzoku_call_tmp ="借金問題サイトで".$req_mvc_data['valid_call_souzoku']."県の電話があります";
-		}else{
-				$souzoku_call_tmp ="";
+		if($souzoku_call!=null && $souzoku_mail!=null){
+				$souzoku_tmp ="相続サイトで".$souzoku_call."件の電話と".$souzoku_mail."件のメール";
+		}elseif($souzoku_call!=null && $souzoku_mail==null){
+				$souzoku_tmp ="相続サイトで".$souzoku_call."件の電話";
+		}elseif($souzoku_call ==null && $souzoku_mail !=null){
+				$souzoku_tmp ="相続サイトで".$souzoku_mail."件のメール";
+		}
+		else{
+				$souzoku_tmp ="";
+		}
+		#交通事故
+		if($koutsujiko_call!=null && $koutsujiko_mail!=null){
+				$koutsujiko_tmp ="交通事故サイトで".$koutsujiko_call."件の電話と".$koutsujiko_mail."件のメール";
+		}elseif($koutsujiko_call!=null && $koutsujiko_mail==null){
+				$koutsujiko_tmp ="交通事故サイトで".$koutsujiko_call."件の電話";
+		}elseif($koutsujiko_call ==null && $koutsujiko_mail !=null){
+				$koutsujiko_tmp ="交通事故サイトで".$koutsujiko_mail."件のメール";
+		}
+		else{
+				$koutsujiko_tmp ="";
+		}
+		#任意売却
+		if($ninibaikyaku_call!=null && $ninibaikyaku_mail!=null){
+				$ninibaikyaku_tmp ="任意売却サイトで".$ninibaikyaku_call."件の電話と".$ninibaikyaku_mail."件のメール";
+		}elseif($ninibaikyaku_call!=null && $ninibaikyaku_mail==null){
+				$ninibaikyaku_tmp ="任意売却サイトで".$ninibaikyaku_call."件の電話";
+		}elseif($ninibaikyaku_call ==null && $ninibaikyaku_mail !=null){
+				$ninibaikyaku_tmp ="任意売却サイトで".$ninibaikyaku_mail."件のメール";
+		}
+		else{
+				$ninibaikyaku_tmp ="";
+		}
+		#名義変更
+		if($meigihenkou_call!=null && $meigihenkou_mail!=null){
+				$meigihenkou_tmp ="名義変更サイトで".$meigihenkou_call."件の電話と".$meigihenkou_mail."件のメール";
+		}elseif($meigihenkou_call!=null && $meigihenkou_mail==null){
+				$meigihenkou_tmp ="名義変更サイトで".$meigihenkou_call."件の電話";
+		}elseif($meigihenkou_call ==null && $meigihenkou_mail !=null){
+				$meigihenkou_tmp ="名義変更サイトで".$meigihenkou_mail."件のメール";
+		}
+		else{
+				$meigihenkou_tmp ="";
+		}
+		#会社設立
+		if($setsuritsu_call!=null && $setsuritsu_mail!=null){
+				$setsuritsu_tmp ="会社設立サイトで".$setsuritsu_call."件の電話と".$setsuritsu_mail."件のメール";
+		}elseif($setsuritsu_call!=null && $setsuritsu_mail==null){
+				$setsuritsu_tmp ="会社設立サイトで".$setsuritsu_call."件の電話";
+		}elseif($setsuritsu_call ==null && $setsuritsu_mail !=null){
+				$setsuritsu_tmp ="会社設立サイトで".$setsuritsu_mail."件のメール";
+		}
+		else{
+				$setsuritsu_tmp ="";
+		}
+		#刑事事件
+		if($keijijiken_call!=null){
+				$keijijiken_tmp ="刑事事件サイトで".$keijijiken_call."件の電話";
+		}
+		else{
+				$keijijiken_tmp ="";
 		}
 		#template本文
 		$reviser->addString($sheet_num,0,0,$c_name."様
@@ -253,7 +312,18 @@ function get_each_ad_data($id,$year,$month){
 		".$month."月分の請求書を添付させていただきます。
 		
 		"
-		.$shakkin_tmp
+		.$shakkin_tmp."
+		".$souzoku_tmp."
+		".$koutsujiko_tmp."
+		".$ninibaikyaku_tmp."
+		".$meigihenkou_tmp."
+		".$setsuritsu_tmp."
+		".$keijijiken_tmp."
+		が発生致しましたので。
+		計".$all_sum."件分を請求させて頂きます。
+
+		何かご不明な点があればなんなりとご連絡ください。
+		"
 		);
 		#テンプレを読み込み、出力する
 		$readfile = "./template.xls";	
