@@ -230,7 +230,6 @@ function get_each_ad_data($id,$year,$month,$year_month){
 				#合計金額
 				$sum = ($shakkin_call+$shakkin_mail)*10000;
 				$i=$i+1;
-				$reviser->addString($sheet_num,$i-1,6,"=E$i*F$i");
 		}
 		#相続
 		if($souzoku_call>0 OR $souzoku_mail>0){
@@ -245,7 +244,6 @@ function get_each_ad_data($id,$year,$month,$year_month){
 				#合計金額
 				$sum = ($souzoku_call + $souzoku_mail)*5000;
 				$i=$i+1;
-				$reviser->addString($sheet_num,$i-1,6,"=E$i*F$i");
 		}
 		#交通事故
 		if($koutsujiko_call>0 OR $koutsujiko_mail>0){
@@ -260,7 +258,6 @@ function get_each_ad_data($id,$year,$month,$year_month){
 				#合計金額
 				$sum = ($koutsujiko_call+$koutsujiko_mail)*10000;
 				$i=$i+1;
-				$reviser->addString($sheet_num,$i-1,6,"=E$i*F$i");
 		}
 		#名義変更
 		if($meigihenkou_call>0 OR $meigihenkou_mail>0){
@@ -275,7 +272,6 @@ function get_each_ad_data($id,$year,$month,$year_month){
 				#合計金額
 				$sum = ($meigihenkou_call+$meigihenkou_mail)*5000;
 				$i=$i+1;
-				$reviser->addString($sheet_num,$i-1,6,"=E$i*F$i");
 		}
 		#会社設立
 		if($setsuritsu_call>0 OR $setsuritsu_mail>0){
@@ -290,7 +286,6 @@ function get_each_ad_data($id,$year,$month,$year_month){
 				#合計金額
 				$sum =($setsuritsu_call + $setsuritsu_mail)*5000;
 				$i=$i+1;
-				$reviser->addString($sheet_num,$i-1,6,"=E$i*F$i");
 		}
 		#刑事事件
 		if($keijijiken_call>0){
@@ -305,7 +300,6 @@ function get_each_ad_data($id,$year,$month,$year_month){
 				#合計金額
 				$sum =($keijijiken_call)*10000;
 				$i=$i+1;
-				$reviser->addString($sheet_num,$i-1,6,"=E$i*F$i");
 		}
 		$i=$i+1;
 		$reviser->addNumber($sheet_num,$i,0,"2");
@@ -330,7 +324,6 @@ function get_each_ad_data($id,$year,$month,$year_month){
 			#合計金額
 			$sum =($req_mvc_data['count_freedial'])*1000;
 			$i =$i+1;
-			$reviser->addString($sheet_num,$i-1,6,"=E$i*F$i");
 		}
 		#メール内容の書き込み
 		
