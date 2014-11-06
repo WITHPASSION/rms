@@ -174,7 +174,7 @@ function get_each_ad_data($id,$year,$month,$year_month){
 				$register_dt = $row["DATE_FORMAT(register_dt,'%m%d')"];
 				$mail_month =substr($register_dt,0,2);
 				$mail_day = substr($register_dt,2,2);
-				$mail_dt = $mail_month."月".$mail_day."日/";
+				$mail_dt = "(".$mail_month."月".$mail_day."日)";
 					 if($st ==0 || $st ==1 || $st ==2 || $st ==6 ||$st ==7 ||$st ==8 ||$st ==9|| $st==10||$st ==11||$st==12||$st==13||$st==15){
 					 		$all_mail_shakkin += $all_mail_count;
 				$shakkin_mail_dt .=$mail_dt;
@@ -336,66 +336,66 @@ function get_each_ad_data($id,$year,$month,$year_month){
 		#問題毎のメールテンプレート文
 		#借金tmp
 		if($all_call_shakkin!=null && $all_mail_shakkin!=null){
-				$shakkin_tmp ="借金問題サイトで".$all_call_shakkin."件の電話と".$all_mail_shakkin."件のメール(".$shakkin_mail_dt.")";
+				$shakkin_tmp ="借金問題サイトで".$all_call_shakkin."件の電話と".$all_mail_shakkin."件のメール".$shakkin_mail_dt;
 		}elseif($all_call_shakkin!=null && $all_mail_shakkin==null){
 				$shakkin_tmp ="借金問題サイトで".$all_call_shakkin."件の電話";
 		}elseif($all_call_shakkin ==null && $all_mail_shakkin !=null){
-				$shakkin_tmp ="借金問題サイトで".$all_mail_shakkin."件のメール(".$shakkin_mail_dt.")";
+				$shakkin_tmp ="借金問題サイトで".$all_mail_shakkin."件のメール".$shakkin_mail_dt;
 		}
 		else{
 				$shakkin_tmp ="";
 		}
 		#相続tmp
 		if($all_call_souzoku!=null && $all_mail_souzoku!=null){
-				$souzoku_tmp ="相続サイトで".$all_call_souzoku."件の電話と".$all_mail_souzoku."件のメール(".$souzoku_mail_dt.")";
+				$souzoku_tmp ="相続サイトで".$all_call_souzoku."件の電話と".$all_mail_souzoku."件のメール".$souzoku_mail_dt;
 		}elseif($all_call_souzoku!=null && $all_mail_souzoku==null){
 				$souzoku_tmp ="相続サイトで".$all_call_souzoku."件の電話";
 		}elseif($all_call_souzoku ==null && $all_mail_souzoku !=null){
-				$souzoku_tmp ="相続サイトで".$all_mail_souzoku."件のメール(".$souzoku_mail_dt.")";
+				$souzoku_tmp ="相続サイトで".$all_mail_souzoku."件のメール".$souzoku_mail_dt;
 		}
 		else{
 				$souzoku_tmp ="";
 		}
 		#交通事故tmp
 		if($all_call_koutsujiko!=null && $all_mail_koutsujiko!=null){
-				$koutsujiko_tmp ="交通事故サイトで".$all_call_koutsujiko."件の電話と".$all_mail_koutsujiko."件のメール(".$koutsujiko_mail_dt.")";
+				$koutsujiko_tmp ="交通事故サイトで".$all_call_koutsujiko."件の電話と".$all_mail_koutsujiko."件のメール".$koutsujiko_mail_dt;
 		}elseif($all_call_koutsujiko!=null && $all_mail_koutsujiko==null){
 				$koutsujiko_tmp ="交通事故サイトで".$all_call_koutsujiko."件の電話";
 		}elseif($all_call_koutsujiko ==null && $all_mail_koutsujiko !=null){
-				$koutsujiko_tmp ="交通事故サイトで".$all_mail_koutsujiko."件のメール(".$koutsujiko_mail_dt.")";
+				$koutsujiko_tmp ="交通事故サイトで".$all_mail_koutsujiko."件のメール".$koutsujiko_mail_dt;
 		}
 		else{
 				$koutsujiko_tmp ="";
 		}
 		#任意売却tmp
 		if($all_call_ninibaikyaku!=null && $all_mail_ninibaikyaku!=null){
-				$ninibaikyaku_tmp ="任意売却サイトで".$all_call_ninibaikyaku."件の電話と".$all_mail_ninibaikyaku."件のメール(".$ninibaikyaku_mail_dt.")";
+				$ninibaikyaku_tmp ="任意売却サイトで".$all_call_ninibaikyaku."件の電話と".$all_mail_ninibaikyaku."件のメール".$ninibaikyaku_mail_dt;
 		}elseif($all_call_ninibaikyaku!=null && $all_mail_ninibaikyaku==null){
 				$ninibaikyaku_tmp ="任意売却サイトで".$all_call_ninibaikyaku."件の電話";
 		}elseif($all_call_ninibaikyaku ==null && $all_mail_ninibaikyaku !=null){
-				$ninibaikyaku_tmp ="任意売却サイトで".$all_mail_ninibaikyaku."件のメール(".$ninibaikyaku_mail_dt.")";
+				$ninibaikyaku_tmp ="任意売却サイトで".$all_mail_ninibaikyaku."件のメール".$ninibaikyaku_mail_dt;
 		}
 		else{
 				$ninibaikyaku_tmp ="";
 		}
 		#名義変更tmp
 		if($all_call_meigihenkou!=null && $all_mail_meigihenkou!=null){
-				$meigihenkou_tmp ="名義変更サイトで".$all_call_meigihenkou."件の電話と".$all_mail_meigihenkou."件のメール(".$meigihenkou_mail_dt.")";
+				$meigihenkou_tmp ="名義変更サイトで".$all_call_meigihenkou."件の電話と".$all_mail_meigihenkou."件のメール".$meigihenkou_mail_dt;
 		}elseif($all_call_meigihenkou!=null && $all_mail_meigihenkou==null){
 				$meigihenkou_tmp ="名義変更サイトで".$all_call_meigihenkou."件の電話";
 		}elseif($all_call_meigihenkou ==null && $all_mail_meigihenkou !=null){
-				$meigihenkou_tmp ="名義変更サイトで".$all_mail_meigihenkou."件のメール(".$megihenkou_mail_dt.")";
+				$meigihenkou_tmp ="名義変更サイトで".$all_mail_meigihenkou."件のメール".$megihenkou_mail_dt;
 		}
 		else{
 				$meigihenkou_tmp ="";
 		}
 		#会社設立tmp
 		if($all_call_setsuritsu!=null && $all_mail_setsuritsu!=null){
-				$setsuritsu_tmp ="会社設立サイトで".$all_call_setsuritsu."件の電話と".$all_mail_setsuritsu."件のメール(".$setsuritsu_mail_dt.")";
+				$setsuritsu_tmp ="会社設立サイトで".$all_call_setsuritsu."件の電話と".$all_mail_setsuritsu."件のメール".$setsuritsu_mail_dt;
 		}elseif($all_call_setsuritsu!=null && $all_mail_setsuritsu==null){
 				$setsuritsu_tmp ="会社設立サイトで".$all_call_setsuritsu."件の電話";
 		}elseif($all_call_setsuritsu ==null && $all_mail_setsuritsu !=null){
-				$setsuritsu_tmp ="会社設立サイトで".$all_mail_setsuritsu."件のメール(".$setsuritsu_mail_dt.")";
+				$setsuritsu_tmp ="会社設立サイトで".$all_mail_setsuritsu."件のメール".$setsuritsu_mail_dt;
 		}
 		else{
 				$setsuritsu_tmp ="";
@@ -468,25 +468,25 @@ $inv_keijijiken = $all_call_keijijiken-$res_keijijiken;
 		$va_setsuritsu =null;
 		$va_keijijiken =null;
 		if(!empty($res_shakkin)){
-			$va_shakkin ="借金".$res_shakkin."件/";
+			$va_shakkin ="(借金".$res_shakkin."件)";
 		}
 		if(!empty($res_souzoku)){
-			$va_souzoku ="相続".$res_souzoku."件/";
+			$va_souzoku ="(相続".$res_souzoku."件)";
 		}
 		if(!empty($res_koutsujiko)){
-			$va_koutsujiko ="交通事故".$res_koutsujiko."件/";
+			$va_koutsujiko ="(交通事故".$res_koutsujiko."件)";
 		}
 		if(!empty($res_ninibaikyaku)){
-			$va_ninibaikyaku ="任意売却".$res_ninibaikyaku."件/";
+			$va_ninibaikyaku ="(任意売却".$res_ninibaikyaku."件)";
 		}
 		if(!empty($res_meigihenkou)){
-			$va_meigihenkou ="名義変更".$res_meigihenkou."件/";
+			$va_meigihenkou ="(名義変更".$res_meigihenkou."件)";
 		}
 		if(!empty($res_setsuritsu)){
-			$va_setsuritsu ="会社設立".$res_setsuritsu."件/";
+			$va_setsuritsu ="(会社設立".$res_setsuritsu."件)";
 		}
 		if(!empty($res_keijijiken)){
-			$va_keijijiken ="刑事事件".$res_keijijiken."件/";
+			$va_keijijiken ="(刑事事件".$res_keijijiken."件)";
 		}
 		#template本文
 		$reviser->addString($sheet_num,0,0,$c_name."様");
