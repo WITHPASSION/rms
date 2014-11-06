@@ -97,7 +97,7 @@ for($y=2004;$y<=($now_year-1);$y++):
 <select name="month">
 <?php 
 $now_month = date("n");
-for($m=1;$m<=12;$m++):?>
+for($m=01;$m<=12;$m++):?>
 	<?php if($m!=$now_month-1):?>
 		<option value="<?php echo $m;?>"><?php echo $m;?></option>
 	<?php elseif($m==$now_month-1):?>

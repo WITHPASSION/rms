@@ -56,10 +56,10 @@ if(!$stmt){
 $stmt = $pdo2->query("SELECT count(*) from ad_req_data");
 $repeat_times = $stmt->fetchcolumn();
 //取得月の設定
-$year_month = 201409;
-$year =substr($year_month,0,4);
-$month =substr($year_month,4,2);
-
+$year = $_POST['year'];
+$month = $_POST['month'];
+$month =sprintf("%02d",$month);
+$year_month = "$year"."$month";
 fetch_req_call_data($year_month,$year,$month,$repeat_times);
 fetch_req_mail_data($year_month,$year,$month,$repeat_times);
 
@@ -214,3 +214,4 @@ echo"<br>";
 }
 //ここまで本番プログラム
 ?>
+<a href="../senmonka-RMS.php">請求書作成ページはこちら</a>

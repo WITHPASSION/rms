@@ -1,5 +1,6 @@
 <?php
 #データベース接続処理
+ini_set("display_errors", "off");
 #db接続データの参照
 $path = parse_ini_file("../rms.cnf");		
 foreach($path as $key => $db_path){
@@ -69,7 +70,8 @@ $id = $_POST['change'];
 #フォームからの年月の受け取り
 $year = $_POST['year'];
 $month = $_POST['month'];
-$year_month = "$year"."0$month";
+$month = sprintf("%02d",$month);
+$year_month = "$year"."$month";
 #請求有効件数が0であった場合には出力しない
 $check = $pdo->query("SELECT valid_call_shakkin,valid_call_souzoku,valid_call_koutsujiko,valid_call_meigihenkou,valid_call_setsuritsu,valid_call_keijijiken FROM ad_monthly_valid_call WHERE req_id=$id AND year=$year AND month=$month");
 $check = $check->fetch(PDO::FETCH_ASSOC);
