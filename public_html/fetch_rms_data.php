@@ -52,21 +52,24 @@ if(!$stmt){
 		$info = $pdo2->errorinfo();
 		exit($info[2]);
 }
-//上限の取得
-$stmt = $pdo2->query("SELECT count(*) from ad_req_data");
-$repeat_times = $stmt->fetchcolumn();
 //取得月の設定
 $year = $_POST['year'];
 $month = $_POST['month'];
 $month =sprintf("%02d",$month);
 $year_month = "$year"."$month";
-fetch_req_call_data($year_month,$year,$month,$repeat_times);
-fetch_req_mail_data($year_month,$year,$month,$repeat_times);
+#req_idの時に処理
+$stmt = $pdo2->query("SELECT req_id FROM ad_req_data");
+$arr_req_id = $stmt->fetchAll(PDO::FETCH_ASSOC);
+foreach ($arr_req_id as $row) {
+	$reqid = $row['req_id'];
+	fetch_req_call_data($year_month,$year,$month,$reqid);
+	fetch_req_mail_data($year_month,$year,$month,$reqid);
+}
+echo"コール・メールデータの取得完了";
+echo "<br>";
 
 //本番プログラム
-function fetch_req_call_data($year_month,$year,$month,$repeat_times){
-for($i=0;$i<=$repeat_times;$i=$i+1){
-		$reqid =$i;
+function fetch_req_call_data($year_month,$year,$month,$reqid){
 		global $pdo,$pdo2;
 		$shakkin = null;
 		$souzoku = null;
@@ -160,13 +163,8 @@ for($i=0;$i<=$repeat_times;$i=$i+1){
 				$result = $stmt->execute(array($reqid,$year,$month,$shakkin,$souzoku,$koutsujiko,$ninibaikyaku,$meigihenkou,$setsuritsu,$keijijiken,$result_call_charge,$count_freedial,$call_sum));
 			}
 }
-echo"コールデータの取得に成功しました";
-echo"<br>";
-}
 //メールデータ本番プログラム
-function fetch_req_mail_data($year_month,$year,$month,$repeat_times){
-for($i=0;$i<=$repeat_times;$i++){
-		$reqid =$i;
+function fetch_req_mail_data($year_month,$year,$month,$reqid){
 		global $pdo,$pdo2;
 		$m_shakkin = null;
 		$m_souzoku = null;
@@ -208,9 +206,6 @@ foreach($arr_adid as $r){
 			$stmt = $pdo2->prepare("INSERT INTO ad_monthly_mail_num VALUES(?,?,?,?,?,?,?,?,?,?)");
 			$result  = $stmt->execute(array($reqid,$year,$month,$m_shakkin,$m_souzoku,$m_koutsujiko,$m_ninibaikyaku,$m_meigihenkou,$m_setsuritsu,$mail_sum));
 		}
-}
-echo "メールデータの取得に成功しました";
-echo"<br>";
 }
 //ここまで本番プログラム
 ?>
