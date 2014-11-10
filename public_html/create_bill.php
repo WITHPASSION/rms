@@ -485,6 +485,11 @@ $inv_tmp =$inv_tmp."
 $inv_tmp =$inv_tmp."
 ".$inv_tmp_keijijiken;
 		}
+if(!empty($inv_tmp)){
+$inv_tmp = $inv_tmp."
+"."を差し引いて";
+}
+
 #valid_tmp
 $va_tmp =$va_shakkin.$va_souzoku.$va_koutsujiko.$va_ninibaikyaku.$va_meigihenkou.$va_setsuritsu.$va_keijijiken;
 $va_tmp = rtrim($va_tmp,'・');
@@ -632,7 +637,6 @@ $reviser->addString($sheet_num,0,0,"
 
 ".$month."月は、".$all_tmp."
 が発生致しました".$inv_tmp."
-を差し引いて
 計".$all_sum."件(".$va_tmp.")を請求させて頂きます。
 
 何かご不明な点があればなんなりとご連絡ください。
