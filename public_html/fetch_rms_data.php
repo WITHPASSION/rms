@@ -85,59 +85,57 @@ function fetch_req_call_data($year_month,$year,$month,$reqid){
 		foreach($arr_adid as $row){
 				$adid = $row['adid'];
 				//call_dataの取得
-				$stmt = $pdo->query("SELECT count(*),media_id FROM call_data_view WHERE advertiser_id =$adid AND redirect_status in(21,22) AND DATE_FORMAT(date_from,'%Y%m')=$year_month AND dpl_tel_cnt =1 AND dpl_mail_cnt = 0 AND call_minutes>=60 GROUP BY media_id");
+				$stmt = $pdo->query("SELECT media_id FROM call_data_view WHERE advertiser_id =$adid AND redirect_status in(21,22) AND DATE_FORMAT(date_from,'%Y%m')=$year_month AND dpl_tel_cnt =1 AND dpl_mail_cnt = 0 AND call_minutes>=60");
 				$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 				foreach($arr_call_data as $r){
-						$count = $r['count(*)'];
 						$mi = $r['media_id'];
 						if($mi == null || $mi == ""){
-								$shakkin += $count;
+								$shakkin ++;
 						}
 						if($mi == "B"){
-								$souzoku += $count;
+								$souzoku ++;
 						}
 						if($mi == "C"){
-								$koutsujiko += $count;
+								$koutsujiko ++;
 						}
 						if($mi == "D"){
-								$ninibaikyaku += $count;
+								$ninibaikyaku ++;
 						}
 						if($mi == "E"){
-								$meigihenkou += $count;
+								$meigihenkou ++;
 						}
 						if($mi == "F"){
-								$setsuritsu += $count;
+								$setsuritsu ++;
 						}
 						if($mi == "G"){
-								$keijijiken += $count;
+								$keijijiken ++;
 						}
 				}
-				//anonymousデータの取得
-				$stmt2 =$pdo->query("SELECT count(*),media_id FROM call_data_view WHERE advertiser_id =$adid AND tel_from ='anonymous' AND DATE_FORMAT(date_from,'%Y%m')=$year_month AND call_minutes>=60 GROUP BY media_id");
-				$arr_anonymous_data = $stmt2->fetchAll(PDO::FETCH_ASSOC);
-				foreach($arr_anonymous_data as $r){
-						$count2 = $r['count(*)'];
+				//anonymous取得
+				$stmt2 = $pdo->query("SELECT media_id FROM call_data_view WHERE advertiser_id =$adid AND tel_from = 'anonymous' AND DATE_FORMAT(date_from,'%Y%m')=$year_month AND call_minutes>=60");
+				$arr_anonymous_call_data = $stmt2->fetchAll(PDO::FETCH_ASSOC);
+				foreach($arr_anonymous_call_data as $r){
 						$mi = $r['media_id'];
 						if($mi == null || $mi == ""){
-								$shakkin += $count2;
+								$shakkin ++;
 						}
 						if($mi == "B"){
-								$souzoku += $count2;
+								$souzoku ++;
 						}
 						if($mi == "C"){
-								$koutsujiko += $count2;
+								$koutsujiko ++;
 						}
 						if($mi == "D"){
-								$ninibaikyaku += $count2;
+								$ninibaikyaku ++;
 						}
 						if($mi == "E"){
-								$meigihenkou += $count2;
+								$meigihenkou ++;
 						}
 						if($mi == "F"){
-								$setsuritsu += $count2;
+								$setsuritsu ++;
 						}
 						if($mi == "G"){
-								$keijijiken += $count;
+								$keijijiken ++;
 						}
 				}
 //call_charge,count_freedialの取得
@@ -176,28 +174,27 @@ $stmt = $pdo2->query("SELECT adid from adid_reqid_matching WHERE reqid = $reqid"
 $arr_adid = $stmt->fetchAll(PDO::FETCH_ASSOC);
 foreach($arr_adid as $r){
 		$adid =$r['adid'];
-		$stmt = $pdo->query("SELECT count(*),site_type FROM mail_conv WHERE dpl_tel_cnt=0 AND dpl_mail_cnt =0 AND DATE_FORMAT(register_dt,'%Y%m')=$year_month AND advertiser_id = $adid GROUP BY site_type");
+		$stmt = $pdo->query("SELECT site_type FROM mail_conv WHERE dpl_tel_cnt=0 AND dpl_mail_cnt =0 AND DATE_FORMAT(register_dt,'%Y%m')=$year_month AND advertiser_id = $adid");
 		$mail_result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach($mail_result as $row){
-				$mail_num = $row['count(*)'];
 				$site_type = $row['site_type'];
 				if($site_type ==0 || $site_type ==1 || $site_type ==2 || $site_type ==6 || $site_type ==7 || $site_type ==8 || $site_type ==9 || $site_type ==10 || $site_type ==11 || $site_type ==12 || $site_type ==13 || $site_type ==15){
-						$m_shakkin += $mail_num;
+						$m_shakkin ++;
 				}
 				if($site_type ==3){
-						$m_souzoku += $mail_num;
+						$m_souzoku ++;
 				}
 				if($site_type ==14){
-						$m_koutsujiko += $mail_num;
+						$m_koutsujiko ++;
 				}
 				if($site_type == 16){
-						$m_ninibaikyaku += $mail_num;
+						$m_ninibaikyaku ++;
 				}
 				if($site_type ==18){
-						$m_setsuritsu += $mail_num;
+						$m_setsuritsu ++;
 				}
 				if($site_type ==17){
-						$m_meigihenkou += $mail_num;
+						$m_meigihenkou ++;
 				}
 		}
 }		

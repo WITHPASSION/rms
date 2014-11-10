@@ -180,70 +180,68 @@ function get_each_ad_data($id,$year,$month,$year_month){
 		$arr_ad_id =$stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach($arr_ad_id as $row){
 			$adid = $row['adid'];
-			$stmt = $pdo2->query("SELECT count(*),media_id FROM call_data_view WHERE advertiser_id = $adid AND DATE_FORMAT(date_from,'%Y%m')=$year_month GROUP BY media_id");
+			$stmt = $pdo2->query("SELECT media_id FROM call_data_view WHERE advertiser_id = $adid AND DATE_FORMAT(date_from,'%Y%m')=$year_month");
 			$arr_all_call_data =$stmt->fetchAll(PDO::FETCH_ASSOC);
 			foreach($arr_all_call_data as $row){
-					$all_call_count = $row['count(*)'];
 					$mi =$row['media_id'];
 						if($mi == null || $mi == ""){
-								$all_call_shakkin += $all_call_count;
+								$all_call_shakkin ++;
 						}
 						if($mi == "B"){
-								$all_call_souzoku += $all_call_count;
+								$all_call_souzoku ++;
 						}
 						if($mi == "C"){
-								$all_call_koutsujiko += $all_call_count;
+								$all_call_koutsujiko ++;
 						}
 						if($mi == "D"){
-								$all_call_ninibaikyaku += $all_call_count;
+								$all_call_ninibaikyaku ++;
 						}
 						if($mi == "E"){
-								$all_call_meigihenkou += $all_call_count;
+								$all_call_meigihenkou ++;
 						}
 						if($mi == "F"){
-								$all_call_setsuritsu += $all_call_count;
+								$all_call_setsuritsu ++;
 						}
 						if($mi == "G"){
-								$all_call_keijijiken += $all_call_count;
+								$all_call_keijijiken ++;
 						}	
 			}
 		#無効アリメール数,メール日取得
-			$stmt2 = $pdo2->query("SELECT count(*),site_type,DATE_FORMAT(register_dt,'%m%d') FROM  mail_conv WHERE advertiser_id = $adid AND DATE_FORMAT(register_dt,'%Y%m')=$year_month GROUP BY site_type");
+			$stmt2 = $pdo2->query("SELECT site_type,DATE_FORMAT(register_dt,'%m%d') FROM  mail_conv WHERE advertiser_id = $adid AND DATE_FORMAT(register_dt,'%Y%m')=$year_month ");
 			$arr_all_mail_data = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 			foreach($arr_all_mail_data as $row){
-				$all_mail_count =$row['count(*)'];
 				$st=$row['site_type'];
 				$register_dt = $row["DATE_FORMAT(register_dt,'%m%d')"];
 				$mail_month =substr($register_dt,0,2);
 				$mail_day = substr($register_dt,2,2);
 				$mail_day = sprintf('%01d',$mail_day);
-				if($st ==0 || $st ==1 || $st ==2 || $st ==6 ||$st ==7 ||$st ==8 ||$st ==9|| $st==10||$st ==11||$st==12||$st==13||$st==15){
-					$all_mail_shakkin += $all_mail_count;
+				if($st == 0 || $st == 1 || $st == 2 || $st == 6 || $st == 7 || $st == 8 || $st == 9 || $st == 10 || $st == 11 || $st == 12 || $st == 13 || $st == 15){
+					$all_mail_shakkin++;
 					array_push($arr_shakkin_mail_dt,$mail_day);
 					asort($arr_shakkin_mail_dt);
 				}
 				if($st ==3){
-					$all_mail_souzoku +=$all_mail_count;
+					$all_mail_souzoku ++;
 					array_push($arr_souzoku_mail_dt,$mail_day);
 					asort($arr_souzoku_mail_dt);
 				}
 				if($st ==14){
-					$all_mail_koutsujiko +=$all_mail_count;
+					$all_mail_koutsujiko ++;
 					array_push($arr_koutsujiko_mail_dt,$mail_day);
 					asort($arr_koutsujiko_mail_dt);
 				}
 				if($st ==16){
-					$all_mail_ninibaikyaku +=$all_mail_count;
+					$all_mail_ninibaikyaku ++;
 					array_push($arr_ninibaikyaku_mail_dt,$mail_day);
 					asort($arr_ninibaikyaku_mail_dt);
 				}
 				if($st ==18){ 
-					$all_mail_setsuritsu +=$all_mail_count;
+					$all_mail_setsuritsu ++;
 					array_push($arr_setsuritsu_mail_dt,$mail_day);
 					asort($arr_setsuritsu_mail_dt);
 				}
 				if($st ==17){
-					$all_mail_meigihenkou +=$all_mail_count;
+					$all_mail_meigihenkou ++;
 					array_push($arr_meigihenkou_mail_dt,$mail_day);
 					asort($arr_meigihenkou_mail_dt);
 				}
@@ -649,7 +647,7 @@ $sheet_name = "請求書　(".$req_ad_name.$year."年".$month."月分)";
 
 		#テンプレを読み込み、出力する
 		$readfile = "./template.xls";	
-		$outfile=$sheet_name."xls";
+		$outfile=$sheet_name.".xls";
 		$reviser->revisefile($readfile,$outfile);
 
 }#end_of_function/get_each_ad_data
