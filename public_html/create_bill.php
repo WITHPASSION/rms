@@ -342,7 +342,7 @@ function get_each_ad_data($id,$year,$month,$year_month){
 		}elseif($all_call_meigihenkou!=null && $all_mail_meigihenkou==null){
 				$meigihenkou_all_tmp ="名義変更サイトで".$all_call_meigihenkou."件の電話";
 		}elseif($all_call_meigihenkou ==null && $all_mail_meigihenkou !=null){
-				$meigihenkou_all_tmp ="名義変更サイトで".$all_mail_meigihenkou."件のメール".$megihenkou_mail_dt;
+				$meigihenkou_all_tmp ="名義変更サイトで".$all_mail_meigihenkou."件のメール".$meigihenkou_mail_dt;
 		}
 		else{
 				$meigihenkou_all_tmp ="";
