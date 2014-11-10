@@ -643,8 +643,7 @@ $reviser->addString($sheet_num,0,0,"
 );
 
 #事務所毎でのsheetの名前
-$sheet_name = "請求書 (".$req_ad_name.$year."年".$month."月分)";
-
+$sheet_name = "請求書（".$req_ad_name.$year."年".$month."月分）";
 		#テンプレを読み込み、出力する
 		$readfile = "./template.xls";	
 		$outfile=$sheet_name.".xls";
