@@ -106,7 +106,7 @@ for($m=01;$m<=12;$m++):?>
 <?php endfor;?>
 </select>
 月分<br>
-	<select name="change"  > 
+	<select name="change" style="font-size:35px" > 
 		<option>選択して下さい</option>
 <?php foreach($ad_form_data as $row):?>
 		<option value="<?php echo $row['req_id'];?>"><?php echo $row['req_id'];  echo $row['req_ad_name'];?></option>
