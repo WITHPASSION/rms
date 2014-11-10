@@ -143,7 +143,7 @@ function get_each_ad_data($id,$year,$month,$year_month){
 		#空の配列作成
 		$arr_shakkin_mail_dt = array();
 		$arr_souzoku_mail_dt = array();
-		$arr_kotsujiko_mail_dt = array();
+		$arr_koutsujiko_mail_dt = array();
 		$arr_ninibaikyaku_mail_dt = array();
 		$arr_meigihenkou_mail_dt = array();
 		$arr_setsuritsu_mail_dt = array();
@@ -286,8 +286,6 @@ function get_each_ad_data($id,$year,$month,$year_month){
 		}
 		$meigihenkou_mail_dt = rtrim($meigihenkou_mail_dt,'・');
 		$meigihenkou_mail_dt = "(".$meigihenkou_mail_dt.")";
-
-
 		#####事務所情報データの取得
 		$stmt3 = $pdo->query("SELECT * FROM ad_req_data WHERE req_id=$id");
 		$ad_data = $stmt3->fetch(PDO::FETCH_ASSOC);
@@ -642,10 +640,12 @@ $reviser->addString($sheet_num,0,0,"
 
 );
 
+#事務所毎でのsheetの名前
+$sheet_name = "請求書　(".$req_ad_name.$year."年".$month."月分)";
 
 		#テンプレを読み込み、出力する
 		$readfile = "./template.xls";	
-		$outfile="$year$month$req_ad_name.xls";
+		$outfile=$sheet_name."xls";
 		$reviser->revisefile($readfile,$outfile);
 
 }#end_of_function/get_each_ad_data
