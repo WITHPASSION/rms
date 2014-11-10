@@ -407,25 +407,25 @@ $inv_keijijiken = $all_call_keijijiken-$res_keijijiken;
 		}
 #有効件数生成
 if(!empty($res_shakkin)){
-	$va_shakkin ="(借金".$res_shakkin."件)";
+	$va_shakkin ="借金".$res_shakkin."件・";
 }
 if(!empty($res_souzoku)){
-	$va_souzoku ="(相続".$res_souzoku."件)";
+	$va_souzoku ="相続".$res_souzoku."件・";
 }
 if(!empty($res_koutsujiko)){
-	$va_koutsujiko ="(交通事故".$res_koutsujiko."件)";
+	$va_koutsujiko ="交通事故".$res_koutsujiko."件・";
 }
 if(!empty($res_ninibaikyaku)){
-	$va_ninibaikyaku ="(任意売却".$res_ninibaikyaku."件)";
+	$va_ninibaikyaku ="任意売却".$res_ninibaikyaku."件・";
 }
 if(!empty($res_meigihenkou)){
-	$va_meigihenkou ="(名義変更".$res_meigihenkou."件)";
+	$va_meigihenkou ="名義変更".$res_meigihenkou."件・";
 }
 if(!empty($res_setsuritsu)){
-	$va_setsuritsu ="(会社設立".$res_setsuritsu."件)";
+	$va_setsuritsu ="会社設立".$res_setsuritsu."件・";
 }
 if(!empty($res_keijijiken)){
-	$va_keijijiken ="(刑事事件".$res_keijijiken."件)";
+	$va_keijijiken ="刑事事件".$res_keijijiken."件・";
 }
 //////////////////
 /////template文生成
@@ -489,6 +489,7 @@ $inv_tmp =$inv_tmp."
 		}
 #valid_tmp
 $va_tmp =$va_shakkin.$va_souzoku.$va_koutsujiko.$va_ninibaikyaku.$va_meigihenkou.$va_setsuritsu.$va_keijijiken;
+$va_tmp = rtrim($va_tmp,'・');
 
 
 		###################################
@@ -634,7 +635,7 @@ $reviser->addString($sheet_num,0,0,"
 ".$month."月は、".$all_tmp."
 が発生致しました".$inv_tmp."
 を差し引いて
-計".$all_sum."件".$va_tmp."を請求させて頂きます。
+計".$all_sum."件(".$va_tmp.")を請求させて頂きます。
 
 何かご不明な点があればなんなりとご連絡ください。
 今後ともよろしくお願い致します。"
