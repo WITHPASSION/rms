@@ -33,8 +33,8 @@ function connect_db(){
 				$configs =parse_ini_file($db_path);
 		}
 		foreach($configs as $key =>$value){
-				if($key =="db_req"){
-				$db_req = $value;
+				if($key =="db_request"){
+				$db_request = $value;
 				}
 				if($key =="db_cdr"){
 				$db_portal = $value;
@@ -50,7 +50,7 @@ function connect_db(){
 				}	
 		}
 		global $pdo;
-		$dsn = "mysql:dbname=$db_req;host=$host";
+		$dsn = "mysql:dbname=$db_request;host=$host";
 		$user= "$name";
 		$pass= "$pass";
 		try{

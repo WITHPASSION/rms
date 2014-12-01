@@ -4,68 +4,78 @@ ini_set("display_errors", "off");
 #db接続データの参照
 $path = parse_ini_file("../rms.cnf");		
 foreach($path as $key => $db_path){
-		$configs =parse_ini_file($db_path);
+	$configs =parse_ini_file($db_path);
 }
 foreach($configs as $key =>$value){
-		if($key =="db_cdr"){
-						$db_portal = $value;
-				}
-		if($key == "db_req"){
-						$db_req = $value;
-				}
-		if($key =="host"){
-						$host = $value;
-				}	
-		if($key =="name"){
-						$name = $value;
-				}
-		if($key =="pass"){
-						$pass = $value;
-				}
+	switch ($key) {
+		case 'db_cdr':
+		$db_cdr = $value;
+		break;
+		case 'db_request':
+		$db_request = $value;
+		break;
+		case 'db_wordpress':
+		$db_wordpress = $value;
+		break;
+		case 'host':
+		$host = $value;
+		break;
+		case 'name':
+		$name = $value;
+		break;
+		case 'pass':
+		$pass = $value;
+		break;
+	}
 }
+
 #グローバル変数
-$pdo =null;
-$pdo2 =null;
+$pdo_request =null;
+$pdo_cdr =null;
+$pdo_wordpress = null;
 $reviser=null;
-
-$dsn ="mysql:dbname=$db_req;host=$host";
-$user = "$name";
-$pass = "$pass";
+#cdrへの接続
+$dsn_cdr ="mysql:dbname=$db_cdr;host=$host";
 try{	
-		$pdo = new PDO($dsn,$user,$pass);
+		$pdo_cdr = new PDO($dsn_cdr,$name,$pass);
 }catch(PDOException $e){
 		exit('接続ミス'.$e->getMessage());
 }
-$stmt=$pdo->query('SET NAMES utf8');
+$stmt=$pdo_cdr->query('SET NAMES utf8');
 if(!$stmt){
-		$info=$pdo->errorinfo();
+		$info=$pdo_cdr->errorinfo();
 		exit($info[2]);
 }
-
-$dsn2 ="mysql:dbname=$db_portal;host=$host";
-$user = "$name";
-$pass = "$pass";
+#smk_request_dataへの接続
+$dsn_request ="mysql:dbname=$db_request;host=$host";
 try{	
-		$pdo2 = new PDO($dsn2,$user,$pass);
+		$pdo_request = new PDO($dsn_request,$name,$pass);
 }catch(PDOException $e){
 		exit('接続ミス'.$e->getMessage());
 }
-$stmt=$pdo2->query('SET NAMES utf8');
+$stmt=$pdo_request->query('SET NAMES utf8');
 if(!$stmt){
-		$info=$pdo->errorinfo();
+		$info=$pdo_request->errorinfo();
 		exit($info[2]);
 }
-
-
-
+#wordpressへの接続
+$dsn_wordpress ="mysql:dbname=$db_wordpress;host=$host";
+try{	
+		$pdo_wordpress = new PDO($dsn_wordpress,$name,$pass);
+}catch(PDOException $e){
+		exit('接続ミス'.$e->getMessage());
+}
+$stmt=$pdo_wordpress->query('SET NAMES utf8');
+if(!$stmt){
+		$info=$pdo_wordpress->errorinfo();
+		exit($info[2]);
+}
 #reviser呼び出し
 require_once('reviser_lite.php');
 $reviser = NEW Excel_Reviser;
 $reviser->setInternalCharset('utf-8');	
-
 #DB内の行最大数を取得
-$max_row = $pdo->query("SELECT COUNT(*) FROM ad_req_data");
-
+$max_row = $pdo_request->query("SELECT COUNT(*) FROM ad_req_data");
 #フォームからの事務所IDの受け取り
 $id = $_POST['change'];
 #フォームからの年月の受け取り
@@ -74,9 +84,9 @@ $month = $_POST['month'];
 $month = sprintf("%02d",$month);
 $year_month = "$year"."$month";
 #請求有効件数が0であった場合には出力しない
-$check = $pdo->query("SELECT valid_call_shakkin,valid_call_souzoku,valid_call_koutsujiko,valid_call_meigihenkou,valid_call_setsuritsu,valid_call_keijijiken FROM ad_monthly_valid_call WHERE req_id=$id AND year=$year AND month=$month");
+$check = $pdo_request->query("SELECT valid_call_shakkin,valid_call_souzoku,valid_call_koutsujiko,valid_call_meigihenkou,valid_call_setsuritsu,valid_call_keijijiken FROM ad_monthly_valid_call WHERE req_id=$id AND year=$year AND month=$month");
 $check = $check->fetch(PDO::FETCH_ASSOC);
-$check2 = $pdo->query("SELECT mail_shakkin,mail_souzoku,mail_koutsujiko,mail_meigihenkou,mail_setsuritsu FROM ad_monthly_mail_num WHERE req_id=$id AND year=$year AND month=$month");
+$check2 = $pdo_request->query("SELECT mail_shakkin,mail_souzoku,mail_koutsujiko,mail_meigihenkou,mail_setsuritsu FROM ad_monthly_mail_num WHERE req_id=$id AND year=$year AND month=$month");
 $check2 = $check2->fetch(PDO::FETCH_ASSOC);
 if(!empty($check)|| !empty($check2)){
 	get_each_ad_data($id,$year,$month,$year_month);
@@ -89,7 +99,7 @@ else{
 
 function get_each_ad_data($id,$year,$month,$year_month){
 		#####有効コール請求内容データの取得
-		global $pdo,$pdo2,$reviser,$month;
+		global $pdo_request,$pdo_cdr,$pdo_wordpress,$reviser,$month;
 		#無効も含めた全てのコール数
 		$all_call_shakkin = null;
 		$all_call_souzoku = null;
@@ -150,7 +160,7 @@ function get_each_ad_data($id,$year,$month,$year_month){
 
 
 		$sheet_num =0;
-		$stmt = $pdo->query("SELECT * FROM ad_monthly_valid_call WHERE req_id=$id AND year=$year AND month=$month");
+		$stmt = $pdo_request->query("SELECT * FROM ad_monthly_valid_call WHERE req_id=$id AND year=$year AND month=$month");
 		$req_mvc_data = $stmt->fetch(PDO::FETCH_ASSOC);
 				#問題毎コール数の取得
 		$shakkin_call = $req_mvc_data['valid_call_shakkin'];
@@ -162,7 +172,7 @@ function get_each_ad_data($id,$year,$month,$year_month){
 		$keijijiken_call = $req_mvc_data['valid_call_keijijiken'];
 		$call_sum = $req_mvc_data['call_sum'];
 		####課金メール数請求内容データの取得
-		$stmt2 = $pdo->query("SELECT * FROM ad_monthly_mail_num WHERE req_id=$id AND year=$year AND month=$month");
+		$stmt2 = $pdo_request->query("SELECT * FROM ad_monthly_mail_num WHERE req_id=$id AND year=$year AND month=$month");
 		$req_mail_data = $stmt2->fetch(PDO::FETCH_ASSOC);
 				#問題ごとメール数の取得
 		$shakkin_mail = $req_mail_data['mail_shakkin'];
@@ -176,11 +186,11 @@ function get_each_ad_data($id,$year,$month,$year_month){
 		$all_sum = $call_sum+$mail_sum;
 		#######無効も含めた全コール数,メール数の取得
 		#無効アリコール数
-		$stmt=$pdo->query("SELECT * FROM adid_reqid_matching WHERE reqid =$id");
+		$stmt=$pdo_request->query("SELECT * FROM adid_reqid_matching WHERE reqid =$id");
 		$arr_ad_id =$stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach($arr_ad_id as $row){
 			$adid = $row['adid'];
-			$stmt = $pdo2->query("SELECT media_id FROM call_data_view WHERE advertiser_id = $adid AND DATE_FORMAT(date_from,'%Y%m')=$year_month");
+			$stmt = $pdo_cdr->query("SELECT media_id FROM call_data_view WHERE advertiser_id = $adid AND DATE_FORMAT(date_from,'%Y%m')=$year_month");
 			$arr_all_call_data =$stmt->fetchAll(PDO::FETCH_ASSOC);
 			foreach($arr_all_call_data as $row){
 					$mi =$row['media_id'];
@@ -207,7 +217,7 @@ function get_each_ad_data($id,$year,$month,$year_month){
 						}	
 			}
 		#無効アリメール数,メール日取得
-			$stmt2 = $pdo2->query("SELECT site_type,DATE_FORMAT(register_dt,'%m%d') FROM  mail_conv WHERE advertiser_id = $adid AND DATE_FORMAT(register_dt,'%Y%m')=$year_month ");
+			$stmt2 = $pdo_cdr->query("SELECT site_type,DATE_FORMAT(register_dt,'%m%d') FROM  mail_conv WHERE advertiser_id = $adid AND DATE_FORMAT(register_dt,'%Y%m')=$year_month ");
 			$arr_all_mail_data = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 			foreach($arr_all_mail_data as $row){
 				$st=$row['site_type'];
@@ -285,11 +295,13 @@ function get_each_ad_data($id,$year,$month,$year_month){
 		$meigihenkou_mail_dt = rtrim($meigihenkou_mail_dt,'・');
 		$meigihenkou_mail_dt = "(".$meigihenkou_mail_dt.")";
 		#####事務所情報データの取得
-		$stmt3 = $pdo->query("SELECT * FROM ad_req_data WHERE req_id=$id");
+		$stmt3 = $pdo_request->query("SELECT * FROM ad_req_data WHERE req_id=$id");
 		$ad_data = $stmt3->fetch(PDO::FETCH_ASSOC);
 		$req_ad_name = $ad_data['req_ad_name'];
 		$reviser->setSheetname($sheet_num,$req_ad_name);
-		#御担当者名の表示
+		#メール担当者名
+		$recipient_name  = $ad_data['mail_recipient'];
+		#御担当者名
 		$c_name  = $ad_data['person_in_charge'];
 		/*問題毎のメールテンプレート文*/
 		#借金all_tmp
@@ -619,9 +631,14 @@ $va_tmp = rtrim($va_tmp,'・');
 		}
 
 
-		//////////////////////
+		//////////////////////////
 		//////メールtemplate本文////
-		//////////////////////
+		//////////////////////////
+##ここの内容はインデント禁止！！！
+#メール担当者がいる場合はメール文面の担当者を書き換える
+if(!empty($recipient_name)){
+	$c_name = $recipient_name;
+}
 $sheet_num =1;
 $reviser->addString($sheet_num,0,0,"
 【専門家検索ドットコム】請求書（".$year."年".$month."月分）
@@ -641,6 +658,88 @@ $reviser->addString($sheet_num,0,0,"
 今後ともよろしくお願い致します。"
 
 );
+
+########################
+###CRMシートに載せる内容###
+########################
+$sheet_num =2;
+$reviser->addString($sheet_num,0,0,$month."月");
+#登録事務所名の取得
+$stmt = $pdo_wordpress->query("SELECT office_name FROM ss_advertisers WHERE ID = $adid");
+$arr_ad_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
+foreach ($arr_ad_name as $row ){
+	$ad_name = $row['office_name'];
+}
+####通話情報の生成
+$reviser->addString($sheet_num,1,0,"通話データ");
+#行数を変数に指定
+$i =2;
+$stmt = $pdo_cdr->query("SELECT * FROM call_data_view WHERE DATE_FORMAT(date_from,'%Y%m')=$year_month AND advertiser_id = $adid");
+$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+foreach ($arr_call_data as $row) {
+	$tel_to = $row['tel_to'];
+	$tel_send = $row['tel_send'];
+	$date_from = $row['date_from'];
+	$date_to = $row['date_to'];
+	$call_minutes = $row['call_minutes'];
+	$tel_from = $row['tel_from'];
+	$reviser->addString($sheet_num,$i,0,$adid);
+	$reviser->addString($sheet_num,$i,1,$ad_name);
+	$reviser->addString($sheet_num,$i,4,$tel_to);
+	$reviser->addString($sheet_num,$i,5,$tel_send);
+	$reviser->addString($sheet_num,$i,6,$date_from);
+	$reviser->addString($sheet_num,$i,7,$date_to);
+	$reviser->addString($sheet_num,$i,8,$call_minutes);
+	$reviser->addString($sheet_num,$i,9,$tel_from);
+	$i++;
+}
+#請求通話料金の出力
+$reviser->addString($sheet_num,1,1,"請求通話料金");
+$reviser->addString($sheet_num,1,2,$req_mvc_data['call_charge']);
+
+
+
+
+####メール情報の生成
+$reviser->addString($sheet_num,$i,0,"メール");
+$i++;
+#全てのメール情報の入る配列
+$sum_crm_mail_data = array();
+$stmt = $pdo_cdr->query("SELECT site_type,sender_tel,register_dt FROM mail_conv WHERE advertiser_id = $adid AND DATE_FORMAT(register_dt,'%Y%m')=$year_month");
+$arr_crm_mail_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+foreach ($arr_crm_mail_data as $r) {
+	$st = $r['site_type'];
+	$sender_tel = $r['sender_tel'];
+	$date = $r['register_dt'];
+			#事務所毎かつ、発生メール毎の情報が入る配列
+	$new_crm_mail_array_data = array();
+			#サイト名の入手
+	$stmt = $pdo_wordpress->query("SELECT site_type_name FROM ss_site_type WHERE site_type = $st");
+	$arr_st_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	foreach ($arr_st_name as $row) {
+		$st_name = $row['site_type_name'];
+	}
+	array_push($new_crm_mail_array_data,$ad_name,$st_name,$sender_tel,$date);
+	array_push($sum_crm_mail_data,$new_crm_mail_array_data);
+}
+
+
+#配列に代入したメールデータを出力
+foreach ($sum_crm_mail_data as $row) {
+	$ad_name = $row['0'];
+	$st_name = $row['1'];
+	$sender_tel = $row['2'];
+	$mail_date = $row['3'];
+	$reviser->addString($sheet_num,$i,0,$adid);
+	$reviser->addString($sheet_num,$i,1,$ad_name);
+	$reviser->addString($sheet_num,$i,5,$st_name);
+	$reviser->addString($sheet_num,$i,7,$mail_date);
+	$reviser->addString($sheet_num,$i,9,$sender_tel."xxxx");
+	$i++;
+}
+
+
+
 
 #事務所毎でのsheetの名前
 $sheet_name = "請求書（".$req_ad_name.$year."年".$month."月分）";
