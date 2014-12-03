@@ -663,12 +663,28 @@ $reviser->addString($sheet_num,0,0,"
 ###CRMシートに載せる内容###
 ########################
 $sheet_num =2;
+#無効も含めた全コール数
+$all_call = $all_call_shakkin + $all_call_souzoku + $all_call_koutsujiko + $all_call_ninibaikyaku + $all_call_meigihenkou + $all_call_setsuritsu + $all_call_keijijiken;
+#無効も含めた全メール数
+$all_mail = $all_mail_shakkin + $all_mail_souzoku + $all_mail_koutsujiko + $all_mail_ninibaikyaku + $all_mail_meigihenkou + $all_mail_setsuritsu + $all_mail_keijijiken;
 $reviser->addString($sheet_num,0,0,$month."月");
 #請求通話料金の出力
 $reviser->addString($sheet_num,1,1,"請求通話料金");
 $reviser->addString($sheet_num,1,2,$req_mvc_data['call_charge']);
+#全体コール数の出力
+$reviser->addString($sheet_num,1,3,"全体コール");
+$reviser->addString($sheet_num,1,4,$all_call);
+#全体メール数の出力
+$reviser->addString($sheet_num,1,5,"全体メール");
+$reviser->addString($sheet_num,1,6,$all_mail);
+#有効コール数の出力
+$reviser->addString($sheet_num,2,3,"有効コール");
+$reviser->addString($sheet_num,2,4,$call_sum);
+#有効メール数の出力
+$reviser->addString($sheet_num,2,5,"有効メール");
+$reviser->addString($sheet_num,2,6,$mail_sum);
 #行数を変数に指定
-$i =2;
+$i =3;
 //crmシートコールデータ処理
 #media_typesへの接続
 $stmt = $pdo_cdr->query("SELECT * FROM media_types");
@@ -687,14 +703,23 @@ foreach ($arr_ad_id as $row) {
 		$stmt = $pdo_cdr->query("SELECT * FROM call_data_view WHERE DATE_FORMAT(date_from,'%Y%m')=$year_month AND advertiser_id = $adid");
 		$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_call_data as $row) {
+			#配列の値から変数へと代入
 			$media_id = $row['media_id'];
+			$tel_to = $row['tel_to'];
+			$tel_send = $row['tel_send'];
+			$date_from = $row['date_from'];
+			$date_to = $row['date_to'];
+			$call_minutes = $row['call_minutes'];
+			$tel_from = $row['tel_from'];
+			$dpl_tel_cnt = $row['dpl_tel_cnt'];
+			$dpl_mail_cnt =$row['dpl_mail_cnt'];
+			$redirect_status = $row['redirect_status'];
 			#media_nameの取得
 			foreach ($arr_media_type_data as $r) {
 				if($r['freebit_media_id'] == $media_id)
 					$media_name = $r['media_type_name'];
 			}
 			#電話statusの取得
-			$redirect_status = $row['redirect_status'];
 			switch ($redirect_status) {
 				case '21':
 				case '22':
@@ -722,18 +747,19 @@ foreach ($arr_ad_id as $row) {
 					break;
 			}
 			#電話重複の確認
-			$dpl_tel_cnt = $row['dpl_tel_cnt'];
-			if($dpl_tel_cnt >=2){
+			if($call_minutes >=60 && $dpl_tel_cnt ==1 && $dpl_mail_cnt ==0 ){
+				if($redirect_status ==21 || $redirect_status ==22){
+					$check_call_dpl ="○";
+				}
+			}elseif($tel_from =="anonymous" && $call_minutes>=60){
+				$check_call_dpl ="○";
+			}
+			elseif($dpl_tel_cnt >=2){
 				$check_call_dpl ="同一電話";
 			}else{
 				$check_call_dpl = null;
 			}
-			$tel_to = $row['tel_to'];
-			$tel_send = $row['tel_send'];
-			$date_from = $row['date_from'];
-			$date_to = $row['date_to'];
-			$call_minutes = $row['call_minutes'];
-			$tel_from = $row['tel_from'];
+			#Excelへの記入
 			$reviser->addString($sheet_num,$i,0,$adid);
 			$reviser->addString($sheet_num,$i,1,$ad_name);
 			$reviser->addString($sheet_num,$i,3,$media_name);
@@ -749,7 +775,7 @@ foreach ($arr_ad_id as $row) {
 		}
 }
 //crmシートメールデータ処理
-$reviser->addString($sheet_num,$i,0,"mail");
+$reviser->addString($sheet_num,$i,0,"メールデータ");
 foreach ($arr_ad_id as $row) {
 $adid = $row['adid'];
 #登録事務所名の取得
