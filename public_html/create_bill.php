@@ -664,81 +664,140 @@ $reviser->addString($sheet_num,0,0,"
 ########################
 $sheet_num =2;
 $reviser->addString($sheet_num,0,0,$month."月");
-#登録事務所名の取得
-$stmt = $pdo_wordpress->query("SELECT office_name FROM ss_advertisers WHERE ID = $adid");
-$arr_ad_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
-foreach ($arr_ad_name as $row ){
-	$ad_name = $row['office_name'];
-}
-####通話情報の生成
-$reviser->addString($sheet_num,1,0,"通話データ");
-#行数を変数に指定
-$i =2;
-$stmt = $pdo_cdr->query("SELECT * FROM call_data_view WHERE DATE_FORMAT(date_from,'%Y%m')=$year_month AND advertiser_id = $adid");
-$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-foreach ($arr_call_data as $row) {
-	$tel_to = $row['tel_to'];
-	$tel_send = $row['tel_send'];
-	$date_from = $row['date_from'];
-	$date_to = $row['date_to'];
-	$call_minutes = $row['call_minutes'];
-	$tel_from = $row['tel_from'];
-	$reviser->addString($sheet_num,$i,0,$adid);
-	$reviser->addString($sheet_num,$i,1,$ad_name);
-	$reviser->addString($sheet_num,$i,4,$tel_to);
-	$reviser->addString($sheet_num,$i,5,$tel_send);
-	$reviser->addString($sheet_num,$i,6,$date_from);
-	$reviser->addString($sheet_num,$i,7,$date_to);
-	$reviser->addString($sheet_num,$i,8,$call_minutes);
-	$reviser->addString($sheet_num,$i,9,$tel_from);
-	$i++;
-}
 #請求通話料金の出力
 $reviser->addString($sheet_num,1,1,"請求通話料金");
 $reviser->addString($sheet_num,1,2,$req_mvc_data['call_charge']);
+#行数を変数に指定
+$i =2;
+//crmシートコールデータ処理
+#media_typesへの接続
+$stmt = $pdo_cdr->query("SELECT * FROM media_types");
+$arr_media_type_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-
-
-
-####メール情報の生成
-$reviser->addString($sheet_num,$i,0,"メール");
-$i++;
-#全てのメール情報の入る配列
-$sum_crm_mail_data = array();
-$stmt = $pdo_cdr->query("SELECT site_type,sender_tel,register_dt FROM mail_conv WHERE advertiser_id = $adid AND DATE_FORMAT(register_dt,'%Y%m')=$year_month");
-$arr_crm_mail_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-foreach ($arr_crm_mail_data as $r) {
-	$st = $r['site_type'];
-	$sender_tel = $r['sender_tel'];
-	$date = $r['register_dt'];
-			#事務所毎かつ、発生メール毎の情報が入る配列
-	$new_crm_mail_array_data = array();
-			#サイト名の入手
-	$stmt = $pdo_wordpress->query("SELECT site_type_name FROM ss_site_type WHERE site_type = $st");
-	$arr_st_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	foreach ($arr_st_name as $row) {
-		$st_name = $row['site_type_name'];
+foreach ($arr_ad_id as $row) {
+	$adid = $row['adid'];
+	#登録事務所名の取得
+	$stmt = $pdo_wordpress->query("SELECT office_name FROM ss_advertisers WHERE ID = $adid");
+	$arr_ad_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	foreach ($arr_ad_name as $row ){
+		$ad_name = $row['office_name'];
 	}
-	array_push($new_crm_mail_array_data,$ad_name,$st_name,$sender_tel,$date);
-	array_push($sum_crm_mail_data,$new_crm_mail_array_data);
+####通話情報の生成
+		$reviser->addString($sheet_num,1,0,"通話データ");
+		$stmt = $pdo_cdr->query("SELECT * FROM call_data_view WHERE DATE_FORMAT(date_from,'%Y%m')=$year_month AND advertiser_id = $adid");
+		$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		foreach ($arr_call_data as $row) {
+			$media_id = $row['media_id'];
+			#media_nameの取得
+			foreach ($arr_media_type_data as $r) {
+				if($r['freebit_media_id'] == $media_id)
+					$media_name = $r['media_type_name'];
+			}
+			#電話statusの取得
+			$redirect_status = $row['redirect_status'];
+			switch ($redirect_status) {
+				case '21':
+				case '22':
+					$call_status = "正常終了";
+					break;
+				case '41':
+				case '42':
+					$call_status = "転送先応答なし";
+					break;
+				case '11':
+				case '12':
+					$call_status = "転送先呼び出し中切断";
+					break;
+				case '51':
+				case '52':
+					$call_status = "転送設定なし";
+					break;
+				case '61':
+				case '62':
+					$call_status = "番号応答なし";
+					break;
+				case '31':
+				case '32':
+					$call_status = "転送先話中";
+					break;
+			}
+			#電話重複の確認
+			$dpl_tel_cnt = $row['dpl_tel_cnt'];
+			if($dpl_tel_cnt >=2){
+				$check_call_dpl ="同一電話";
+			}else{
+				$check_call_dpl = null;
+			}
+			$tel_to = $row['tel_to'];
+			$tel_send = $row['tel_send'];
+			$date_from = $row['date_from'];
+			$date_to = $row['date_to'];
+			$call_minutes = $row['call_minutes'];
+			$tel_from = $row['tel_from'];
+			$reviser->addString($sheet_num,$i,0,$adid);
+			$reviser->addString($sheet_num,$i,1,$ad_name);
+			$reviser->addString($sheet_num,$i,3,$media_name);
+			$reviser->addString($sheet_num,$i,4,$tel_to);
+			$reviser->addString($sheet_num,$i,5,$tel_send);
+			$reviser->addString($sheet_num,$i,6,$date_from);
+			$reviser->addString($sheet_num,$i,7,$date_to);
+			$reviser->addNumber($sheet_num,$i,8,$call_minutes);
+			$reviser->addString($sheet_num,$i,9,$tel_from);
+			$reviser->addString($sheet_num,$i,10,$call_status);
+			$reviser->addString($sheet_num,$i,11,$check_call_dpl);
+			$i++;
+		}
 }
-
-
-#配列に代入したメールデータを出力
-foreach ($sum_crm_mail_data as $row) {
-	$ad_name = $row['0'];
-	$st_name = $row['1'];
-	$sender_tel = $row['2'];
-	$mail_date = $row['3'];
-	$reviser->addString($sheet_num,$i,0,$adid);
-	$reviser->addString($sheet_num,$i,1,$ad_name);
-	$reviser->addString($sheet_num,$i,5,$st_name);
-	$reviser->addString($sheet_num,$i,7,$mail_date);
-	$reviser->addString($sheet_num,$i,9,$sender_tel."xxxx");
-	$i++;
+//crmシートメールデータ処理
+$reviser->addString($sheet_num,$i,0,"mail");
+foreach ($arr_ad_id as $row) {
+$adid = $row['adid'];
+#登録事務所名の取得
+$stmt = $pdo_wordpress->query("SELECT office_name FROM ss_advertisers WHERE ID = $adid");
+$arr_ad_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
+foreach ($arr_ad_name as $row){
+	$ad_name = $row['office_name'];
 }
-
-
+#全てのメール情報の入る配列
+		$sum_crm_mail_data = array();
+		$stmt = $pdo_cdr->query("SELECT * FROM mail_conv WHERE advertiser_id = $adid AND DATE_FORMAT(register_dt,'%Y%m')=$year_month");
+		$arr_crm_mail_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		foreach ($arr_crm_mail_data as $r) {
+			$st = $r['site_type'];
+			$sender_tel = $r['sender_tel'];
+			$date = $r['register_dt'];
+			$dpl_tel_cnt = $r['dpl_tel_cnt'];
+			$dpl_mail_cnt = $r['dpl_mail_cnt'];
+			if($dpl_tel_cnt>=1 || $dpl_mail_cnt>=1){
+				$check_mail_dpl = "重複";
+			}
+			#事務所毎かつ、発生メール毎の情報が入る配列
+			$new_crm_mail_array_data = array();
+			#サイト名の入手
+			$stmt = $pdo_wordpress->query("SELECT site_type_name FROM ss_site_type WHERE site_type = $st");
+			$arr_st_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			foreach ($arr_st_name as $row) {
+				$st_name = $row['site_type_name'];
+			}
+			array_push($new_crm_mail_array_data,$ad_name,$st_name,$sender_tel,$date,$check_mail_dpl);
+			array_push($sum_crm_mail_data,$new_crm_mail_array_data);
+		}
+	#配列に代入したメールデータを出力
+		foreach ($sum_crm_mail_data as $row) {
+			$i++;
+			$ad_name = $row['0'];
+			$st_name = $row['1'];
+			$sender_tel = $row['2'];
+			$mail_date = $row['3'];
+			$check_mail_dpl =$row['4'];
+			$reviser->addString($sheet_num,$i,0,$adid);
+			$reviser->addString($sheet_num,$i,1,$ad_name);
+			$reviser->addString($sheet_num,$i,5,$st_name);
+			$reviser->addString($sheet_num,$i,7,$mail_date);
+			$reviser->addString($sheet_num,$i,9,$sender_tel);
+			$reviser->addString($sheet_num,$i,11,$check_mail_dpl);
+		}
+}
 
 
 #事務所毎でのsheetの名前
