@@ -865,7 +865,7 @@ function create_monthly_details($year,$month,$year_month){
 			$arr_ad_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
 			foreach ($arr_ad_name as $row ){
 			$ad_name = $row['office_name'];
-			$reviser->addString(0,$r,0,$ad_id$ad_name);
+			$reviser->addString(0,$r,0,$ad_id.$ad_name);
 			$r++;
 			}
 		}
