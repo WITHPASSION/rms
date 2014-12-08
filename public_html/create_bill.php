@@ -700,7 +700,7 @@ foreach ($arr_ad_id as $row) {
 	}
 ####通話情報の生成
 		$reviser->addString($sheet_num,1,0,"通話データ");
-		$stmt = $pdo_cdr->query("SELECT * FROM call_data_view WHERE DATE_FORMAT(date_from,'%Y%m')=$year_month AND advertiser_id = $adid");
+		$stmt = $pdo_cdr->query("SELECT * FROM call_data_view WHERE DATE_FORMAT(date_from,'%Y%m')=$year_month AND advertiser_id = $adid ORDER BY date_from");
 		$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_call_data as $row) {
 			#配列の値から変数へと代入
@@ -786,7 +786,7 @@ foreach ($arr_ad_name as $row){
 }
 #全てのメール情報の入る配列
 		$sum_crm_mail_data = array();
-		$stmt = $pdo_cdr->query("SELECT * FROM mail_conv WHERE advertiser_id = $adid AND DATE_FORMAT(register_dt,'%Y%m')=$year_month");
+		$stmt = $pdo_cdr->query("SELECT * FROM mail_conv WHERE advertiser_id = $adid AND DATE_FORMAT(register_dt,'%Y%m')=$year_month ORDER BY register_dt");
 		$arr_crm_mail_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_crm_mail_data as $r) {
 			$st = $r['site_type'];
