@@ -1,6 +1,7 @@
 <?php
-#データベース接続処理
+#エラーを画面に表示させない処理
 ini_set("display_errors", "off");
+#データベース接続処理
 #db接続データの参照
 $path = parse_ini_file("../rms.cnf");		
 foreach($path as $key => $db_path){
@@ -689,8 +690,29 @@ $reviser->addString($sheet_num,2,4,$call_sum);
 $reviser->addString($sheet_num,2,5,"有効メール");
 $reviser->addString($sheet_num,2,6,$mail_sum);
 #行数を変数に指定
-$i =3;
+$i =2;
 //crmシートコールデータ処理
+#発番毎の請求料金の取得
+foreach ($arr_ad_id as $row) {
+	$adid = $row['adid'];
+	$stmt = $pdo_cdr->query("SELECT * FROM call_data_view WHERE DATE_FORMAT(date_from,'%Y%m')=$year_month AND advertiser_id = $adid GROUP BY tel_to");
+	$arr_each_tel_to = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	foreach ($arr_each_tel_to as $row) {
+			$each_tel_to = $row['tel_to'];
+			$each_media_type = $row['media_type'];
+			$stmt = $pdo_cdr->query("SELECT tel_to,call_charge FROM bill WHERE tel_to = $each_tel_to AND year = $year AND month = $month GROUP BY tel_to");
+			$arr_each_bill_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			foreach ($arr_each_bill_data as $row) {
+				$each_bill_data = $row['tel_to'];
+				$each_call_charge = $row['call_charge'];
+				$reviser->addString($sheet_num,$i,0,$adid."-".$each_media_type);
+				$reviser->addNumber($sheet_num,$i,1,$each_bill_data);
+				$reviser->addNumber($sheet_num,$i,2,$each_call_charge);
+				$i++;
+			}
+		}
+}
+
 #media_typesへの接続
 $stmt = $pdo_cdr->query("SELECT * FROM media_types");
 $arr_media_type_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -723,10 +745,11 @@ foreach ($arr_ad_id as $row) {
 			foreach ($arr_media_type_data as $r) {
 				if($r['freebit_media_id'] == $media_id)
 					$media_name = $r['media_type_name'];
-			}
-			if($r['freebit_media_id'] == null){
-				$media_name = "";
-			}
+				}
+				if($media_name == "借金問題"){
+					$media_name = "";
+				}
+
 			#電話statusの取得
 			switch ($redirect_status) {
 				case '21':
@@ -767,6 +790,7 @@ foreach ($arr_ad_id as $row) {
 			}else{
 				$check_call_dpl = null;
 			}
+
 			#Excelへの記入
 			$reviser->addString($sheet_num,$i,0,$adid);
 			$reviser->addString($sheet_num,$i,1,$ad_name);
