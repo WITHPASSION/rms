@@ -81,6 +81,7 @@ $id = $_POST['change'];
 #フォームからの年月の受け取り
 $year = $_POST['year'];
 $month = $_POST['month'];
+#一桁の月に"0"を付加
 $month = sprintf("%02d",$month);
 $year_month = "$year"."$month";
 #請求有効件数が0であった場合には出力しない
@@ -88,10 +89,14 @@ $check = $pdo_request->query("SELECT valid_call_shakkin,valid_call_souzoku,valid
 $check = $check->fetch(PDO::FETCH_ASSOC);
 $check2 = $pdo_request->query("SELECT mail_shakkin,mail_souzoku,mail_koutsujiko,mail_meigihenkou,mail_setsuritsu FROM ad_monthly_mail_num WHERE req_id=$id AND year=$year AND month=$month");
 $check2 = $check2->fetch(PDO::FETCH_ASSOC);
+#関数の呼び出し
 if(!empty($check)|| !empty($check2)){
-	get_each_ad_data($id,$year,$month,$year_month);
+		get_each_ad_data($id,$year,$month,$year_month);
+}
+elseif ($id == "000"){
+		create_monthly_details($id,$year,$month,$year_month);
 		}
-else{
+elseif(empty($check) && empty($check2)){
 		print('<a href="../senmonka-RMS.php">戻る</a>');
 		print("<br>");
 		die("この年月では、この事務所は有効電話数とメール数が０件です");
@@ -99,7 +104,7 @@ else{
 
 function get_each_ad_data($id,$year,$month,$year_month){
 		#####有効コール請求内容データの取得
-		global $pdo_request,$pdo_cdr,$pdo_wordpress,$reviser,$month;
+		global $pdo_request,$pdo_cdr,$pdo_wordpress,$reviser;
 		#無効も含めた全てのコール数
 		$all_call_shakkin = null;
 		$all_call_souzoku = null;
@@ -719,6 +724,9 @@ foreach ($arr_ad_id as $row) {
 				if($r['freebit_media_id'] == $media_id)
 					$media_name = $r['media_type_name'];
 			}
+			if($r['freebit_media_id'] == null){
+				$media_name = "";
+			}
 			#電話statusの取得
 			switch ($redirect_status) {
 				case '21':
@@ -837,5 +845,36 @@ $sheet_name = "請求書（".$req_ad_name.$year."年".$month."月分）";
 		$reviser->revisefile($readfile,$outfile);
 
 }#end_of_function/get_each_ad_data
+
+
+
+
+function create_monthly_details($year,$month,$year_month){
+	global $pdo_cdr,$pdo_request,$pdo_wordpress,$reviser;
+	$r = 0;
+	$stmt = $pdo_request->query("SELECT req_id FROM ad_req_data");
+	$arr_req_ad_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	foreach ($arr_req_ad_data as $row) {
+		$req_id = $row['req_id'];
+		$stmt = $pdo_request->query("SELECT * FROM adid_reqid_matching WHERE reqid = $req_id");
+		$arr_ad_id = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		foreach ($arr_ad_id as $row) {
+			$ad_id = $row['adid'];
+			#登録事務所名の取得
+			$stmt = $pdo_wordpress->query("SELECT office_name FROM ss_advertisers WHERE ID = $ad_id");
+			$arr_ad_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			foreach ($arr_ad_name as $row ){
+			$ad_name = $row['office_name'];
+			$reviser->addString(0,$r,0,$ad_id$ad_name);
+			$r++;
+			}
+		}
+	}
+$readfile = "./monthly_details_template.xls";
+$outfile = $year."年".$month."月詳細情報.xls";
+$reviser->revisefile($readfile,$outfile);
+
+}#end_of_function/create_monthly_details
+
 
 ?>
