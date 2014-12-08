@@ -794,7 +794,10 @@ foreach ($arr_ad_name as $row){
 			$date = $r['register_dt'];
 			$dpl_tel_cnt = $r['dpl_tel_cnt'];
 			$dpl_mail_cnt = $r['dpl_mail_cnt'];
-			if($dpl_tel_cnt>=1 || $dpl_mail_cnt>=1){
+			if($dpl_tel_cnt == 0 && $dpl_mail_cnt == 0){
+				$check_mail_dpl = "○";
+			}
+			elseif($dpl_tel_cnt>=1 || $dpl_mail_cnt>=1){
 				$check_mail_dpl = "重複";
 			}
 			#事務所毎かつ、発生メール毎の情報が入る配列
