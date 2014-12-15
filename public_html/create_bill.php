@@ -86,18 +86,45 @@ $month = $_POST['month'];
 $month = sprintf("%02d",$month);
 $year_month = "$year"."$month";
 #請求有効件数が0であった場合には出力しない
-$check = $pdo_request->query("SELECT valid_call_shakkin,valid_call_souzoku,valid_call_koutsujiko,valid_call_meigihenkou,valid_call_setsuritsu,valid_call_keijijiken FROM ad_monthly_valid_call WHERE req_id=$id AND year=$year AND month=$month");
-$check = $check->fetch(PDO::FETCH_ASSOC);
-$check2 = $pdo_request->query("SELECT mail_shakkin,mail_souzoku,mail_koutsujiko,mail_meigihenkou,mail_setsuritsu FROM ad_monthly_mail_num WHERE req_id=$id AND year=$year AND month=$month");
-$check2 = $check2->fetch(PDO::FETCH_ASSOC);
-#関数の呼び出し
-if(!empty($check)|| !empty($check2)){
+#call_check関数
+function check_valid_call($id,$year,$month){
+	global $pdo_request;
+	$stmt = $pdo_request->query("SELECT valid_call_shakkin,valid_call_souzoku,valid_call_koutsujiko,valid_call_meigihenkou,valid_call_setsuritsu,valid_call_keijijiken FROM ad_monthly_valid_call WHERE req_id=$id AND year=$year AND month=$month");
+	$arr_call_check = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	foreach ($arr_call_check as $row) {
+		$all_call_check += $row['valid_call_shakkin'];
+		$all_call_check += $row['valid_call_souzoku'];
+		$all_call_check += $row['valid_call_koutsujiko'];
+		$all_call_check += $row['valid_call_meigihenkou'];
+		$all_call_check += $row['valid_call_setsuritsu'];
+		$all_call_check += $row['valid_call_keijijiken'];
+	}
+	return $all_call_check;
+}//end_of_function
+#mail_check関数
+function check_valid_mail($id,$year,$month){
+	global $pdo_request;
+	$stmt = $pdo_request->query("SELECT mail_shakkin,mail_souzoku,mail_koutsujiko,mail_meigihenkou,mail_setsuritsu FROM ad_monthly_mail_num WHERE req_id=$id AND year=$year AND month=$month");
+	$arr_mail_check = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	foreach ($arr_mail_check as $row) {
+		$all_mail_check += $row['mail_shakkin'];
+		$all_mail_check += $row['mail_souzoku'];
+		$all_mail_check += $row['mail_koutsujiko'];
+		$all_mail_check += $row['mail_meigihenkou'];
+		$all_mail_check += $row['mail_setsuritsu'];
+	}
+	return $all_mail_check;
+}//end_of_function
+#チェック関数を呼び出し、nullで無ければExcelに書き出す
+$call_check = check_valid_call($id,$year,$month);
+$mail_check = check_valid_mail($id,$year,$month);
+if(!empty($call_check)|| !empty($mail_check)){
 		get_each_ad_data($id,$year,$month,$year_month);
 }
 elseif ($id == "000"){
 		create_monthly_details($year,$month,$year_month);
 		}
-elseif(empty($check) && empty($check2)){
+elseif(empty($call_check) && empty($mail_check)){
 		print('<a href="../senmonka-RMS.php">戻る</a>');
 		print("<br>");
 		die("この年月では、この事務所は有効電話数とメール数が０件です");
@@ -660,7 +687,7 @@ $reviser->addString($sheet_num,0,0,"
 が発生致しました。".$inv_tmp."
 計".$all_sum."件(".$va_tmp.")を請求させて頂きます。
 
-何かご不明な点があればなんなりとご連絡ください。
+ご不明な点があればなんなりとご連絡ください。
 今後ともよろしくお願い致します。"
 
 );

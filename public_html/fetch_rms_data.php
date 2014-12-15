@@ -8,10 +8,10 @@ foreach($path as $key => $db_path){
 }
 foreach($configs as $key =>$value){
 		if($key =="db_cdr"){
-				$db_portal = $value;
+				$db_cdr = $value;
 		}
-		if($key == "db_req"){
-				$db_req = $value;
+		if($key == "db_request"){
+				$db_request = $value;
 		}
 		if($key =="host"){
 				$host = $value;
@@ -24,7 +24,7 @@ foreach($configs as $key =>$value){
 		}
 }
 #smk_portal_dataへの接続
-$dsn = "mysql:dbname=$db_portal;host=$host";
+$dsn = "mysql:dbname=$db_cdr;host=$host";
 $user = "$name";
 $pass = "$pass";
 try{
@@ -39,7 +39,7 @@ if(!$stmt){
 }
 #smk_request_dataへの接続
 
-$dsn2 = "mysql:dbname=$db_req;host=$host";
+$dsn2 = "mysql:dbname=$db_request;host=$host";
 $user2= "$name";
 $pass2= "$pass";
 try{
@@ -138,29 +138,35 @@ function fetch_req_call_data($year_month,$year,$month,$reqid){
 								$keijijiken ++;
 						}
 				}
-//call_charge,count_freedialの取得
+				//call_chargeの取得
 				$stmt = $pdo->query("SELECT tel_to FROM call_data_view WHERE advertiser_id =$adid AND DATE_FORMAT(date_from,'%Y%m')=$year_month GROUP BY tel_to");
 				$arr_call_num =$stmt->fetchAll(PDO::FETCH_ASSOC);
 				foreach($arr_call_num as $r){
 					$call_num = $r['tel_to'];
-					$freedial = substr($call_num,0,4);
-					if($freedial =="0120"){
-						$count_freedial +=1;
-					}
 					$stmt = $pdo->query("SELECT call_charge FROM bill WHERE tel_to=$call_num AND year=$year AND month =$month");
 					$arr_call_charge  = $stmt->fetchAll(PDO::FETCH_ASSOC);
 					foreach($arr_call_charge as $row){
-							$call_charge = $row['call_charge'];
-								$result_call_charge +=$call_charge;
-							}
+						$call_charge = $row['call_charge'];
+						$result_call_charge +=$call_charge;
+					}
+				}
+				//count_freedialの取得
+				$stmt = $pdo->query("SELECT tel FROM adsip_conf WHERE office_id = $adid");
+				$arr_adsip_conf = $stmt->fetchAll(PDO::FETCH_ASSOC);
+				foreach ($arr_adsip_conf as $row){
+					$tel_num = $row['tel'];
+					$freedial = substr($tel_num,0,4);
+					if($freedial =="0120"){
+						$count_freedial ++;
+					}
 				}
 		}
-		if(!empty($shakkin)||!empty($souzoku)||!empty($koutsujiko)||!empty($ninibaikyaku)||!empty($meigihenkou)||!empty($setsuritsu)||!empty($keijijiken)){
+				if(!empty($shakkin)||!empty($souzoku)||!empty($koutsujiko)||!empty($ninibaikyaku)||!empty($meigihenkou)||!empty($setsuritsu)||!empty($keijijiken)||!empty($result_call_charge)||!empty($count_freedial)){
 				$call_sum = $shakkin+$souzoku+$koutsujiko+$ninibaikyaku+$meigihenkou+$setsuritsu+$keijijiken;
 				$stmt = $pdo2->prepare("INSERT INTO ad_monthly_valid_call VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
 				$result = $stmt->execute(array($reqid,$year,$month,$shakkin,$souzoku,$koutsujiko,$ninibaikyaku,$meigihenkou,$setsuritsu,$keijijiken,$result_call_charge,$count_freedial,$call_sum));
-			}
-}
+				}
+}//end_of_function
 //メールデータ本番プログラム
 function fetch_req_mail_data($year_month,$year,$month,$reqid){
 		global $pdo,$pdo2;
