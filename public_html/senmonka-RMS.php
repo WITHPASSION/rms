@@ -3,84 +3,70 @@
 <head> 
 <meta charset="UTF-8">
 <title>request_manager</title>
+</head>
 <?php 
-$pdo=null;
+$pdo = null;
 connect_db();
 $ad_form_data = get_adformdata();
-$arr_call_req_id = get_when_selected_time_call_data(2014,9);
-#$arr_mail_req_id = get_when_selected_time_mail_data(2014,9);
-foreach($arr_call_req_id as $r):?>
-<script>
-function getvalidreqdata(){
-		var selectyear = document.forms.form.year;
-		var selectmonth = document.forms.form.month;
-		var selectreqdata = document.forms.form.change;
-		month.options.length = 0;
-		if(selectyear.options.[selectyear.selectedIndex].value ==<?php $r['year']?>)
-		{
-			document.write("成功");
+
+function connect_db() {
+	global $pdo;
+
+	$path = parse_ini_file("../rms.cnf");		
+	foreach($path as $key => $db_path) {
+		$configs = parse_ini_file($db_path);
+	}
+	foreach($configs as $key =>$value){
+		if($key == "db_request") {
+			$db_request = $value;
 		}
+		if($key == "db_cdr") {
+			$db_portal = $value;
+		}
+		if($key == "host") {
+			$host = $value;
+		}	
+		if($key == "name") {
+			$name = $value;
+		}
+		if($key == "pass"){
+			$pass = $value;
+		}	
+	}
+
+	$dsn = "mysql:dbname=$db_request;host=$host";
+	$user= "$name";
+	$pass= "$pass";
+	try {
+		$pdo = new PDO($dsn,$user,$pass);
+	}
+	catch(PDOException $e) {
+		exit ('接続ミス'.$e->getMessage());
+	}
+	$stmt = $pdo->query('SET NAMES utf8');
+	if(!$stmt) {
+		$info = $pdo->errorinfo();
+		exit($info[2]);
+	}
 }
-</script>
-</head>
-<?php
-	$call_req_id = $r['req_id'];
-endforeach;
-######funciton#########################################################
-function connect_db(){
-		$path = parse_ini_file("../rms.cnf");		
-		foreach($path as $key => $db_path){
-				$configs =parse_ini_file($db_path);
-		}
-		foreach($configs as $key =>$value){
-				if($key =="db_request"){
-				$db_request = $value;
-				}
-				if($key =="db_cdr"){
-				$db_portal = $value;
-				}
-				if($key =="host"){
-				$host = $value;
-				}	
-				if($key =="name"){
-				$name = $value;
-				}
-				if($key =="pass"){
-				$pass = $value;
-				}	
-		}
-		global $pdo;
-		$dsn = "mysql:dbname=$db_request;host=$host";
-		$user= "$name";
-		$pass= "$pass";
-		try{
-				$pdo = new PDO($dsn,$user,$pass);
-		}catch(PDOException $e){
-				exit ('接続ミス'.$e->getMessage());
-		}
-		$stmt = $pdo->query('SET NAMES utf8');
-		if(!$stmt){
-				$info = $pdo->errorinfo();
-				exit($info[2]);
-		}
-}
-function get_adformdata(){
-		global $pdo;
-		$stmt = $pdo->query("SELECT req_id,req_ad_name FROM ad_req_data");
-		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+function get_adformdata() {
+	global $pdo;
+	$stmt = $pdo->query("SELECT req_id,req_ad_name FROM ad_req_data");
+	return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
-function get_when_selected_time_call_data($year,$month){
-		global $pdo;
-		$stmt = $pdo->query("SELECT req_id,year,month FROM ad_monthly_valid_call WHERE year=$year AND month=$month");
-		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+function get_when_selected_time_call_data($year, $month) {
+	global $pdo;
+	$stmt = $pdo->query("SELECT req_id,year,month FROM ad_monthly_valid_call WHERE year=$year AND month=$month");
+	return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-function get_when_selected_time_mail_data($year,$month){
+
+function get_when_selected_time_mail_data($year, $month) {
 	global $pdo;
 	$stmt = $pdo->query("SELECT req_id FROM ad_monthly_mail_num WHERE year=$year AND month=$month");
 	return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
-#######endofdunction########################################################
+
 ?>
 <body>
 <form method="post" name="form" action="../create_bill.php">
