@@ -1,9 +1,3 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head> 
-<meta charset="UTF-8">
-<title>request_manager</title>
-</head>
 <?php 
 $pdo = null;
 connect_db();
@@ -68,9 +62,31 @@ function get_when_selected_time_mail_data($year, $month) {
 }
 
 ?>
+<!DOCTYPE html>
+<html lang="ja">
+<head> 
+<meta charset="UTF-8">
+<title>request_manager</title>
+<script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+<script type="text/javascript">
+<!--
+function changeYM() {
+	var year = $("#id_year").val();
+	var month = $("#id_month").val();
+	form1.year.value = year;
+	form1.month.value = month;
+	form2.year.value = year;
+	form2.month.value = month;
+}
+
+$(function(){
+	changeYM();
+});
+-->
+</script>
+</head>
 <body>
-<form method="post" name="form" action="../create_bill.php">
-<select name="year" onChange="getvalidreqdata()">
+<select id="id_year" name="year" onChange="changeYM()">
 <?php 
 $now_year =date("Y");
 for($y=2004;$y<=($now_year-1);$y++):
@@ -80,7 +96,7 @@ for($y=2004;$y<=($now_year-1);$y++):
 		<option value="<?php echo $now_year;?>"selected><?php echo $now_year;?></option>
 </select>
 年
-<select name="month">
+<select id="id_month" name="month" onChange="changeYM()">
 <?php 
 $now_month = date("n");
 for($m=01;$m<=12;$m++):?>
@@ -91,17 +107,23 @@ for($m=01;$m<=12;$m++):?>
 	<?php endif;?>
 <?php endfor;?>
 </select>
-月分<br>
+月分
+<br>
+<form method="post" name="form1" action="create_monthly_details.php">
+	<input type="hidden" name="year" value="">
+	<input type="hidden" name="month" value="">
+	<input type="submit" value="月次詳細情報ダウンロード">
+</form>
+<br>
+<form method="post" name="form2" action="../create_bill.php">
+	<input type="hidden" name="year" value="">
+	<input type="hidden" name="month" value="">
 	<select name="change" style="font-size:35px" > 
 		<option>選択して下さい</option>
-		<option value ="000">月次詳細情報</option>
 <?php foreach($ad_form_data as $row):?>
 		<option value="<?php echo $row['req_id'];?>"><?php echo $row['req_id'],"_",$row['req_ad_name'];?></option>
 <?php endforeach; ?>		
-	</select>
-<br>
-<br>
-<input type="submit"  value="請求書作成">
+	</select> <input type="submit"  value="請求書ダウンロード">
 <br>
 <br>
 <!--
