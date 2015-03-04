@@ -113,26 +113,26 @@ function fetch_req_call_data($year_month, $year, $month, $reqid) {
 		$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_call_data as $r) {
 			$mi = $r['media_id'];
-			if($mi == null || $mi == ""){
-				$shakkin ++;
+			if ($mi == "B"){
+				$souzoku++;
 			}
-			if($mi == "B"){
-				$souzoku ++;
+			else if ($mi == "C"){
+				$koutsujiko++;
 			}
-			if($mi == "C"){
-				$koutsujiko ++;
+			else if ($mi == "D"){
+				$ninibaikyaku++;
 			}
-			if($mi == "D"){
-				$ninibaikyaku ++;
+			else if ($mi == "E"){
+				$meigihenkou++;
 			}
-			if($mi == "E"){
-				$meigihenkou ++;
+			else if ($mi == "F"){
+				$setsuritsu++;
 			}
-			if($mi == "F"){
-				$setsuritsu ++;
+			else if ($mi == "G"){
+				$keijijiken++;
 			}
-			if($mi == "G"){
-				$keijijiken ++;
+			else {
+				$shakkin++;
 			}
 		}
 		//anonymous取得
@@ -150,26 +150,26 @@ function fetch_req_call_data($year_month, $year, $month, $reqid) {
 		$arr_anonymous_call_data = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_anonymous_call_data as $r) {
 			$mi = $r['media_id'];
-			if ($mi == null || $mi == "") {
-				$shakkin ++;
-			}
 			if ($mi == "B") {
-				$souzoku ++;
+				$souzoku++;
 			}
-			if ($mi == "C") {
-				$koutsujiko ++;
+			else if ($mi == "C") {
+				$koutsujiko++;
 			}
-			if ($mi == "D") {
-				$ninibaikyaku ++;
+			else if ($mi == "D") {
+				$ninibaikyaku++;
 			}
-			if ($mi == "E") {
-				$meigihenkou ++;
+			else if ($mi == "E") {
+				$meigihenkou++;
 			}
-			if ($mi == "F") {
-				$setsuritsu ++;
+			else if ($mi == "F") {
+				$setsuritsu++;
 			}
-			if ($mi == "G") {
-				$keijijiken ++;
+			else if ($mi == "G") {
+				$keijijiken++;
+			}
+			else {
+				$shakkin++;
 			}
 		}
 		//call_chargeの取得
