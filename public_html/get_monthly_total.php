@@ -35,7 +35,7 @@ $pdo_request = null;
 $pdo_cdr = null;
 $pdo_wordpress = null;
 
-$types = [
+$types = array(
 	"shakkin",
 	"souzoku",
 	"koutsujiko",
@@ -43,7 +43,7 @@ $types = [
 	"meigihenkou",
 	"setsuritsu",
 	"keijijiken"
-];
+);
 
 #cdrへの接続
 $dsn_cdr ="mysql:dbname=$db_cdr;host=$host";
