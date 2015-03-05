@@ -216,7 +216,7 @@ function changeYM() {
 				}
 				html += "<tr>";
 				if (has_bill) {
-					html += "<td class='right_txt'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + req_id + ")' style='font-size: 35px; font-weight: bold;'></td>";
+					html += "<td class='right_txt'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + req_id + ")' style='font-size: 1.2em; font-weight: bold;'></td>";
 					html += "<td class='bold_blue'>請求計</td>";
 					html += "<td class='right_txt bold_blue'>" + office.call_count + "</td>";
 					html += "<td class='right_txt bold_blue'>" + office.mail_count + "</td>";
@@ -275,7 +275,7 @@ for ($m = 01; $m <= 12; $m++):?>
 <form method="post" name="form1" action="create_monthly_details.php">
 	<input type="hidden" name="year" value="">
 	<input type="hidden" name="month" value="">
-	<input type="submit" value="月次詳細情報ダウンロード" style="font-size: 1.2em; width: 200px;">
+	<input type="submit" value="月次詳細情報ダウンロード" style="font-size: 1.2em; width: 300px;">
 </form>
 <form method="post" name="form2" action="../create_bill.php">
 	<input type="hidden" name="year" value="">
