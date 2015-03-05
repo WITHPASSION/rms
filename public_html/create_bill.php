@@ -96,9 +96,19 @@ if (!empty($call_check)|| !empty($mail_check)) {
 	get_each_ad_data($id, $year, $month, $year_month);
 }
 else if (empty($call_check) && empty($mail_check)) {
+	print('<!DOCTYPE html>');
+	print('<html lang="ja">');
+	print('<head>');
+	print('<meta charset="UTF-8">');
+	print('<title>作成できません</title>');
+	print('</head>');
+	print('<body>');
 	print('<a href="../senmonka-RMS.php">戻る</a>');
 	print("<br>");
-	die("この年月では、この事務所は有効電話数とメール数が０件です");
+	print("この年月では、この事務所は有効電話数とメール数が０件です");
+	print('</body>');
+	print('</html>');
+	die();
 }
 
 #call_check関数

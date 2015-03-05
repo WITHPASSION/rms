@@ -239,7 +239,18 @@ function get_monthly_total_calls($year_month) {
 			v.media_id as media_id,
 			count(v.id) as valid_tel_count
 		FROM
-			cdr.call_data_view v,
+			(
+				SELECT
+					id,
+					advertiser_id,
+					IF (media_id <> '', media_id, 'A') as media_id,
+					dpl_tel_cnt,
+					dpl_mail_cnt,
+					date_from,
+					call_minutes
+				FROM
+					cdr.call_data_view
+			) v,
 			smk_request_data.adid_reqid_matching m
 		WHERE
 			m.adid = v.advertiser_id AND
