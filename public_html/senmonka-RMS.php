@@ -294,5 +294,8 @@ for ($m = 01; $m <= 12; $m++):?>
 	<tbody id="office_table">
 	</tbody>
 </table>
+<br>
+<br>
+<br>
 </body>
 </html>
