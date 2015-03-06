@@ -1,90 +1,254 @@
+<?php 
+$pdo = null;
+connect_db();
+$ad_form_data = get_adformdata();
+
+function connect_db() {
+	global $pdo;
+
+	$path = parse_ini_file("../rms.cnf");		
+	foreach($path as $key => $db_path) {
+		$configs = parse_ini_file($db_path);
+	}
+	foreach($configs as $key =>$value){
+		if($key == "db_request") {
+			$db_request = $value;
+		}
+		if($key == "db_cdr") {
+			$db_portal = $value;
+		}
+		if($key == "host") {
+			$host = $value;
+		}	
+		if($key == "name") {
+			$name = $value;
+		}
+		if($key == "pass"){
+			$pass = $value;
+		}	
+	}
+
+	$dsn = "mysql:dbname=$db_request;host=$host";
+	$user= "$name";
+	$pass= "$pass";
+	try {
+		$pdo = new PDO($dsn,$user,$pass);
+	}
+	catch(PDOException $e) {
+		exit ('接続ミス'.$e->getMessage());
+	}
+	$stmt = $pdo->query('SET NAMES utf8');
+	if(!$stmt) {
+		$info = $pdo->errorinfo();
+		exit($info[2]);
+	}
+}
+function get_adformdata() {
+	global $pdo;
+	$stmt = $pdo->query("SELECT req_id,req_ad_name FROM ad_req_data");
+	return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function get_when_selected_time_call_data($year, $month) {
+	global $pdo;
+	$stmt = $pdo->query("SELECT req_id,year,month FROM ad_monthly_valid_call WHERE year=$year AND month=$month");
+	return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function get_when_selected_time_mail_data($year, $month) {
+	global $pdo;
+	$stmt = $pdo->query("SELECT req_id FROM ad_monthly_mail_num WHERE year=$year AND month=$month");
+	return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+?>
 <!DOCTYPE html>
 <html lang="ja">
 <head> 
 <meta charset="UTF-8">
 <title>request_manager</title>
-<?php 
-$pdo=null;
-connect_db();
-$ad_form_data = get_adformdata();
-$arr_call_req_id = get_when_selected_time_call_data(2014,9);
-#$arr_mail_req_id = get_when_selected_time_mail_data(2014,9);
-foreach($arr_call_req_id as $r):?>
-<script>
-function getvalidreqdata(){
-		var selectyear = document.forms.form.year;
-		var selectmonth = document.forms.form.month;
-		var selectreqdata = document.forms.form.change;
-		month.options.length = 0;
-		if(selectyear.options.[selectyear.selectedIndex].value ==<?php $r['year']?>)
-		{
-			document.write("成功");
-		}
+<style>
+.offices{
+	font-size: 12px;
+	border-collapse: separate;
+	border-spacing: 0px;
+	border-top: 1px solid #ccc;
+	border-left: 1px solid #ccc;
 }
-</script>
-</head>
-<?php
-	$call_req_id = $r['req_id'];
-endforeach;
-######funciton#########################################################
-function connect_db(){
-		$path = parse_ini_file("../rms.cnf");		
-		foreach($path as $key => $db_path){
-				$configs =parse_ini_file($db_path);
-		}
-		foreach($configs as $key =>$value){
-				if($key =="db_request"){
-				$db_request = $value;
-				}
-				if($key =="db_cdr"){
-				$db_portal = $value;
-				}
-				if($key =="host"){
-				$host = $value;
-				}	
-				if($key =="name"){
-				$name = $value;
-				}
-				if($key =="pass"){
-				$pass = $value;
-				}	
-		}
-		global $pdo;
-		$dsn = "mysql:dbname=$db_request;host=$host";
-		$user= "$name";
-		$pass= "$pass";
-		try{
-				$pdo = new PDO($dsn,$user,$pass);
-		}catch(PDOException $e){
-				exit ('接続ミス'.$e->getMessage());
-		}
-		$stmt = $pdo->query('SET NAMES utf8');
-		if(!$stmt){
-				$info = $pdo->errorinfo();
-				exit($info[2]);
-		}
+.offices th{
+	padding: 4px;
+	text-align: left;
+	vertical-align: top;
+	color: #444;
+	background-color: #ccc;
+	border-top: 1px solid #fff;
+	border-left: 1px solid #fff;
+	border-right: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
 }
-function get_adformdata(){
-		global $pdo;
-		$stmt = $pdo->query("SELECT req_id,req_ad_name FROM ad_req_data");
-		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+.offices td{
+	padding: 4px;
+	background-color: #fafafa;
+	border-right: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+}
+.right_txt {
+	text-align: right;
+}
+.bold {
+	font-weight: bold;
+}
+.bold_blue {
+	font-weight: bold;
+	color: blue;
+}
+.gray_down {
+	color: #AAAAAA;
+}
+</style>
+<script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+<script type="text/javascript">
+<!--
+function changeYM() {
+	var year = $("#id_year").val();
+	var month = $("#id_month").val();
+	form1.year.value = year;
+	form1.month.value = month;
+	form2.year.value = year;
+	form2.month.value = month;
+
+	$.getJSON(
+		"/get_monthly_total.php",
+		{'year' : year, 'month' : month},
+		function(json) {
+			var html = "<body>";
+			var keys = Object.keys(json);
+			for (i = 0; i < keys.length; i++) {
+				var req_id = keys[i];
+				var office = json[req_id];
+				var ad_keys = Object.keys(office.advertisers);
+				var office_row_count = 1;
+				for (n = 0; n < ad_keys.length; n++) {
+					var adv = office.advertisers[ad_keys[n]];
+					var med_keys = Object.keys(adv.medias);
+					for (z = 0; z < med_keys.length; z++) {
+						var med = adv.medias[med_keys[z]];
+						if (med.call_count > 0 || med.mail_count > 0) {
+							office_row_count++;
+						}
+					}
+					office_row_count++;
+				}
+				var has_bill = false;
+				if (office.call_count > 0 || office.mail_count > 0) {
+					has_bill = true;
+				}
+				var office_named = false;
+				for (n = 0; n < ad_keys.length; n++) {
+					var ad_id = ad_keys[n];
+					var adv = office.advertisers[ad_id];
+					var med_keys = Object.keys(adv.medias);
+					var adv_named = false;
+					var adv_row_count = 1;
+					for (z = 0; z < med_keys.length; z++) {
+						var med = adv.medias[med_keys[z]];
+						if (med.call_count > 0 || med.mail_count > 0) {
+							adv_row_count++;
+						}
+					}
+					for (z = 0; z < med_keys.length; z++) {
+						var med = adv.medias[med_keys[z]];
+						var med_name = "";
+						if (med.call_count == 0 && med.mail_count == 0) {
+							continue;
+						}
+						if (med_keys[z] == "shakkin") {
+							med_name = "借金問題";
+						}
+						else if (med_keys[z] == "souzoku") {
+							med_name = "相続問題";
+						}
+						else if (med_keys[z] == "koutsujiko") {
+							med_name = "交通事故";
+						}
+						else if (med_keys[z] == "ninibaikyaku") {
+							med_name = "任意売却";
+						}
+						else if (med_keys[z] == "meigihenkou") {
+							med_name = "名義変更";
+						}
+						else if (med_keys[z] == "setsuritsu") {
+							med_name = "会社設立";
+						}
+						else if (med_keys[z] == "keijijiken") {
+							med_name = "刑事事件";
+						}
+						else if (med_keys[z] == "LP") {
+							med_name = "Ｌ　Ｐ　";
+						}
+						html += "<tr>";
+						if (!office_named) {
+							html += "<td rowspan='" + office_row_count + "'>" + req_id + "." + office.req_ad_name + "</td>";
+							office_named = true;
+						}
+						if (!adv_named) {
+							html += "<td rowspan='" + adv_row_count + "'>" + ad_id + "." + adv.office_name + "</td>";
+							adv_named = true;
+						}
+						html += "<td>" + med_name + "</td>";
+						html += "<td class='right_txt'>" + med.call_count + "</td>";
+						html += "<td class='right_txt'>" + med.mail_count + "</td>";
+						html += "</tr>";
+					}
+					html += "<tr>";
+					if (!office_named) {
+						html += "<td rowspan='" + office_row_count + "'>" + req_id + "." + office.req_ad_name + "</td>";
+						office_named = true;
+					}
+					if (!adv_named) {
+						html += "<td rowspan='" + adv_row_count + "'>" + ad_id + "." + adv.office_name + "</td>";
+						adv_named = true;
+					}
+					html += "<td class='bold'>事務所計</td>";
+					html += "<td class='right_txt bold'>" + adv.call_count + "</td>";
+					html += "<td class='right_txt bold'>" + adv.mail_count + "</td>";
+					html += "</tr>";
+				}
+				html += "<tr>";
+				if (has_bill) {
+					html += "<td class='right_txt'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + req_id + ")' style='font-size: 1.2em; font-weight: bold;'></td>";
+					html += "<td class='bold_blue'>請求計</td>";
+					html += "<td class='right_txt bold_blue'>" + office.call_count + "</td>";
+					html += "<td class='right_txt bold_blue'>" + office.mail_count + "</td>";
+				}
+				else {
+					html += "<td></td>";
+					html += "<td class='gray_down'>請求計</td>";
+					html += "<td class='right_txt gray_down'>" + office.call_count + "</td>";
+					html += "<td class='right_txt gray_down'>" + office.mail_count + "</td>";
+				}
+				html += "</tr>";
+			}
+			html += "</body>";
+			$("#office_table").html(html);
+		}
+	);
 }
 
-function get_when_selected_time_call_data($year,$month){
-		global $pdo;
-		$stmt = $pdo->query("SELECT req_id,year,month FROM ad_monthly_valid_call WHERE year=$year AND month=$month");
-		return $stmt->fetchAll(PDO::FETCH_ASSOC);
+function download_bill(req_id) {
+	document.form
+	form2.change.value = req_id;
+	return form2.submit();
 }
-function get_when_selected_time_mail_data($year,$month){
-	global $pdo;
-	$stmt = $pdo->query("SELECT req_id FROM ad_monthly_mail_num WHERE year=$year AND month=$month");
-	return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-#######endofdunction########################################################
-?>
+
+$(function(){
+	changeYM();
+});
+-->
+</script>
+</head>
 <body>
-<form method="post" name="form" action="../create_bill.php">
-<select name="year" onChange="getvalidreqdata()">
+<select id="id_year" name="year" onChange="changeYM()">
 <?php 
 $now_year =date("Y");
 for($y=2004;$y<=($now_year-1);$y++):
@@ -94,35 +258,44 @@ for($y=2004;$y<=($now_year-1);$y++):
 		<option value="<?php echo $now_year;?>"selected><?php echo $now_year;?></option>
 </select>
 年
-<select name="month">
+<select id="id_month" name="month" onChange="changeYM()">
 <?php 
 $now_month = date("n");
-for($m=01;$m<=12;$m++):?>
-	<?php if($m!=$now_month-1):?>
+for ($m = 01; $m <= 12; $m++):?>
+	<?php if ($m != $now_month - 1):?>
 		<option value="<?php echo $m;?>"><?php echo $m;?></option>
-	<?php elseif($m==$now_month-1):?>
-		<option value="<?php echo $now_month-1;?>"selected><?php echo $now_month-1;?></option>
+	<?php elseif ($m == $now_month - 1):?>
+		<option value="<?php echo $now_month - 1;?>" selected><?php echo $now_month - 1;?></option>
 	<?php endif;?>
 <?php endfor;?>
 </select>
-月分<br>
-	<select name="change" style="font-size:35px" > 
-		<option>選択して下さい</option>
-		<option value ="000">月次詳細情報</option>
-<?php foreach($ad_form_data as $row):?>
-		<option value="<?php echo $row['req_id'];?>"><?php echo $row['req_id'],"_",$row['req_ad_name'];?></option>
-<?php endforeach; ?>		
-	</select>
+月分
 <br>
 <br>
-<input type="submit"  value="請求書作成">
-<br>
-<br>
-<!--
-<textarea name="mail_template"  cols=40 rows=4 disabled>
-</textarea>
--->
+<form method="post" name="form1" action="create_monthly_details.php">
+	<input type="hidden" name="year" value="">
+	<input type="hidden" name="month" value="">
+	<input type="submit" value="月次詳細情報ダウンロード" style="font-size: 1.2em; width: 300px;">
 </form>
-
+<form method="post" name="form2" action="../create_bill.php">
+	<input type="hidden" name="year" value="">
+	<input type="hidden" name="month" value="">
+	<input type="hidden" name="change" value="">
+</form>
+<br>
+<table class="offices">
+	<thead>
+		<th>請求先</th>
+		<th>事務所</th>
+		<th>メディア</th>
+		<th>請求コール数</th>
+		<th>請求メール数</th>
+	</thead>
+	<tbody id="office_table">
+	</tbody>
+</table>
+<br>
+<br>
+<br>
 </body>
 </html>
