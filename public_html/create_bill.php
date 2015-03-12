@@ -148,14 +148,13 @@ else if (!empty($pack) && $pack == "true") {
 	}
 	try {
 		all_zip("../tmp/$year_month", "../tmp/$year_month.zip");
+		remove_directory($path);
 		header('Pragma: public');
 		header("Content-Type: application/octet-stream");
 		header("Content-Disposition: attachment; filename=$year_month.zip");
 		readfile("../tmp/$year_month.zip");
 	} catch (Exception $e) {
 		die("Failed to create zip.");
-	} finally {
-		remove_directory($path);
 	}
 }
 else {
