@@ -116,6 +116,8 @@ function changeYM() {
 	form1.month.value = month;
 	form2.year.value = year;
 	form2.month.value = month;
+	form3.year.value = year;
+	form3.month.value = month;
 
 	$.getJSON(
 		"/get_monthly_total.php",
@@ -277,7 +279,13 @@ for ($m = 01; $m <= 12; $m++):?>
 	<input type="hidden" name="month" value="">
 	<input type="submit" value="月次詳細情報ダウンロード" style="font-size: 1.2em; width: 300px;">
 </form>
-<form method="post" name="form2" action="../create_bill.php">
+<form method="post" name="form3" action="create_bill.php">
+	<input type="hidden" name="year" value="">
+	<input type="hidden" name="month" value="">
+	<input type="hidden" name="pack" value="true">
+	<input type="submit" value="請求書一括ダウンロード" style="font-size: 1.2em; width: 300px;">
+</form>
+<form method="post" name="form2" action="create_bill.php">
 	<input type="hidden" name="year" value="">
 	<input type="hidden" name="month" value="">
 	<input type="hidden" name="change" value="">

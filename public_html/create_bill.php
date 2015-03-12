@@ -1,6 +1,8 @@
 <?php
 #エラーを画面に表示させない処理
 ini_set("display_errors", "off");
+#reviser呼び出し
+require_once('reviser_lite.php');
 #データベース接続処理
 #db接続データの参照
 $path = parse_ini_file("../rms.cnf");		
@@ -34,7 +36,6 @@ foreach($configs as $key => $value) {
 $pdo_request = null;
 $pdo_cdr = null;
 $pdo_wordpress = null;
-$reviser = null;
 
 #cdrへの接続
 $dsn_cdr ="mysql:dbname=$db_cdr;host=$host";
@@ -75,27 +76,12 @@ if(!$stmt) {
 	exit($info[2]);
 }
 
-#reviser呼び出し
-require_once('reviser_lite.php');
-$reviser = NEW Excel_Reviser;
-$reviser->setInternalCharset('utf-8');	
 #フォームからの事務所IDの受け取り
 $id = $_POST['change'];
 #フォームからの年月の受け取り
 $year = $_POST['year'];
 $month = $_POST['month'];
-#一桁の月に"0"を付加
-$month = sprintf("%02d",$month);
-$year_month = "$year"."$month";
-#請求有効件数が0であった場合には出力しない
-
-#チェック関数を呼び出し、nullで無ければExcelに書き出す
-$call_check = check_valid_call($id,$year,$month);
-$mail_check = check_valid_mail($id,$year,$month);
-if (!empty($call_check)|| !empty($mail_check)) {
-	get_each_ad_data($id, $year, $month, $year_month);
-}
-else if (empty($call_check) && empty($mail_check)) {
+if (empty($year)|| empty($month)) {
 	print('<!DOCTYPE html>');
 	print('<html lang="ja">');
 	print('<head>');
@@ -103,13 +89,220 @@ else if (empty($call_check) && empty($mail_check)) {
 	print('<title>作成できません</title>');
 	print('</head>');
 	print('<body>');
-	print('<a href="../senmonka-RMS.php">戻る</a>');
+	print('<a href="senmonka-RMS.php">戻る</a>');
 	print("<br>");
-	print("この年月では、この事務所は有効電話数とメール数が０件です");
+	print("年月が未指定です。");
 	print('</body>');
 	print('</html>');
 	die();
 }
+#一桁の月に"0"を付加
+$month = sprintf("%02d",$month);
+$year_month = "$year"."$month";
+#請求有効件数が0であった場合には出力しない
+
+//一括ダウンロードかどうか
+$pack = $_POST['pack'];
+
+if (!empty($id)) {
+	#チェック関数を呼び出し、nullで無ければExcelに書き出す
+	$call_check = check_valid_call($id,$year,$month);
+	$mail_check = check_valid_mail($id,$year,$month);
+	if (!empty($call_check)|| !empty($mail_check)) {
+		$reviser = NEW Excel_Reviser;
+		$reviser->setInternalCharset('utf-8');	
+		get_each_ad_data($reviser, $id, $year, $month, $year_month);
+	}
+	else if (empty($call_check) && empty($mail_check)) {
+		print('<!DOCTYPE html>');
+		print('<html lang="ja">');
+		print('<head>');
+		print('<meta charset="UTF-8">');
+		print('<title>作成できません</title>');
+		print('</head>');
+		print('<body>');
+		print('<a href="senmonka-RMS.php">戻る</a>');
+		print("<br>");
+		print("この年月では、この事務所は有効電話数とメール数が０件です");
+		print('</body>');
+		print('</html>');
+		die();
+	}
+}
+else if (!empty($pack) && $pack == "true") {
+	$ids = get_billing_ids($year, $month);
+	$path = "../tmp/$year_month";
+	if (is_dir($path)) {
+		remove_directory($path);
+	}
+	if (is_file("$path.zip")) {
+		unlink("$path.zip");
+	}
+	if (!mkdir($path, 0777, true)) {
+		die("Failed to create dirs.");
+	};
+	foreach ($ids as $id) {
+		$reviser = NEW Excel_Reviser;
+		$reviser->setInternalCharset('utf-8');	
+		get_each_ad_data($reviser, $id, $year, $month, $year_month, $path);
+	}
+	try {
+		all_zip("../tmp/$year_month", "../tmp/$year_month.zip");
+		header('Pragma: public');
+		header("Content-Type: application/octet-stream");
+		header("Content-Disposition: attachment; filename=$year_month.zip");
+		readfile("../tmp/$year_month.zip");
+	} catch (Exception $e) {
+		die("Failed to create zip.");
+	} finally {
+		remove_directory($path);
+	}
+}
+else {
+		print('<!DOCTYPE html>');
+		print('<html lang="ja">');
+		print('<head>');
+		print('<meta charset="UTF-8">');
+		print('<title>作成できません</title>');
+		print('</head>');
+		print('<body>');
+		print('<a href="senmonka-RMS.php">戻る</a>');
+		print("<br>");
+		print("事務所が指定されていません");
+		print('</body>');
+		print('</html>');
+		die();
+}
+
+//--------------------------------------------------------------------------
+// ディレクトリZIP圧縮
+//--------------------------------------------------------------------------
+function all_zip( $dir_path, $new_dir )
+{
+ $zip = new ZipArchive();
+ if( $zip->open( $new_dir, ZipArchive::OVERWRITE ) === true ){
+  add_zip( $zip, $dir_path, "" );
+  $zip->close();
+ }
+ else{
+  throw new Exception('It does not make a zip file');
+ }
+}
+ 
+//--------------------------------------------------------------------------
+// 再起的にディレクトリかファイルを判断し、ストリームに追加する
+//--------------------------------------------------------------------------
+function add_zip( $zip, $dir_path, $new_dir )
+{
+ if( ! is_dir( $new_dir ) ){
+  $zip->addEmptyDir( $new_dir );
+ }
+ 
+ foreach( get_inner_path_of_directory( $dir_path ) as $file ){
+  if( is_dir( $dir_path . "/" . $file ) ){
+   add_zip( $zip, $dir_path . "/" . $file, $new_dir . "/" . $file );
+  }
+  else{
+   $zip->addFile( $dir_path . "/" . $file, $new_dir . "/" . $file );
+  }
+ }
+}
+ 
+//--------------------------------------------------------------------------
+// ディレクトリ内の一覧を取得する
+//--------------------------------------------------------------------------
+function get_inner_path_of_directory( $dir_path )
+{
+ $file_array = array();
+ if( is_dir( $dir_path ) ){
+  if( $dh = opendir( $dir_path ) ){
+   while( ( $file = readdir( $dh ) ) !== false ){
+    if( $file == "." || $file == ".." ){
+     continue;
+    }
+    $file_array[] = $file;
+   }
+   closedir( $dh );
+  }
+ }
+ sort( $file_array );
+ return $file_array;
+}
+
+function remove_directory($dir) {
+	if ($handle = opendir("$dir")) {
+		while (false !== ($item = readdir($handle))) {
+			if ($item != "." && $item != "..") {
+				if (is_dir("$dir/$item")) {
+					remove_directory("$dir/$item");
+				}
+				else {
+					unlink("$dir/$item");
+					//echo " removing $dir/$item<br>\n";
+				}
+			}
+		}
+		closedir($handle);
+		rmdir($dir);
+		//echo "removing $dir<br>\n";
+	}
+}
+
+function get_billing_ids($year, $month) {
+	global $pdo_request;
+	$stmt = $pdo_request->query("
+		SELECT
+			req_id
+		FROM
+			ad_monthly_valid_call
+		WHERE
+			year = $year AND
+			month = $month AND
+			(
+				valid_call_shakkin is not null OR
+				valid_call_souzoku is not null OR
+				valid_call_koutsujiko is not null OR
+				valid_call_ninibaikyaku is not null OR
+				valid_call_meigihenkou is not null OR
+				valid_call_setsuritsu is not null OR
+				valid_call_keijijiken is not null
+			)
+	");
+	$ids = array();
+	$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	foreach ($rows as $row) {
+		array_push($ids, $row["req_id"]);
+	}
+
+	$stmt = $pdo_request->query("
+		SELECT
+			req_id
+		FROM
+			test_smk_request_data.ad_monthly_mail_num
+		WHERE
+			year = $year AND
+			month = $month AND
+			(
+				mail_shakkin is not null OR
+				mail_souzoku is not null OR
+				mail_koutsujiko is not null OR
+				mail_ninibaikyaku is not null OR
+				mail_meigihenkou is not null OR
+				mail_setsuritsu is not null
+			)
+	");
+
+	$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	foreach ($rows as $row) {
+		array_push($ids, $row["req_id"]);
+	}
+
+	$ids = array_unique($ids);
+	asort($ids);
+
+	return $ids;
+}
+
 
 #call_check関数
 function check_valid_call($id,$year,$month){
@@ -171,9 +364,9 @@ function check_valid_mail($id,$year,$month){
 }
 //end_of_function
 
-function get_each_ad_data($id, $year, $month, $year_month) {
+function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath = null) {
 	#####有効コール請求内容データの取得
-	global $pdo_request,$pdo_cdr,$pdo_wordpress,$reviser;
+	global $pdo_request,$pdo_cdr,$pdo_wordpress;
 	#無効も含めた全てのコール数
 	$all_call_shakkin = null;
 	$all_call_souzoku = null;
@@ -1079,7 +1272,12 @@ function get_each_ad_data($id, $year, $month, $year_month) {
 	#テンプレを読み込み、出力する
 	$readfile = "./template.xls";	
 	$outfile = $sheet_name.".xls";
-	$reviser->revisefile($readfile, $outfile);
+	if ($filepath != null) {
+		$reviser->revisefile($readfile, $outfile, $filepath);
+	}
+	else {
+		$reviser->revisefile($readfile, $outfile);
+	}
 }
 #end_of_function/get_each_ad_data
 ?>
