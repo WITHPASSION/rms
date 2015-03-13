@@ -533,47 +533,35 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			$mail_month = substr($register_dt, 0, 2);
 			$mail_day = substr($register_dt, 2, 2);
 			$mail_day = sprintf('%01d', $mail_day);
-			if($st == 0 ||
-					$st == 1 ||
-					$st == 2 ||
-					$st == 6 ||
-					$st == 7 ||
-					$st == 8 ||
-					$st == 9 ||
-					$st == 10 ||
-					$st == 11 ||
-					$st == 12 ||
-					$st == 13 ||
-					$st == 15
-			) {
-				$all_mail_shakkin++;
-				array_push($arr_shakkin_mail_dt, $mail_day);
-				asort($arr_shakkin_mail_dt);
-			}
 			if ($st == 3) {
 				$all_mail_souzoku++;
 				array_push($arr_souzoku_mail_dt, $mail_day);
 				asort($arr_souzoku_mail_dt);
 			}
-			if ($st == 14) {
+			else if ($st == 14) {
 				$all_mail_koutsujiko++;
 				array_push($arr_koutsujiko_mail_dt, $mail_day);
 				asort($arr_koutsujiko_mail_dt);
 			}
-			if ($st == 16) {
+			else if ($st == 16) {
 				$all_mail_ninibaikyaku++;
 				array_push($arr_ninibaikyaku_mail_dt, $mail_day);
 				asort($arr_ninibaikyaku_mail_dt);
 			}
-			if ($st == 18) { 
+			else if ($st == 18) { 
 				$all_mail_setsuritsu++;
 				array_push($arr_setsuritsu_mail_dt, $mail_day);
 				asort($arr_setsuritsu_mail_dt);
 			}
-			if ($st == 17) {
+			else if ($st == 17) {
 				$all_mail_meigihenkou++;
 				array_push($arr_meigihenkou_mail_dt, $mail_day);
 				asort($arr_meigihenkou_mail_dt);
+			}
+			else {
+				$all_mail_shakkin++;
+				array_push($arr_shakkin_mail_dt, $mail_day);
+				asort($arr_shakkin_mail_dt);
 			}
 		}
 	}

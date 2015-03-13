@@ -294,22 +294,7 @@ function fetch_req_mail_data($year_month, $year, $month, $reqid) {
 		$mail_result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($mail_result as $row) {
 			$site_type = $row['site_type'];
-			if ($site_type == 0 ||
-					$site_type == 1 ||
-					$site_type == 2 ||
-					$site_type == 6 ||
-					$site_type == 7 ||
-					$site_type == 8 ||
-					$site_type == 9 ||
-					$site_type == 10 ||
-					$site_type == 11 ||
-					$site_type == 12 ||
-					$site_type == 13 ||
-					$site_type == 15
-			) {
-				$m_shakkin++;
-			}
-			else if ($site_type == 3) {
+			if ($site_type == 3) {
 				$m_souzoku++;
 			}
 			else if ($site_type == 14) {
