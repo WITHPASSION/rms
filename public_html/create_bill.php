@@ -1190,78 +1190,78 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$reviser->addString($sheet_num, $i, 0, "メールデータ");
 	foreach ($arr_ad_id as $row) {
 		$adid = $row['adid'];
-	}
-	#登録事務所名の取得
-	$stmt = $pdo_wordpress->query("
-		SELECT
-			office_name
-		FROM
-			ss_advertisers
-		WHERE
-			ID = $adid
-	");
-	$arr_ad_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	foreach ($arr_ad_name as $row) {
-		$ad_name = $row['office_name'];
-	}
-	#全てのメール情報の入る配列
-	$sum_crm_mail_data = array();
-	$stmt = $pdo_cdr->query("
-		SELECT
-			*
-		FROM
-			mail_conv
-		WHERE
-			advertiser_id = $adid AND
-			DATE_FORMAT(register_dt,'%Y%m') = $year_month
-		ORDER BY
-			register_dt
-	");
-	$arr_crm_mail_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	foreach ($arr_crm_mail_data as $r) {
-		$st = $r['site_type'];
-		$sender_tel = $r['sender_tel'];
-		$date = $r['register_dt'];
-		$dpl_tel_cnt = $r['dpl_tel_cnt'];
-		$dpl_mail_cnt = $r['dpl_mail_cnt'];
-		if ($dpl_tel_cnt == 0 && $dpl_mail_cnt == 0) {
-			$check_mail_dpl = "○";
-		}
-		else if ($dpl_tel_cnt >= 1 || $dpl_mail_cnt >= 1) {
-			$check_mail_dpl = "重複";
-		}
-		#事務所毎かつ、発生メール毎の情報が入る配列
-		$new_crm_mail_array_data = array();
-		#サイト名の入手
+		#登録事務所名の取得
 		$stmt = $pdo_wordpress->query("
 			SELECT
-				site_type_name
+				office_name
 			FROM
-				ss_site_type
+				ss_advertisers
 			WHERE
-				site_type = $st
+				ID = $adid
 		");
-		$arr_st_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		foreach ($arr_st_name as $row) {
-			$st_name = $row['site_type_name'];
+		$arr_ad_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		foreach ($arr_ad_name as $row) {
+			$ad_name = $row['office_name'];
 		}
-		array_push($new_crm_mail_array_data, $ad_name, $st_name, $sender_tel, $date, $check_mail_dpl);
-		array_push($sum_crm_mail_data, $new_crm_mail_array_data);
-	}
-	#配列に代入したメールデータを出力
-	foreach ($sum_crm_mail_data as $row) {
-		$i++;
-		$ad_name = $row['0'];
-		$st_name = $row['1'];
-		$sender_tel = $row['2'];
-		$mail_date = $row['3'];
-		$check_mail_dpl = $row['4'];
-		$reviser->addString($sheet_num, $i, 0, $adid);
-		$reviser->addString($sheet_num, $i, 1, $ad_name);
-		$reviser->addString($sheet_num, $i, 5, $st_name);
-		$reviser->addString($sheet_num, $i, 7, $mail_date);
-		$reviser->addString($sheet_num, $i, 9, $sender_tel);
-		$reviser->addString($sheet_num, $i, 11, $check_mail_dpl);
+		#全てのメール情報の入る配列
+		$sum_crm_mail_data = array();
+		$stmt = $pdo_cdr->query("
+			SELECT
+				*
+			FROM
+				mail_conv
+			WHERE
+				advertiser_id = $adid AND
+				DATE_FORMAT(register_dt,'%Y%m') = $year_month
+			ORDER BY
+				register_dt
+		");
+		$arr_crm_mail_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		foreach ($arr_crm_mail_data as $r) {
+			$st = $r['site_type'];
+			$sender_tel = $r['sender_tel'];
+			$date = $r['register_dt'];
+			$dpl_tel_cnt = $r['dpl_tel_cnt'];
+			$dpl_mail_cnt = $r['dpl_mail_cnt'];
+			if ($dpl_tel_cnt == 0 && $dpl_mail_cnt == 0) {
+				$check_mail_dpl = "○";
+			}
+			else if ($dpl_tel_cnt >= 1 || $dpl_mail_cnt >= 1) {
+				$check_mail_dpl = "重複";
+			}
+			#事務所毎かつ、発生メール毎の情報が入る配列
+			$new_crm_mail_array_data = array();
+			#サイト名の入手
+			$stmt = $pdo_wordpress->query("
+				SELECT
+					site_type_name
+				FROM
+					ss_site_type
+				WHERE
+					site_type = $st
+			");
+			$arr_st_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			foreach ($arr_st_name as $row) {
+				$st_name = $row['site_type_name'];
+			}
+			array_push($new_crm_mail_array_data, $ad_name, $st_name, $sender_tel, $date, $check_mail_dpl);
+			array_push($sum_crm_mail_data, $new_crm_mail_array_data);
+		}
+		#配列に代入したメールデータを出力
+		foreach ($sum_crm_mail_data as $row) {
+			$i++;
+			$ad_name = $row['0'];
+			$st_name = $row['1'];
+			$sender_tel = $row['2'];
+			$mail_date = $row['3'];
+			$check_mail_dpl = $row['4'];
+			$reviser->addString($sheet_num, $i, 0, $adid);
+			$reviser->addString($sheet_num, $i, 1, $ad_name);
+			$reviser->addString($sheet_num, $i, 5, $st_name);
+			$reviser->addString($sheet_num, $i, 7, $mail_date);
+			$reviser->addString($sheet_num, $i, 9, $sender_tel);
+			$reviser->addString($sheet_num, $i, 11, $check_mail_dpl);
+		}
 	}
 
 	#シートネームを設定
