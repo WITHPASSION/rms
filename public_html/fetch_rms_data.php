@@ -307,22 +307,25 @@ function fetch_req_mail_data($year_month, $year, $month, $reqid) {
 					$site_type == 13 ||
 					$site_type == 15
 			) {
-				$m_shakkin ++;
+				$m_shakkin++;
 			}
-			if ($site_type == 3) {
-				$m_souzoku ++;
+			else if ($site_type == 3) {
+				$m_souzoku++;
 			}
-			if ($site_type == 14) {
-				$m_koutsujiko ++;
+			else if ($site_type == 14) {
+				$m_koutsujiko++;
 			}
-			if ($site_type == 16) {
-				$m_ninibaikyaku ++;
+			else if ($site_type == 16) {
+				$m_ninibaikyaku++;
 			}
-			if ($site_type == 18) {
-				$m_setsuritsu ++;
+			else if ($site_type == 18) {
+				$m_setsuritsu++;
 			}
-			if ($site_type == 17) {
-				$m_meigihenkou ++;
+			else if ($site_type == 17) {
+				$m_meigihenkou++;
+			}
+			else {
+				$m_shakkin++;
 			}
 		}
 		if (!empty($m_shakkin) ||

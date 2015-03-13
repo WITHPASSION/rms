@@ -1118,9 +1118,11 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			$dpl_mail_cnt = $row['dpl_mail_cnt'];
 			$redirect_status = $row['redirect_status'];
 			#media_nameの取得
+			$media_name = "";
 			foreach ($arr_media_type_data as $r) {
 				if ($r['freebit_media_id'] == $media_id) {
 					$media_name = $r['media_type_name'];
+					break;
 				}
 			}
 			if ($media_name == "借金問題") {
