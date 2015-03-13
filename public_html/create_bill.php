@@ -493,27 +493,27 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 		$arr_all_call_data =$stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach($arr_all_call_data as $row) {
 			$mi = $row['media_id'];
-			if($mi == null || $mi == "") {
-				$all_call_shakkin++;
-			}
 			if($mi == "B") {
 				$all_call_souzoku++;
 			}
-			if($mi == "C") {
+			else if($mi == "C") {
 				$all_call_koutsujiko++;
 			}
-			if($mi == "D") {
+			else if($mi == "D") {
 				$all_call_ninibaikyaku++;
 			}
-			if($mi == "E") {
+			else if($mi == "E") {
 				$all_call_meigihenkou++;
 			}
-			if($mi == "F") {
+			else if($mi == "F") {
 				$all_call_setsuritsu++;
 			}
-			if($mi == "G") {
+			else if($mi == "G") {
 				$all_call_keijijiken++;
 			}	
+			else {
+				$all_call_shakkin++;
+			}
 		}
 		#無効アリメール数,メール日取得
 		$stmt2 = $pdo_cdr->query("

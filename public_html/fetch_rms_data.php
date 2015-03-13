@@ -328,36 +328,36 @@ function fetch_req_mail_data($year_month, $year, $month, $reqid) {
 				$m_shakkin++;
 			}
 		}
-		if (!empty($m_shakkin) ||
-				!empty($m_souzoku) ||
-				!empty($m_koutsujiko) ||
-				!empty($m_ninibaikyaku) ||
-				!empty($m_meigihenkou) ||
-				!empty($m_setsuritsu)
-		) {
-			$mail_sum =	$m_shakkin+$m_souzoku+$m_koutsujiko+$m_ninibaikyaku+$m_meigihenkou+$m_setsuritsu;
-			$stmt = $pdo2->prepare("
-				INSERT INTO
-					ad_monthly_mail_num
-				VALUES(
-					?,?,?,?,?,?,?,?,?,?
-				)
-			");
-			$result = $stmt->execute(
-				array(
-					$reqid,
-					$year,
-					$month,
-					$m_shakkin,
-					$m_souzoku,
-					$m_koutsujiko,
-					$m_ninibaikyaku,
-					$m_meigihenkou,
-					$m_setsuritsu,
-					$mail_sum
-				)
-			);
-		}
+	}
+	if (!empty($m_shakkin) ||
+			!empty($m_souzoku) ||
+			!empty($m_koutsujiko) ||
+			!empty($m_ninibaikyaku) ||
+			!empty($m_meigihenkou) ||
+			!empty($m_setsuritsu)
+	) {
+		$mail_sum =	$m_shakkin+$m_souzoku+$m_koutsujiko+$m_ninibaikyaku+$m_meigihenkou+$m_setsuritsu;
+		$stmt = $pdo2->prepare("
+			INSERT INTO
+				ad_monthly_mail_num
+			VALUES(
+				?,?,?,?,?,?,?,?,?,?
+			)
+		");
+		$result = $stmt->execute(
+			array(
+				$reqid,
+				$year,
+				$month,
+				$m_shakkin,
+				$m_souzoku,
+				$m_koutsujiko,
+				$m_ninibaikyaku,
+				$m_meigihenkou,
+				$m_setsuritsu,
+				$mail_sum
+			)
+		);
 	}
 }
 //ここまで本番プログラム
