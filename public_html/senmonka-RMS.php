@@ -110,8 +110,9 @@ function get_when_selected_time_mail_data($year, $month) {
 <script type="text/javascript">
 <!--
 function changeYM() {
-	var year = $("#id_year").val();
-	var month = $("#id_month").val();
+	var ym = $("#id_ym").val();
+	var year = ym.substring(0, 4);
+	var month = ym.substring(4, 6);
 	form1.year.value = year;
 	form1.month.value = month;
 	form2.year.value = year;
@@ -250,28 +251,32 @@ $(function(){
 </script>
 </head>
 <body>
-<select id="id_year" name="year" onChange="changeYM()">
+<select id="id_ym" name="ym" onChange="changeYM()">
 <?php 
-$now_year =date("Y");
-for($y=2004;$y<=($now_year-1);$y++):
+$now_ym = date("Ym01");
+$default_ym = date("Ym01", strtotime($now_ym.' -1 month'));
+$startdt = '20140901';
+$i = 0;
+while (true) {
+	$d = date('Ym01', strtotime($startdt.' +'.$i.' month'));
+	$d1 = date('Ym', strtotime($d));
+	$d2 = date('Y年m月', strtotime($d));
+	if ($d == $default_ym) {
 ?>
-<option value="<?php echo $y;?>"><?php echo $y;?></option>
-<?php endfor;?>
-		<option value="<?php echo $now_year;?>"selected><?php echo $now_year;?></option>
-</select>
-年
-<select id="id_month" name="month" onChange="changeYM()">
-<?php 
-$now_month = date("n");
-for ($m = 01; $m <= 12; $m++):?>
-	<?php if ($m != $now_month - 1):?>
-		<option value="<?php echo $m;?>"><?php echo $m;?></option>
-	<?php elseif ($m == $now_month - 1):?>
-		<option value="<?php echo $now_month - 1;?>" selected><?php echo $now_month - 1;?></option>
-	<?php endif;?>
-<?php endfor;?>
-</select>
-月分
+<option value="<?php echo $d1;?>" selected><?php echo $d2;?></option>
+<?php
+	} else {
+?>
+<option value="<?php echo $d1;?>"><?php echo $d2;?></option>
+<?php
+	}
+	if ($d == $now_ym) {
+		break;
+	}
+	$i++;
+}
+?>
+</select>分
 <br>
 <br>
 <form method="post" name="form1" action="create_monthly_details.php">

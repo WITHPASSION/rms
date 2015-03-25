@@ -53,10 +53,24 @@ if (!$stmt) {
 	exit($info[2]);
 }
 //取得月の設定
-$year = $_POST['year'];
-$month = $_POST['month'];
-$month = sprintf("%02d",$month);
-$year_month = "$year"."$month";
+$year_month = $_POST['ym'];
+if (empty($year_month)) {
+	print('<!DOCTYPE html>');
+	print('<html lang="ja">');
+	print('<head>');
+	print('<meta charset="UTF-8">');
+	print('<title>作成できません</title>');
+	print('</head>');
+	print('<body>');
+	print('<a href="/">戻る</a>');
+	print("<br>");
+	print("年月が未指定です。");
+	print('</body>');
+	print('</html>');
+	die();
+}
+$year = substr($year_month, 0, 4);
+$month = substr($year_month, 4, 6);
 #req_idの時に処理
 $stmt = $pdo2->query("
 	SELECT
@@ -70,8 +84,6 @@ foreach ($arr_req_id as $row) {
 	fetch_req_call_data($year_month, $year, $month, $reqid);
 	fetch_req_mail_data($year_month, $year, $month, $reqid);
 }
-echo"コール・メールデータの取得完了";
-echo "<br>";
 
 //本番プログラム
 function fetch_req_call_data($year_month, $year, $month, $reqid) {
@@ -233,7 +245,7 @@ function fetch_req_call_data($year_month, $year, $month, $reqid) {
 	) {
 		$call_sum = $shakkin+$souzoku+$koutsujiko+$ninibaikyaku+$meigihenkou+$setsuritsu+$keijijiken;
 		$stmt = $pdo2->prepare("
-			INSERT INTO
+			REPLACE INTO
 				ad_monthly_valid_call
 			VALUES(
 				?,?,?,?,?,?,?,?,?,?,?,?,?
@@ -323,7 +335,7 @@ function fetch_req_mail_data($year_month, $year, $month, $reqid) {
 	) {
 		$mail_sum =	$m_shakkin+$m_souzoku+$m_koutsujiko+$m_ninibaikyaku+$m_meigihenkou+$m_setsuritsu;
 		$stmt = $pdo2->prepare("
-			INSERT INTO
+			REPLACE INTO
 				ad_monthly_mail_num
 			VALUES(
 				?,?,?,?,?,?,?,?,?,?
@@ -347,4 +359,15 @@ function fetch_req_mail_data($year_month, $year, $month, $reqid) {
 }
 //ここまで本番プログラム
 ?>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>作成完了</title>
+</head>
+<body>
+作成完了
+<br>
 <a href="../senmonka-RMS.php">請求書作成ページはこちら</a>
+</body>
+</html>

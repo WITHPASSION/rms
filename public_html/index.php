@@ -6,29 +6,34 @@
 </head>
 <body>
 <form method="post" name="form" action="../fetch_rms_data.php">
-<select name="year">
+<select name="ym">
 <?php 
-$now_year =date("Y");
-for($y=2004;$y<=($now_year-1);$y++):
+$now_ym = date("Ym01");
+$default_ym = date("Ym01", strtotime($now_ym.' -1 month'));
+$startdt = '20140901';
+$i = 0;
+while (true) {
+	$d = date('Ym01', strtotime($startdt.' +'.$i.' month'));
+	$d1 = date('Ym', strtotime($d));
+	$d2 = date('Y年m月', strtotime($d));
+	if ($d == $default_ym) {
 ?>
-<option value="<?php echo $y;?>"><?php echo $y;?></option>
-<?php endfor;?>
-		<option value="<?php echo $now_year;?>"selected><?php echo $now_year;?></option>
-</select>
-年
-<select name="month">
-<?php 
-$now_month = date("n");
-for($m=1;$m<=12;$m++):?>
-	<?php if($m!=$now_month-1):?>
-		<option value="<?php echo $m;?>"><?php echo $m;?></option>
-	<?php elseif($m==$now_month-1):?>
-		<option value="<?php echo $now_month-1;?>"selected><?php echo $now_month-1;?></option>
-	<?php endif;?>
-<?php endfor;?>
-</select>
-月分<br>
-<input type="submit"  value="請求書データ取得">
+<option value="<?php echo $d1;?>" selected><?php echo $d2;?></option>
+<?php
+	} else {
+?>
+<option value="<?php echo $d1;?>"><?php echo $d2;?></option>
+<?php
+	}
+	if ($d == $now_ym) {
+		break;
+	}
+	$i++;
+}
+?>
+</select>分
+<br>
+<input type="submit"  value="請求書データ生成">
 <br>
 <br>
 <a href="../senmonka-RMS.php">請求書作成ページはこちら</a>
