@@ -202,7 +202,7 @@ function add_zip( $zip, $dir_path, $new_dir )
    add_zip( $zip, $dir_path . "/" . $file, $new_dir . "/" . $file );
   }
   else{
-   $zip->addFile( $dir_path . "/" . $file, $new_dir . "/" . $file );
+   $zip->addFile( $dir_path . "/" . $file, $new_dir . "/" . mb_convert_encoding($file, "SJIS-WIN", "UTF-8") ) ;
   }
  }
 }
