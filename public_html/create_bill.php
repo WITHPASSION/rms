@@ -277,7 +277,7 @@ function get_billing_ids($year, $month) {
 		SELECT
 			req_id
 		FROM
-			test_smk_request_data.ad_monthly_mail_num
+			smk_request_data.ad_monthly_mail_num
 		WHERE
 			year = $year AND
 			month = $month AND
