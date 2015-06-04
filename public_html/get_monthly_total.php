@@ -241,23 +241,33 @@ function get_monthly_total_calls($year_month) {
 		FROM
 			(
 				SELECT
-					id,
-					advertiser_id,
-					IF (media_id <> '', media_id, 'A') as media_id,
-					dpl_tel_cnt,
-					dpl_mail_cnt,
-					date_from,
-					call_minutes
+					dv.id,
+					dv.advertiser_id,
+					IF (dv.media_id <> '', dv.media_id, 'A') as media_id,
+					dv.dpl_tel_cnt,
+					dv.dpl_mail_cnt,
+					dv.dpl_tel_cnt_for_billing,
+					dv.date_from,
+					dv.call_minutes,
+					pm.payment_method_id,
+					pm.charge_seconds
 				FROM
-					cdr.call_data_view
+					cdr.call_data_view dv,
+					cdr.office_group_payment_method pm,
+					wordpress.ss_site_group sg
+				WHERE
+					dv.ad_group_id = pm.ad_group_id AND
+					sg.media_type = dv.media_type AND
+					sg.site_group = pm.site_group AND
+					CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date
 			) v,
 			smk_request_data.adid_reqid_matching m
 		WHERE
 			m.adid = v.advertiser_id AND
 			DATE_FORMAT(v.date_from, '%Y%m') = '$year_month' AND
-			v.dpl_tel_cnt <= 1 AND
+			v.dpl_tel_cnt_for_billing <= 1 AND
 			v.dpl_mail_cnt = 0 AND
-			v.call_minutes >= 60
+			v.call_minutes >= v.charge_seconds
 		GROUP BY
 			m.reqid,
 			v.advertiser_id,
