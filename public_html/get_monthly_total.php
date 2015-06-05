@@ -93,6 +93,7 @@ $year_month = "$year"."$month";
 
 $billing_offices = get_billing_office_list();
 $call_data = get_monthly_total_calls($year_month);
+$sample_call_data = get_monthly_total_sample_calls($year_month);
 $mail_data = get_monthly_total_mails($year_month);
 
 $ret = array();
@@ -237,20 +238,27 @@ function get_monthly_total_calls($year_month) {
 			m.reqid as req_id,
 			v.advertiser_id as advertiser_id,
 			v.media_id as media_id,
+			group_concat(distinct pm.method) as payment_method,
 			count(v.id) as valid_tel_count
 		FROM
 			(
 				SELECT
 					dv.id,
+					dv.ad_group_id,
 					dv.advertiser_id,
-					IF (dv.media_id <> '', dv.media_id, 'A') as media_id,
+					(case
+						when (dv.media_id like 'A%') then 'A'
+						when (dv.media_id like '') then 'A'
+						else dv.media_id
+					end) AS media_id,
 					dv.dpl_tel_cnt,
 					dv.dpl_mail_cnt,
 					dv.dpl_tel_cnt_for_billing,
 					dv.date_from,
 					dv.call_minutes,
 					pm.payment_method_id,
-					pm.charge_seconds
+					pm.charge_seconds,
+					sg.site_group
 				FROM
 					cdr.call_data_view dv,
 					cdr.office_group_payment_method pm,
@@ -261,13 +269,57 @@ function get_monthly_total_calls($year_month) {
 					sg.site_group = pm.site_group AND
 					CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date
 			) v,
+			smk_request_data.adid_reqid_matching m,
+			cdr.office_group_payment_method gpm,
+			cdr.payment_method pm
+		WHERE
+			m.adid = v.advertiser_id AND
+			v.ad_group_id = gpm.ad_group_id AND
+			gpm.payment_method_id = pm.id AND
+			CAST(v.date_from AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
+			DATE_FORMAT(v.date_from, '%Y%m') = '$year_month' AND
+			gpm.site_group = v.site_group AND
+			v.dpl_tel_cnt_for_billing <= 1 AND
+			v.dpl_mail_cnt = 0 AND
+			v.call_minutes >= v.charge_seconds
+		GROUP BY
+			m.reqid,
+			v.advertiser_id,
+			v.media_id
+		WITH ROLLUP
+	");
+	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	return $res_arr;
+}
+
+function get_monthly_total_sample_calls($year_month) {
+	global $pdo_request;
+	$stmt = $pdo_request->query("
+		SELECT
+			m.reqid as req_id,
+			v.advertiser_id as advertiser_id,
+			v.media_id as media_id,
+			count(v.id) as valid_tel_count
+		FROM
+			(
+				SELECT
+					id,
+					advertiser_id,
+					IF (media_id <> '', media_id, 'A') as media_id,
+					dpl_tel_cnt,
+					dpl_mail_cnt,
+					date_from,
+					call_minutes
+				FROM
+					cdr.call_data_view
+			) v,
 			smk_request_data.adid_reqid_matching m
 		WHERE
 			m.adid = v.advertiser_id AND
 			DATE_FORMAT(v.date_from, '%Y%m') = '$year_month' AND
-			v.dpl_tel_cnt_for_billing <= 1 AND
+			v.dpl_tel_cnt <= 1 AND
 			v.dpl_mail_cnt = 0 AND
-			v.call_minutes >= v.charge_seconds
+			v.call_minutes >= 60
 		GROUP BY
 			m.reqid,
 			v.advertiser_id,
@@ -285,14 +337,23 @@ function get_monthly_total_mails($year_month) {
 			m.reqid as req_id,
 			v.advertiser_id as advertiser_id,
 			s.site_group as site_group,
+			group_concat(distinct pm.method) as payment_method,
 			count(v.ID) as valid_mail_count
 		FROM
 			cdr.mail_conv v,
 			smk_request_data.adid_reqid_matching m,
-			wordpress.ss_site_type s
+			wordpress.ss_site_type s,
+			wordpress.ss_advertiser_ad_group adg,
+			cdr.office_group_payment_method gpm,
+			cdr.payment_method pm
 		WHERE
 			s.site_type = v.site_type AND
 			m.adid = v.advertiser_id AND
+			adg.advertiser_id = v.advertiser_id AND
+			adg.ad_group_id = gpm.ad_group_id AND
+			(gpm.site_group = s.site_group OR (s.site_group = 999 AND gpm.site_group = 0)) AND
+			gpm.payment_method_id = pm.id AND
+			CAST(v.register_dt AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
 			DATE_FORMAT(v.register_dt, '%Y%m') = '$year_month' AND
 			v.dpl_tel_cnt <= 0 AND
 			v.dpl_mail_cnt <= 0
