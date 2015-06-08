@@ -92,9 +92,10 @@ $month = sprintf("%02d",$month);
 $year_month = "$year"."$month";
 
 $billing_offices = get_billing_office_list();
-$call_data = get_monthly_total_calls($year_month);
-$sample_call_data = get_monthly_total_sample_calls($year_month);
-$mail_data = get_monthly_total_mails($year_month);
+$call_data = get_monthly_total_calls($year_month, false);
+$sample_call_data = get_monthly_total_calls($year_month, true);
+$mail_data = get_monthly_total_mails($year_month, false);
+$sample_mail_data = get_monthly_total_mails($year_month, true);
 
 $ret = array();
 foreach ($billing_offices as $office) {
@@ -102,24 +103,32 @@ foreach ($billing_offices as $office) {
 		$o = array();
 		$o["req_ad_name"] = $office["req_ad_name"];
 		$o["call_count"] = 0;
+		$o["sample_call_count"] = 0;
 		$o["mail_count"] = 0;
+		$o["sample_mail_count"] = 0;
 		$o["advertisers"] = array();
 		$ret += array($office["req_id"] => $o);
 	}
 	$a = array();
 	$a["office_name"] = $office["office_name"];
 	$a["call_count"] = 0;
+	$a["sample_call_count"] = 0;
 	$a["mail_count"] = 0;
+	$a["sample_mail_count"] = 0;
 	$a["medias"] = array();
 	foreach($types as $type) {
 		$mc = array();
 		$mc["call_count"] = 0;
+		$mc["sample_call_count"] = 0;
 		$mc["mail_count"] = 0;
+		$mc["sample_mail_count"] = 0;
 		$a["medias"] += array($type => $mc);
 	}
 	$mc = array();
 	$mc["call_count"] = 0;
+	$mc["sample_call_count"] = 0;
 	$mc["mail_count"] = 0;
+	$mc["sample_mail_count"] = 0;
 	$a["medias"] += array("LP" => $mc);
 	$ret[$office["req_id"]]["advertisers"] += array($office["advertiser_id"] => $a);
 }
@@ -146,7 +155,7 @@ foreach ($call_data as $call) {
 		}
 		else if ($media_id == "C"){
 			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutusjiko"]["payment_method"] = $payment_method;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
 			}
 		else if ($media_id == "D"){
 			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["call_count"] += $count;
@@ -170,6 +179,57 @@ foreach ($call_data as $call) {
 		}
 		else {
 			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["call_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
+		}
+	}
+}
+
+foreach ($sample_call_data as $call) {
+	$req_id = $call["req_id"];
+	if ($req_id == null) {
+		continue;
+	}
+	$ad_id = $call["advertiser_id"];
+	$media_id = $call["media_id"];
+	$count = $call["valid_tel_count"];
+	$payment_method = $call["payment_method"];
+	if ($ad_id == null) {
+		$ret[$req_id]["sample_call_count"] = $count;
+	}
+	else if ($media_id == null) {
+		$ret[$req_id]["advertisers"][$ad_id]["sample_call_count"] = $count;
+	}
+	else {
+		if ($media_id == "B"){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["souzoku"]["sample_call_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
+		}
+		else if ($media_id == "C"){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["sample_call_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
+			}
+		else if ($media_id == "D"){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["sample_call_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaykyaku"]["payment_method"] = $payment_method;
+		}
+		else if ($media_id == "E"){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["sample_call_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
+		}
+		else if ($media_id == "F"){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["sample_call_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
+		}
+		else if ($media_id == "G"){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["sample_call_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
+		}
+		else if ($media_id == "A-LPPC" || $media_id == "A-LPSmart"){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["LP"]["sample_call_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
+		}
+		else {
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["sample_call_count"] += $count;
 			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
 		}
 	}
@@ -226,6 +286,57 @@ foreach ($mail_data as $mail) {
 	}
 }
 
+foreach ($sample_mail_data as $mail) {
+	$req_id = $mail["req_id"];
+	if ($req_id == null) {
+		continue;
+	}
+	$ad_id = $mail["advertiser_id"];
+	$group = $mail["site_group"];
+	$count = $mail["valid_mail_count"];
+	$payment_method = $mail["payment_method"];
+	if ($ad_id == null) {
+		$ret[$req_id]["sample_mail_count"] = $count;
+	}
+	else if ($group == null) {
+		$ret[$req_id]["advertisers"][$ad_id]["sample_mail_count"] = $count;
+	}
+	else {
+		if ($group == 0){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["sample_mail_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
+		}
+		else if ($group == 1){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["souzoku"]["sample_mail_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
+		}
+		else if ($group == 2){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["sample_mail_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
+			}
+		else if ($group == 3){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["sample_mail_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["payment_method"] = $payment_method;
+		}
+		else if ($group == 4){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["sample_mail_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
+		}
+		else if ($group == 5){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["sample_mail_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
+		}
+		else if ($group == 6){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["sample_mail_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
+		}
+		else if ($group == 999){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["LP"]["sample_mail_count"] += $count;
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
+		}
+	}
+}
+
 echo json_encode($ret);
 
 function get_billing_office_list() {
@@ -249,8 +360,13 @@ function get_billing_office_list() {
 	return $res_arr;
 }
 
-function get_monthly_total_calls($year_month) {
+function get_monthly_total_calls($year_month, $is_sample = false) {
 	global $pdo_request;
+	$where = "v.dpl_tel_cnt_for_billing <= 1 AND v.call_minutes >= v.charge_seconds AND";
+	if ($is_sample)
+	{
+		$where = "v.dpl_tel_cnt <= 1 AND v.call_minutes >= 60 AND";
+	}
 	$stmt = $pdo_request->query("
 		SELECT
 			m.reqid as req_id,
@@ -297,9 +413,8 @@ function get_monthly_total_calls($year_month) {
 			CAST(v.date_from AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
 			DATE_FORMAT(v.date_from, '%Y%m') = '$year_month' AND
 			gpm.site_group = v.site_group AND
-			v.dpl_tel_cnt_for_billing <= 1 AND
-			v.dpl_mail_cnt = 0 AND
-			v.call_minutes >= v.charge_seconds
+			$where
+			v.dpl_mail_cnt = 0
 		GROUP BY
 			m.reqid,
 			v.advertiser_id,
@@ -310,46 +425,13 @@ function get_monthly_total_calls($year_month) {
 	return $res_arr;
 }
 
-function get_monthly_total_sample_calls($year_month) {
+function get_monthly_total_mails($year_month, $is_sample = false) {
 	global $pdo_request;
-	$stmt = $pdo_request->query("
-		SELECT
-			m.reqid as req_id,
-			v.advertiser_id as advertiser_id,
-			v.media_id as media_id,
-			count(v.id) as valid_tel_count
-		FROM
-			(
-				SELECT
-					id,
-					advertiser_id,
-					IF (media_id <> '', media_id, 'A') as media_id,
-					dpl_tel_cnt,
-					dpl_mail_cnt,
-					date_from,
-					call_minutes
-				FROM
-					cdr.call_data_view
-			) v,
-			smk_request_data.adid_reqid_matching m
-		WHERE
-			m.adid = v.advertiser_id AND
-			DATE_FORMAT(v.date_from, '%Y%m') = '$year_month' AND
-			v.dpl_tel_cnt <= 1 AND
-			v.dpl_mail_cnt = 0 AND
-			v.call_minutes >= 60
-		GROUP BY
-			m.reqid,
-			v.advertiser_id,
-			v.media_id
-		WITH ROLLUP
-	");
-	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	return $res_arr;
-}
-
-function get_monthly_total_mails($year_month) {
-	global $pdo_request;
+	$where = "AND pm.id <> 2";
+	if ($is_sample)
+	{
+		$where = "";
+	}
 	$stmt = $pdo_request->query("
 		SELECT
 			m.reqid as req_id,
@@ -375,6 +457,7 @@ function get_monthly_total_mails($year_month) {
 			DATE_FORMAT(v.register_dt, '%Y%m') = '$year_month' AND
 			v.dpl_tel_cnt <= 0 AND
 			v.dpl_mail_cnt <= 0
+			$where
 		GROUP BY
 			m.reqid,
 			v.advertiser_id,

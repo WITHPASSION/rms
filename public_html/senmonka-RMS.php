@@ -136,7 +136,7 @@ function changeYM() {
 					var med_keys = Object.keys(adv.medias);
 					for (z = 0; z < med_keys.length; z++) {
 						var med = adv.medias[med_keys[z]];
-						if (med.call_count > 0 || med.mail_count > 0) {
+						if (med.call_count > 0 || med.sample_call_count > 0 || med.mail_count > 0 || med.sample_mail_count > 0) {
 							office_row_count++;
 						}
 					}
@@ -155,14 +155,14 @@ function changeYM() {
 					var adv_row_count = 1;
 					for (z = 0; z < med_keys.length; z++) {
 						var med = adv.medias[med_keys[z]];
-						if (med.call_count > 0 || med.mail_count > 0) {
+						if (med.call_count > 0 || med.sample_call_count > 0 || med.mail_count > 0 || med.sample_mail_count > 0) {
 							adv_row_count++;
 						}
 					}
 					for (z = 0; z < med_keys.length; z++) {
 						var med = adv.medias[med_keys[z]];
 						var med_name = "";
-						if (med.call_count == 0 && med.mail_count == 0) {
+						if (med.call_count == 0 && med.sample_call_count == 0 && med.mail_count == 0 && med.sample_mail_count == 0) {
 							continue;
 						}
 						if (med_keys[z] == "shakkin") {
@@ -198,9 +198,9 @@ function changeYM() {
 							html += "<td rowspan='" + adv_row_count + "'>" + ad_id + "." + adv.office_name + "</td>";
 							adv_named = true;
 						}
-						html += "<td>" + med_name + "</td>";
-						html += "<td class='right_txt'>" + med.call_count + "</td>";
-						html += "<td class='right_txt'>" + med.mail_count + "</td>";
+						html += "<td>" + med_name + "<small>（" + med.payment_method + "）</small></td>";
+						html += "<td class='right_txt'>" + med.call_count + "<small>(" + med.sample_call_count + ")</small></td>";
+						html += "<td class='right_txt'>" + med.mail_count + "<small>(" + med.sample_mail_count + ")</small></td>";
 						html += "</tr>";
 					}
 					html += "<tr>";
@@ -213,22 +213,22 @@ function changeYM() {
 						adv_named = true;
 					}
 					html += "<td class='bold'>事務所計</td>";
-					html += "<td class='right_txt bold'>" + adv.call_count + "</td>";
-					html += "<td class='right_txt bold'>" + adv.mail_count + "</td>";
+					html += "<td class='right_txt bold'>" + adv.call_count + "<small>(" + adv.sample_call_count + ")</small></td>";
+					html += "<td class='right_txt bold'>" + adv.mail_count + "<small>(" + adv.sample_mail_count + ")</small></td>";
 					html += "</tr>";
 				}
 				html += "<tr>";
 				if (has_bill) {
 					html += "<td class='right_txt'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + req_id + ")' style='font-size: 1.2em; font-weight: bold;'></td>";
 					html += "<td class='bold_blue'>請求計</td>";
-					html += "<td class='right_txt bold_blue'>" + office.call_count + "</td>";
-					html += "<td class='right_txt bold_blue'>" + office.mail_count + "</td>";
+					html += "<td class='right_txt bold_blue'>" + office.call_count + "<small>(" + office.sample_call_count + ")</small></td>";
+					html += "<td class='right_txt bold_blue'>" + office.mail_count + "<small>(" + office.sample_mail_count + ")</small></td>";
 				}
 				else {
 					html += "<td></td>";
 					html += "<td class='gray_down'>請求計</td>";
-					html += "<td class='right_txt gray_down'>" + office.call_count + "</td>";
-					html += "<td class='right_txt gray_down'>" + office.mail_count + "</td>";
+					html += "<td class='right_txt gray_down'>" + office.call_count + "<small>(" + office.sample_call_count + ")</small></td>";
+					html += "<td class='right_txt gray_down'>" + office.mail_count + "<small>(" + office.sample_mail_count + ")</small></td>";
 				}
 				html += "</tr>";
 			}
