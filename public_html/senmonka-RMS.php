@@ -199,8 +199,10 @@ function changeYM() {
 							adv_named = true;
 						}
 						html += "<td>" + med_name + "<small>（" + med.payment_method + "）</small></td>";
-						html += "<td class='right_txt'>" + med.call_count + "<small>(" + med.sample_call_count + ")</small></td>";
-						html += "<td class='right_txt'>" + med.mail_count + "<small>(" + med.sample_mail_count + ")</small></td>";
+						html += "<td class='right_txt'>" + med.call_count + "</td>";
+						html += "<td class=''><small>(" + med.sample_call_count + ")</small></td>";
+						html += "<td class='right_txt'>" + med.mail_count + "</td>";
+						html += "<td class=''><small>(" + med.sample_mail_count + ")</small></td>";
 						html += "</tr>";
 					}
 					html += "<tr>";
@@ -213,22 +215,28 @@ function changeYM() {
 						adv_named = true;
 					}
 					html += "<td class='bold'>事務所計</td>";
-					html += "<td class='right_txt bold'>" + adv.call_count + "<small>(" + adv.sample_call_count + ")</small></td>";
-					html += "<td class='right_txt bold'>" + adv.mail_count + "<small>(" + adv.sample_mail_count + ")</small></td>";
+					html += "<td class='right_txt bold'>" + adv.call_count + "</td>";
+					html += "<td class=''><small>(" + adv.sample_call_count + ")</small></td>";
+					html += "<td class='right_txt bold'>" + adv.mail_count + "</td>";
+					html += "<td class=''><small>(" + adv.sample_mail_count + ")</small></td>";
 					html += "</tr>";
 				}
 				html += "<tr>";
 				if (has_bill) {
 					html += "<td class='right_txt'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + req_id + ")' style='font-size: 1.2em; font-weight: bold;'></td>";
 					html += "<td class='bold_blue'>請求計</td>";
-					html += "<td class='right_txt bold_blue'>" + office.call_count + "<small>(" + office.sample_call_count + ")</small></td>";
-					html += "<td class='right_txt bold_blue'>" + office.mail_count + "<small>(" + office.sample_mail_count + ")</small></td>";
+					html += "<td class='right_txt bold_blue'>" + office.call_count + "</td>";
+					html += "<td class=''><small>(" + office.sample_call_count + ")</small></td>";
+					html += "<td class='right_txt bold_blue'>" + office.mail_count + "</td>";
+					html += "<td class=''><small>(" + office.sample_mail_count + ")</small></td>";
 				}
 				else {
 					html += "<td></td>";
 					html += "<td class='gray_down'>請求計</td>";
-					html += "<td class='right_txt gray_down'>" + office.call_count + "<small>(" + office.sample_call_count + ")</small></td>";
-					html += "<td class='right_txt gray_down'>" + office.mail_count + "<small>(" + office.sample_mail_count + ")</small></td>";
+					html += "<td class='right_txt gray_down'>" + office.call_count + "</td>";
+					html += "<td class='gray_down'><small>(" + office.sample_call_count + ")</small></td>";
+					html += "<td class='right_txt gray_down'>" + office.mail_count + "</td>";
+					html += "<td class='gray_down'><small>(" + office.sample_mail_count + ")</small></td>";
 				}
 				html += "</tr>";
 			}
@@ -301,8 +309,8 @@ while (true) {
 		<th>請求先</th>
 		<th>事務所</th>
 		<th>メディア</th>
-		<th>請求コール数</th>
-		<th>請求メール数</th>
+		<th colspan="2">請求コール数 <small>(参考値)</small></th>
+		<th colspan="2">請求メール数 <small>(参考値)</small></th>
 	</thead>
 	<tbody id="office_table">
 	</tbody>
