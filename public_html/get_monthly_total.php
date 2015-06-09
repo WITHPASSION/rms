@@ -345,15 +345,21 @@ function get_billing_office_list() {
 		SELECT
 			r.req_id as req_id,
 			r.req_ad_name as req_ad_name,
+			ag.ID as ad_group_id,
+			ag.group_name,
 			a.ID as advertiser_id,
 			a.office_name as office_name
 		FROM
 			smk_request_data.adid_reqid_matching as m,
 			smk_request_data.ad_req_data as r,
-			wordpress.ss_advertisers as a
+			wordpress.ss_advertisers as a,
+			wordpress.ss_advertiser_ad_group aag,
+			wordpress.ss_ad_groups ag
 		WHERE
 			r.req_id = m.reqid AND
-			a.ID = m.adid
+			a.ID = m.adid AND
+			aag.advertiser_id = a.ID AND
+			aag.ad_group_id = ag.ID
 		ORDER BY r.req_id, a.ID
 	");
 	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
