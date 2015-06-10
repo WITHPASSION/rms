@@ -350,14 +350,14 @@ function get_billing_office_list() {
 			a.ID as advertiser_id,
 			a.office_name as office_name
 		FROM
-			smk_request_data.adid_reqid_matching as m,
-			smk_request_data.ad_req_data as r,
+			test_smk_request_data.ad_group_bill_payer as m,
+			test_smk_request_data.ad_req_data as r,
 			wordpress.ss_advertisers as a,
 			wordpress.ss_advertiser_ad_group aag,
 			wordpress.ss_ad_groups ag
 		WHERE
-			r.req_id = m.reqid AND
-			a.ID = m.adid AND
+			r.req_id = m.bill_payer_id AND
+			ag.ID = m.ad_group_id AND
 			aag.advertiser_id = a.ID AND
 			aag.ad_group_id = ag.ID
 		ORDER BY r.req_id, a.ID
@@ -409,7 +409,7 @@ function get_monthly_total_calls($year_month, $is_sample = false) {
 					sg.site_group = pm.site_group AND
 					CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date
 			) v,
-			smk_request_data.adid_reqid_matching m,
+			test_smk_request_data.adid_reqid_matching m,
 			cdr.office_group_payment_method gpm,
 			cdr.payment_method pm
 		WHERE
@@ -447,7 +447,7 @@ function get_monthly_total_mails($year_month, $is_sample = false) {
 			count(v.ID) as valid_mail_count
 		FROM
 			cdr.mail_conv v,
-			smk_request_data.adid_reqid_matching m,
+			test_smk_request_data.adid_reqid_matching m,
 			wordpress.ss_site_type s,
 			wordpress.ss_advertiser_ad_group adg,
 			cdr.office_group_payment_method gpm,
