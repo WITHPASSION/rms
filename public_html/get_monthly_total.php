@@ -99,15 +99,26 @@ $sample_mail_data = get_monthly_total_mails($year_month, true);
 
 $ret = array();
 foreach ($billing_offices as $office) {
-	if (!array_key_exists($office["req_id"], $ret)) {
+	$req_id = $office["req_id"];
+	if (!array_key_exists($req_id, $ret)) {
 		$o = array();
 		$o["req_ad_name"] = $office["req_ad_name"];
 		$o["call_count"] = 0;
 		$o["sample_call_count"] = 0;
 		$o["mail_count"] = 0;
 		$o["sample_mail_count"] = 0;
-		$o["advertisers"] = array();
-		$ret += array($office["req_id"] => $o);
+		$o["ad_groups"] = array();
+		$ret += array($req_id => $o);
+	}
+	if (!array_key_exists($office["ad_group_id"], $ret[$req_id]["ad_groups"])) {
+		$g = array();
+		$g["group_name"] = $office["group_name"];
+		$g["call_count"] = 0;
+		$g["sample_call_count"] = 0;
+		$g["mail_count"] = 0;
+		$g["sample_mail_count"] = 0;
+		$g["advertisers"] = array();
+		$ret[$req_id]["ad_groups"] += array($office["ad_group_id"] => $g);
 	}
 	$a = array();
 	$a["office_name"] = $office["office_name"];
@@ -130,7 +141,7 @@ foreach ($billing_offices as $office) {
 	$mc["mail_count"] = 0;
 	$mc["sample_mail_count"] = 0;
 	$a["medias"] += array("LP" => $mc);
-	$ret[$office["req_id"]]["advertisers"] += array($office["advertiser_id"] => $a);
+	$ret[$req_id]["ad_groups"][$office["ad_group_id"]]["advertisers"] += array($office["advertiser_id"] => $a);
 }
 
 foreach ($call_data as $call) {
@@ -138,48 +149,52 @@ foreach ($call_data as $call) {
 	if ($req_id == null) {
 		continue;
 	}
+	$ad_group_id = $call["ad_group_id"];
 	$ad_id = $call["advertiser_id"];
 	$media_id = $call["media_id"];
 	$count = $call["valid_tel_count"];
 	$payment_method = $call["payment_method"];
-	if ($ad_id == null) {
+	if ($ad_group_id == null) {
 		$ret[$req_id]["call_count"] = $count;
 	}
+	else if ($ad_id == null) {
+		$ret[$req_id]["ad_groups"][$ad_group_id]["call_count"] = $count;
+	}
 	else if ($media_id == null) {
-		$ret[$req_id]["advertisers"][$ad_id]["call_count"] = $count;
+		$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["call_count"] = $count;
 	}
 	else {
 		if ($media_id == "B"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["souzoku"]["call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
 		}
 		else if ($media_id == "C"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
 			}
 		else if ($media_id == "D"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaykyaku"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaykyaku"]["payment_method"] = $payment_method;
 		}
 		else if ($media_id == "E"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
 		}
 		else if ($media_id == "F"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
 		}
 		else if ($media_id == "G"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
 		}
 		else if ($media_id == "A-LPPC" || $media_id == "A-LPSmart"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["LP"]["call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
 		}
 		else {
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
 		}
 	}
 }
@@ -189,48 +204,52 @@ foreach ($sample_call_data as $call) {
 	if ($req_id == null) {
 		continue;
 	}
+	$ad_group_id = $call["ad_group_id"];
 	$ad_id = $call["advertiser_id"];
 	$media_id = $call["media_id"];
 	$count = $call["valid_tel_count"];
 	$payment_method = $call["payment_method"];
-	if ($ad_id == null) {
+	if ($ad_group_id == null) {
 		$ret[$req_id]["sample_call_count"] = $count;
 	}
+	else if ($ad_id == null) {
+		$ret[$req_id]["ad_groups"][$ad_group_id]["sample_call_count"] = $count;
+	}
 	else if ($media_id == null) {
-		$ret[$req_id]["advertisers"][$ad_id]["sample_call_count"] = $count;
+		$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["sample_call_count"] = $count;
 	}
 	else {
 		if ($media_id == "B"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["souzoku"]["sample_call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["sample_call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
 		}
 		else if ($media_id == "C"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["sample_call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["sample_call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
 			}
 		else if ($media_id == "D"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["sample_call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaykyaku"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["sample_call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaykyaku"]["payment_method"] = $payment_method;
 		}
 		else if ($media_id == "E"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["sample_call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["sample_call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
 		}
 		else if ($media_id == "F"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["sample_call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["sample_call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
 		}
 		else if ($media_id == "G"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["sample_call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["sample_call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
 		}
 		else if ($media_id == "A-LPPC" || $media_id == "A-LPSmart"){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["LP"]["sample_call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["sample_call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
 		}
 		else {
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["sample_call_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["sample_call_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
 		}
 	}
 }
@@ -240,48 +259,52 @@ foreach ($mail_data as $mail) {
 	if ($req_id == null) {
 		continue;
 	}
+	$ad_group_id = $mail["ad_group_id"];
 	$ad_id = $mail["advertiser_id"];
 	$group = $mail["site_group"];
 	$count = $mail["valid_mail_count"];
 	$payment_method = $mail["payment_method"];
-	if ($ad_id == null) {
+	if ($ad_group_id == null) {
 		$ret[$req_id]["mail_count"] = $count;
 	}
+	else if ($ad_id == null) {
+		$ret[$req_id]["ad_groups"][$ad_group_id]["mail_count"] = $count;
+	}
 	else if ($group == null) {
-		$ret[$req_id]["advertisers"][$ad_id]["mail_count"] = $count;
+		$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["mail_count"] = $count;
 	}
 	else {
 		if ($group == 0){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
 		}
 		else if ($group == 1){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["souzoku"]["mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
 		}
 		else if ($group == 2){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
 			}
 		else if ($group == 3){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["payment_method"] = $payment_method;
 		}
 		else if ($group == 4){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
 		}
 		else if ($group == 5){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
 		}
 		else if ($group == 6){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
 		}
 		else if ($group == 999){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["LP"]["mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
 		}
 	}
 }
@@ -295,44 +318,47 @@ foreach ($sample_mail_data as $mail) {
 	$group = $mail["site_group"];
 	$count = $mail["valid_mail_count"];
 	$payment_method = $mail["payment_method"];
-	if ($ad_id == null) {
+	if ($ad_group_id == null) {
 		$ret[$req_id]["sample_mail_count"] = $count;
 	}
+	else if ($ad_id == null) {
+		$ret[$req_id]["ad_groups"][$ad_group_id]["sample_mail_count"] = $count;
+	}
 	else if ($group == null) {
-		$ret[$req_id]["advertisers"][$ad_id]["sample_mail_count"] = $count;
+		$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["sample_mail_count"] = $count;
 	}
 	else {
 		if ($group == 0){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["sample_mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["sample_mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
 		}
 		else if ($group == 1){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["souzoku"]["sample_mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["sample_mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
 		}
 		else if ($group == 2){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["sample_mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["sample_mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
 			}
 		else if ($group == 3){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["sample_mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["sample_mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["payment_method"] = $payment_method;
 		}
 		else if ($group == 4){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["sample_mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["sample_mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
 		}
 		else if ($group == 5){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["sample_mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["sample_mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
 		}
 		else if ($group == 6){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["sample_mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["sample_mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
 		}
 		else if ($group == 999){
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["LP"]["sample_mail_count"] += $count;
-			$ret[$req_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["sample_mail_count"] += $count;
+			$ret[$req_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
 		}
 	}
 }
@@ -376,6 +402,7 @@ function get_monthly_total_calls($year_month, $is_sample = false) {
 	$stmt = $pdo_request->query("
 		SELECT
 			m.reqid as req_id,
+			v.ad_group_id,
 			v.advertiser_id as advertiser_id,
 			v.media_id as media_id,
 			group_concat(distinct pm.method) as payment_method,
@@ -385,7 +412,7 @@ function get_monthly_total_calls($year_month, $is_sample = false) {
 				SELECT
 					dv.id,
 					dv.ad_group_id,
-					dv.advertiser_id,
+					CAST(dv.advertiser_id AS UNSIGNED) as advertiser_id,
 					(case
 						when (dv.media_id like 'A-Portal%') then 'A'
 						when (dv.media_id like '') then 'A'
@@ -408,6 +435,7 @@ function get_monthly_total_calls($year_month, $is_sample = false) {
 					sg.media_type = dv.media_type AND
 					sg.site_group = pm.site_group AND
 					CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date
+				ORDER BY dv.ad_group_id, dv.advertiser_id, dv.id
 			) v,
 			test_smk_request_data.adid_reqid_matching m,
 			cdr.office_group_payment_method gpm,
@@ -423,6 +451,7 @@ function get_monthly_total_calls($year_month, $is_sample = false) {
 			v.dpl_mail_cnt = 0
 		GROUP BY
 			m.reqid,
+			v.ad_group_id,
 			v.advertiser_id,
 			v.media_id
 		WITH ROLLUP
@@ -441,6 +470,7 @@ function get_monthly_total_mails($year_month, $is_sample = false) {
 	$stmt = $pdo_request->query("
 		SELECT
 			m.reqid as req_id,
+			adg.ad_group_id as ad_group_id,
 			v.advertiser_id as advertiser_id,
 			s.site_group as site_group,
 			group_concat(distinct pm.method) as payment_method,
@@ -466,6 +496,7 @@ function get_monthly_total_mails($year_month, $is_sample = false) {
 			$where
 		GROUP BY
 			m.reqid,
+			adg.ad_group_id,
 			v.advertiser_id,
 			s.site_group
 		WITH ROLLUP

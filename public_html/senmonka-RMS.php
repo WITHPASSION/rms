@@ -129,69 +129,92 @@ function changeYM() {
 			for (i = 0; i < keys.length; i++) {
 				var req_id = keys[i];
 				var office = json[req_id];
-				var ad_keys = Object.keys(office.advertisers);
-				var office_row_count = 1;
-				for (n = 0; n < ad_keys.length; n++) {
-					var adv = office.advertisers[ad_keys[n]];
-					var med_keys = Object.keys(adv.medias);
-					for (z = 0; z < med_keys.length; z++) {
-						var med = adv.medias[med_keys[z]];
-						if (med.call_count > 0 || med.sample_call_count > 0 || med.mail_count > 0 || med.sample_mail_count > 0) {
-							office_row_count++;
+				var adg_keys = Object.keys(office.ad_groups);
+
+				for (n = 0; n < adg_keys.length; n++) {
+					var ad_group_id = adg_keys[n];
+					var ad_group = json[req_id]['ad_groups'][ad_group_id];
+					var ad_keys = Object.keys(ad_group.advertisers);
+					var office_row_count = 1;
+
+					for (t = 0; t < ad_keys.length; t++) {
+						var adv = ad_group.advertisers[ad_keys[t]];
+						var med_keys = Object.keys(adv.medias);
+						for (z = 0; z < med_keys.length; z++) {
+							var med = adv.medias[med_keys[z]];
+							if (med.call_count > 0 || med.sample_call_count > 0 || med.mail_count > 0 || med.sample_mail_count > 0) {
+								office_row_count++;
+							}
 						}
+						office_row_count++;
 					}
-					office_row_count++;
-				}
-				var has_bill = false;
-				if (office.call_count > 0 || office.mail_count > 0) {
-					has_bill = true;
-				}
-				var office_named = false;
-				for (n = 0; n < ad_keys.length; n++) {
-					var ad_id = ad_keys[n];
-					var adv = office.advertisers[ad_id];
-					var med_keys = Object.keys(adv.medias);
-					var adv_named = false;
-					var adv_row_count = 1;
-					for (z = 0; z < med_keys.length; z++) {
-						var med = adv.medias[med_keys[z]];
-						if (med.call_count > 0 || med.sample_call_count > 0 || med.mail_count > 0 || med.sample_mail_count > 0) {
-							adv_row_count++;
-						}
+
+					var has_bill = false;
+					if (office.call_count > 0 || office.mail_count > 0) {
+						has_bill = true;
 					}
-					for (z = 0; z < med_keys.length; z++) {
-						var med = adv.medias[med_keys[z]];
-						var med_name = "";
-						if (med.call_count == 0 && med.sample_call_count == 0 && med.mail_count == 0 && med.sample_mail_count == 0) {
-							continue;
+					var office_named = false;
+					for (t = 0; t < ad_keys.length; t++) {
+						var ad_id = ad_keys[t];
+						var adv = ad_group.advertisers[ad_id];
+						var med_keys = Object.keys(adv.medias);
+						var adv_named = false;
+						var adv_row_count = 1;
+						for (z = 0; z < med_keys.length; z++) {
+							var med = adv.medias[med_keys[z]];
+							if (med.call_count > 0 || med.sample_call_count > 0 || med.mail_count > 0 || med.sample_mail_count > 0) {
+								adv_row_count++;
+							}
 						}
-						if (med_keys[z] == "shakkin") {
-							med_name = "借金問題";
-						}
-						else if (med_keys[z] == "souzoku") {
-							med_name = "相続問題";
-						}
-						else if (med_keys[z] == "koutsujiko") {
-							med_name = "交通事故";
-						}
-						else if (med_keys[z] == "ninibaikyaku") {
-							med_name = "任意売却";
-						}
-						else if (med_keys[z] == "meigihenkou") {
-							med_name = "名義変更";
-						}
-						else if (med_keys[z] == "setsuritsu") {
-							med_name = "会社設立";
-						}
-						else if (med_keys[z] == "keijijiken") {
-							med_name = "刑事事件";
-						}
-						else if (med_keys[z] == "LP") {
-							med_name = "Ｌ　Ｐ　";
-						}
-						if (med.payment_method.lastIndexOf('月額固定', 0) === 0) {
-							//月額固定費の案件が有ればダウンロードボタン表示
-							has_bill = true;
+						for (z = 0; z < med_keys.length; z++) {
+							var med = adv.medias[med_keys[z]];
+							var med_name = "";
+							if (med.call_count == 0 && med.sample_call_count == 0 && med.mail_count == 0 && med.sample_mail_count == 0) {
+								continue;
+							}
+							if (med_keys[z] == "shakkin") {
+								med_name = "借金問題";
+							}
+							else if (med_keys[z] == "souzoku") {
+								med_name = "相続問題";
+							}
+							else if (med_keys[z] == "koutsujiko") {
+								med_name = "交通事故";
+							}
+							else if (med_keys[z] == "ninibaikyaku") {
+								med_name = "任意売却";
+							}
+							else if (med_keys[z] == "meigihenkou") {
+								med_name = "名義変更";
+							}
+							else if (med_keys[z] == "setsuritsu") {
+								med_name = "会社設立";
+							}
+							else if (med_keys[z] == "keijijiken") {
+								med_name = "刑事事件";
+							}
+							else if (med_keys[z] == "LP") {
+								med_name = "Ｌ　Ｐ　";
+							}
+							if (med.payment_method.lastIndexOf('月額固定', 0) === 0) {
+								//月額固定費の案件が有ればダウンロードボタン表示
+								has_bill = true;
+							}
+							html += "<tr>";
+							if (!office_named) {
+								html += "<td rowspan='" + office_row_count + "'>" + req_id + "." + office.req_ad_name + "</td>";
+								office_named = true;
+							}
+							if (!adv_named) {
+								html += "<td rowspan='" + adv_row_count + "'>" + ad_id + "." + adv.office_name + "</td>";
+								adv_named = true;
+							}
+							html += "<td>" + med_name + "<small>（" + med.payment_method + "）</small></td>";
+							html += "<td class='right_txt'>" + med.call_count + "</td>";
+							html += "<td class=''><small>(" + med.sample_call_count + ")</small></td>";
+							html += "<td class='right_txt'>" + med.mail_count + "</td>";
+							html += "<td class=''><small>(" + med.sample_mail_count + ")</small></td>";
+							html += "</tr>";
 						}
 						html += "<tr>";
 						if (!office_named) {
@@ -202,47 +225,34 @@ function changeYM() {
 							html += "<td rowspan='" + adv_row_count + "'>" + ad_id + "." + adv.office_name + "</td>";
 							adv_named = true;
 						}
-						html += "<td>" + med_name + "<small>（" + med.payment_method + "）</small></td>";
-						html += "<td class='right_txt'>" + med.call_count + "</td>";
-						html += "<td class=''><small>(" + med.sample_call_count + ")</small></td>";
-						html += "<td class='right_txt'>" + med.mail_count + "</td>";
-						html += "<td class=''><small>(" + med.sample_mail_count + ")</small></td>";
+						html += "<td class='bold'>事務所計</td>";
+						html += "<td class='right_txt bold'>" + adv.call_count + "</td>";
+						html += "<td class=''><small>(" + adv.sample_call_count + ")</small></td>";
+						html += "<td class='right_txt bold'>" + adv.mail_count + "</td>";
+						html += "<td class=''><small>(" + adv.sample_mail_count + ")</small></td>";
 						html += "</tr>";
 					}
 					html += "<tr>";
-					if (!office_named) {
-						html += "<td rowspan='" + office_row_count + "'>" + req_id + "." + office.req_ad_name + "</td>";
-						office_named = true;
+					if (has_bill) {
+						html += "<td class='right_txt'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + req_id + ")' style='font-size: 1.2em; font-weight: bold;'></td>";
+						html += "<td class='bold_blue'>請求計</td>";
+						html += "<td class='right_txt bold_blue'>" + office.call_count + "</td>";
+						html += "<td class=''><small>(" + office.sample_call_count + ")</small></td>";
+						html += "<td class='right_txt bold_blue'>" + office.mail_count + "</td>";
+						html += "<td class=''><small>(" + office.sample_mail_count + ")</small></td>";
 					}
-					if (!adv_named) {
-						html += "<td rowspan='" + adv_row_count + "'>" + ad_id + "." + adv.office_name + "</td>";
-						adv_named = true;
+					else {
+						html += "<td></td>";
+						html += "<td class='gray_down'>請求計</td>";
+						html += "<td class='right_txt gray_down'>" + office.call_count + "</td>";
+						html += "<td class='gray_down'><small>(" + office.sample_call_count + ")</small></td>";
+						html += "<td class='right_txt gray_down'>" + office.mail_count + "</td>";
+						html += "<td class='gray_down'><small>(" + office.sample_mail_count + ")</small></td>";
 					}
-					html += "<td class='bold'>事務所計</td>";
-					html += "<td class='right_txt bold'>" + adv.call_count + "</td>";
-					html += "<td class=''><small>(" + adv.sample_call_count + ")</small></td>";
-					html += "<td class='right_txt bold'>" + adv.mail_count + "</td>";
-					html += "<td class=''><small>(" + adv.sample_mail_count + ")</small></td>";
 					html += "</tr>";
 				}
-				html += "<tr>";
-				if (has_bill) {
-					html += "<td class='right_txt'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + req_id + ")' style='font-size: 1.2em; font-weight: bold;'></td>";
-					html += "<td class='bold_blue'>請求計</td>";
-					html += "<td class='right_txt bold_blue'>" + office.call_count + "</td>";
-					html += "<td class=''><small>(" + office.sample_call_count + ")</small></td>";
-					html += "<td class='right_txt bold_blue'>" + office.mail_count + "</td>";
-					html += "<td class=''><small>(" + office.sample_mail_count + ")</small></td>";
-				}
-				else {
-					html += "<td></td>";
-					html += "<td class='gray_down'>請求計</td>";
-					html += "<td class='right_txt gray_down'>" + office.call_count + "</td>";
-					html += "<td class='gray_down'><small>(" + office.sample_call_count + ")</small></td>";
-					html += "<td class='right_txt gray_down'>" + office.mail_count + "</td>";
-					html += "<td class='gray_down'><small>(" + office.sample_mail_count + ")</small></td>";
-				}
-				html += "</tr>";
+
+
 			}
 			html += "</body>";
 			$("#office_table").html(html);
@@ -311,6 +321,7 @@ while (true) {
 <table class="offices">
 	<thead>
 		<th>請求先</th>
+		<th>事務所グループ</th>
 		<th>事務所</th>
 		<th>メディア</th>
 		<th colspan="2">請求コール数 <small>(参考値)</small></th>
