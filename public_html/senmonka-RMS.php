@@ -1,72 +1,8 @@
-<?php 
-$pdo = null;
-connect_db();
-$ad_form_data = get_adformdata();
-
-function connect_db() {
-	global $pdo;
-
-	$path = parse_ini_file("../rms.cnf");		
-	foreach($path as $key => $db_path) {
-		$configs = parse_ini_file($db_path);
-	}
-	foreach($configs as $key =>$value){
-		if($key == "db_request") {
-			$db_request = $value;
-		}
-		if($key == "db_cdr") {
-			$db_portal = $value;
-		}
-		if($key == "host") {
-			$host = $value;
-		}	
-		if($key == "name") {
-			$name = $value;
-		}
-		if($key == "pass"){
-			$pass = $value;
-		}	
-	}
-
-	$dsn = "mysql:dbname=$db_request;host=$host";
-	$user= "$name";
-	$pass= "$pass";
-	try {
-		$pdo = new PDO($dsn,$user,$pass);
-	}
-	catch(PDOException $e) {
-		exit ('接続ミス'.$e->getMessage());
-	}
-	$stmt = $pdo->query('SET NAMES utf8');
-	if(!$stmt) {
-		$info = $pdo->errorinfo();
-		exit($info[2]);
-	}
-}
-function get_adformdata() {
-	global $pdo;
-	$stmt = $pdo->query("SELECT req_id,req_ad_name FROM ad_req_data");
-	return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function get_when_selected_time_call_data($year, $month) {
-	global $pdo;
-	$stmt = $pdo->query("SELECT req_id,year,month FROM ad_monthly_valid_call WHERE year=$year AND month=$month");
-	return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-function get_when_selected_time_mail_data($year, $month) {
-	global $pdo;
-	$stmt = $pdo->query("SELECT req_id FROM ad_monthly_mail_num WHERE year=$year AND month=$month");
-	return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-?>
 <!DOCTYPE html>
 <html lang="ja">
 <head> 
 <meta charset="UTF-8">
-<title>request_manager</title>
+<title>月次請求内容一覧</title>
 <style>
 .offices{
 	font-size: 12px;
@@ -98,6 +34,10 @@ function get_when_selected_time_mail_data($year, $month) {
 .bold {
 	font-weight: bold;
 }
+.bold_steel_blue {
+	font-weight: bold;
+	color: steelblue;
+}
 .bold_blue {
 	font-weight: bold;
 	color: blue;
@@ -127,39 +67,62 @@ function changeYM() {
 			var html = "<body>";
 			var keys = Object.keys(json);
 			for (i = 0; i < keys.length; i++) {
-				var req_id = keys[i];
-				var office = json[req_id];
-				var adg_keys = Object.keys(office.ad_groups);
+				var bill_payer_id = keys[i];
+				var bill_payer = json[bill_payer_id];
+				var adg_keys = Object.keys(bill_payer.ad_groups);
+				var bill_payer_row_count = 1;
 
+				//請求先分の行数カウント
 				for (n = 0; n < adg_keys.length; n++) {
 					var ad_group_id = adg_keys[n];
-					var ad_group = json[req_id]['ad_groups'][ad_group_id];
+					var ad_group = json[bill_payer_id]['ad_groups'][ad_group_id];
 					var ad_keys = Object.keys(ad_group.advertisers);
-					var office_row_count = 1;
-
+					//事務所数分の行数カウント
 					for (t = 0; t < ad_keys.length; t++) {
 						var adv = ad_group.advertisers[ad_keys[t]];
 						var med_keys = Object.keys(adv.medias);
 						for (z = 0; z < med_keys.length; z++) {
 							var med = adv.medias[med_keys[z]];
 							if (med.call_count > 0 || med.sample_call_count > 0 || med.mail_count > 0 || med.sample_mail_count > 0) {
-								office_row_count++;
+								bill_payer_row_count++;
 							}
 						}
-						office_row_count++;
+						bill_payer_row_count++;
+					}
+					bill_payer_row_count++;
+				}
+
+				var bill_payer_named = false;
+				for (n = 0; n < adg_keys.length; n++) {
+					var ad_group_id = adg_keys[n];
+					var ad_group = json[bill_payer_id]['ad_groups'][ad_group_id];
+					var ad_keys = Object.keys(ad_group.advertisers);
+					var group_row_count = 1;
+					//事務所数分の行数カウント
+					for (t = 0; t < ad_keys.length; t++) {
+						var adv = ad_group.advertisers[ad_keys[t]];
+						var med_keys = Object.keys(adv.medias);
+						for (z = 0; z < med_keys.length; z++) {
+							var med = adv.medias[med_keys[z]];
+							if (med.call_count > 0 || med.sample_call_count > 0 || med.mail_count > 0 || med.sample_mail_count > 0) {
+								group_row_count++;
+							}
+						}
+						group_row_count++;
 					}
 
 					var has_bill = false;
-					if (office.call_count > 0 || office.mail_count > 0) {
+					if (bill_payer.call_count > 0 || bill_payer.mail_count > 0) {
 						has_bill = true;
 					}
-					var office_named = false;
+					var group_named = false;
 					for (t = 0; t < ad_keys.length; t++) {
 						var ad_id = ad_keys[t];
 						var adv = ad_group.advertisers[ad_id];
 						var med_keys = Object.keys(adv.medias);
 						var adv_named = false;
 						var adv_row_count = 1;
+						//メディア数分の行数カウント
 						for (z = 0; z < med_keys.length; z++) {
 							var med = adv.medias[med_keys[z]];
 							if (med.call_count > 0 || med.sample_call_count > 0 || med.mail_count > 0 || med.sample_mail_count > 0) {
@@ -201,15 +164,19 @@ function changeYM() {
 								has_bill = true;
 							}
 							html += "<tr>";
-							if (!office_named) {
-								html += "<td rowspan='" + office_row_count + "'>" + req_id + "." + office.req_ad_name + "</td>";
-								office_named = true;
+							if (!bill_payer_named) {
+								html += "<td rowspan='" + bill_payer_row_count + "'>" + bill_payer_id + "." + bill_payer.bill_payer_name + "</td>";
+								bill_payer_named = true;
+							}
+							if (!group_named) {
+								html += "<td rowspan='" + group_row_count + "'>" + ad_group_id + "." + ad_group.group_name + "</td>";
+								group_named = true;
 							}
 							if (!adv_named) {
 								html += "<td rowspan='" + adv_row_count + "'>" + ad_id + "." + adv.office_name + "</td>";
 								adv_named = true;
 							}
-							html += "<td>" + med_name + "<small>（" + med.payment_method + "）</small></td>";
+							html += "<td class='right_txt'>" + med_name + "<small>（" + med.payment_method + "）</small></td>";
 							html += "<td class='right_txt'>" + med.call_count + "</td>";
 							html += "<td class=''><small>(" + med.sample_call_count + ")</small></td>";
 							html += "<td class='right_txt'>" + med.mail_count + "</td>";
@@ -217,15 +184,19 @@ function changeYM() {
 							html += "</tr>";
 						}
 						html += "<tr>";
-						if (!office_named) {
-							html += "<td rowspan='" + office_row_count + "'>" + req_id + "." + office.req_ad_name + "</td>";
-							office_named = true;
+						if (!bill_payer_named) {
+							html += "<td rowspan='" + bill_payer_row_count + "'>" + bill_payer_id + "." + bill_payer.bill_payer_name + "</td>";
+							bill_payer_named = true;
+						}
+						if (!group_named) {
+							html += "<td rowspan='" + group_row_count + "'>" + ad_group_id + "." + ad_group.group_name + "</td>";
+							group_named = true;
 						}
 						if (!adv_named) {
 							html += "<td rowspan='" + adv_row_count + "'>" + ad_id + "." + adv.office_name + "</td>";
 							adv_named = true;
 						}
-						html += "<td class='bold'>事務所計</td>";
+						html += "<td class='right_txt bold'>事務所計</td>";
 						html += "<td class='right_txt bold'>" + adv.call_count + "</td>";
 						html += "<td class=''><small>(" + adv.sample_call_count + ")</small></td>";
 						html += "<td class='right_txt bold'>" + adv.mail_count + "</td>";
@@ -233,26 +204,31 @@ function changeYM() {
 						html += "</tr>";
 					}
 					html += "<tr>";
-					if (has_bill) {
-						html += "<td class='right_txt'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + req_id + ")' style='font-size: 1.2em; font-weight: bold;'></td>";
-						html += "<td class='bold_blue'>請求計</td>";
-						html += "<td class='right_txt bold_blue'>" + office.call_count + "</td>";
-						html += "<td class=''><small>(" + office.sample_call_count + ")</small></td>";
-						html += "<td class='right_txt bold_blue'>" + office.mail_count + "</td>";
-						html += "<td class=''><small>(" + office.sample_mail_count + ")</small></td>";
-					}
-					else {
-						html += "<td></td>";
-						html += "<td class='gray_down'>請求計</td>";
-						html += "<td class='right_txt gray_down'>" + office.call_count + "</td>";
-						html += "<td class='gray_down'><small>(" + office.sample_call_count + ")</small></td>";
-						html += "<td class='right_txt gray_down'>" + office.mail_count + "</td>";
-						html += "<td class='gray_down'><small>(" + office.sample_mail_count + ")</small></td>";
-					}
+					html += "<td colspan='2' class='right_txt bold_steel_blue'>事務所グループ計</td>";
+					html += "<td class='right_txt bold_steel_blue'>" + ad_group.call_count + "</td>";
+					html += "<td class=''><small>(" + ad_group.sample_call_count + ")</small></td>";
+					html += "<td class='right_txt bold_steel_blue'>" + ad_group.mail_count + "</td>";
+					html += "<td class=''><small>(" + ad_group.sample_mail_count + ")</small></td>";
 					html += "</tr>";
 				}
 
-
+				html += "<tr>";
+				if (has_bill) {
+					html += "<td colspan='3' class='right_txt bold_blue'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + bill_payer_id + ")' style='font-size: 1.2em; font-weight: bold;'>";
+					html += "　請求計</td>";
+					html += "<td class='right_txt bold_blue'>" + bill_payer.call_count + "</td>";
+					html += "<td class=''><small>(" + bill_payer.sample_call_count + ")</small></td>";
+					html += "<td class='right_txt bold_blue'>" + bill_payer.mail_count + "</td>";
+					html += "<td class=''><small>(" + bill_payer.sample_mail_count + ")</small></td>";
+				}
+				else {
+					html += "<td colspan='3' class='right_txt gray_down'>請求計</td>";
+					html += "<td class='right_txt gray_down'>" + bill_payer.call_count + "</td>";
+					html += "<td class='gray_down'><small>(" + bill_payer.sample_call_count + ")</small></td>";
+					html += "<td class='right_txt gray_down'>" + bill_payer.mail_count + "</td>";
+					html += "<td class='gray_down'><small>(" + bill_payer.sample_mail_count + ")</small></td>";
+				}
+				html += "</tr>";
 			}
 			html += "</body>";
 			$("#office_table").html(html);
@@ -260,9 +236,9 @@ function changeYM() {
 	);
 }
 
-function download_bill(req_id) {
+function download_bill(bill_payer_id) {
 	document.form
-	form2.change.value = req_id;
+	form2.change.value = bill_payer_id;
 	return form2.submit();
 }
 
