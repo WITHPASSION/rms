@@ -203,24 +203,31 @@ function create_monthly_details($year, $month, $year_month) {
 							break;
 					}
 					#電話重複の確認
-					if ($call_minutes >= 60 && $dpl_tel_cnt == 1 && $dpl_mail_cnt == 0) {
-						if ($redirect_status == 21 || $redirect_status == 22) {
-							$check_call_dpl = "○";
-							$count_valid_call++;
-						}
+					if($dpl_tel_cnt >= 2 && $dpl_mail_cnt > 0) {
+						$check_call_dpl = "同一電話・メール";
+						$count_invalid_call++;
 					}
-					else if ($tel_from == "anonymous" && $call_minutes >= 60) {
-						$check_call_dpl = "○";
-						$count_valid_call++;
-					}
-					else if ($dpl_tel_cnt >= 2) {
+					else if($dpl_tel_cnt >= 2) {
 						$check_call_dpl = "同一電話";
 						$count_invalid_call++;
+					}
+					else if($dpl_mail_cnt > 0) {
+						$check_call_dpl = "同一メール";
+						$count_invalid_call++;
+					}
+					else if ($call_minutes >= 60) {
+						if ($tel_from == "anonymous" OR ($dpl_tel_cnt < 2 && $dpl_mail_cnt == 0)) {
+							if ($redirect_status == 21 || $redirect_status == 22) {
+								$check_call_dpl = "○";
+								$count_valid_call++;
+							}
+						}
 					}
 					else {
 						$check_call_dpl = null;
 						$count_invalid_call++;
 					}
+
 					$reviser->addString(0, $i, 0, $ad_id);
 					$reviser->addString(0, $i, 1, $ad_name);
 					$reviser->addString(0, $i, 3, $media_name);

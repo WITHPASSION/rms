@@ -1146,16 +1146,21 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			}
 
 			#電話重複の確認
-			if ($call_minutes >= 60 && $dpl_tel_cnt == 1 && $dpl_mail_cnt == 0) {
-				if ($redirect_status == 21 || $redirect_status == 22) {
-					$check_call_dpl = "○";
-				}
-			}
-			else if($tel_from == "anonymous" && $call_minutes >= 60) {
-				$check_call_dpl = "○";
+			if($dpl_tel_cnt >= 2 && $dpl_mail_cnt > 0) {
+				$check_call_dpl = "同一電話・メール";
 			}
 			else if($dpl_tel_cnt >= 2) {
 				$check_call_dpl = "同一電話";
+			}
+			else if($dpl_mail_cnt > 0) {
+				$check_call_dpl = "同一メール";
+			}
+			else if ($call_minutes >= 60) {
+				if ($tel_from == "anonymous" OR ($dpl_tel_cnt < 2 && $dpl_mail_cnt == 0)) {
+					if ($redirect_status == 21 || $redirect_status == 22) {
+						$check_call_dpl = "○";
+					}
+				}
 			}
 			else {
 				$check_call_dpl = null;
