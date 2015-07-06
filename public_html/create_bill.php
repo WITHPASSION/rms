@@ -1146,13 +1146,13 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			}
 
 			#電話重複の確認
-			if($dpl_tel_cnt > 0 && $dpl_mail_cnt > 0) {
+			if ($call_minutes >= 60 && $dpl_tel_cnt > 0 && $dpl_mail_cnt > 0) {
 				$check_call_dpl = "同一電話・メール";
 			}
-			else if($dpl_tel_cnt > 0) {
+			else if ($call_minutes >= 60 && $dpl_tel_cnt > 0) {
 				$check_call_dpl = "同一電話";
 			}
-			else if($dpl_mail_cnt > 0) {
+			else if ($call_minutes >= 60 && $dpl_mail_cnt > 0) {
 				$check_call_dpl = "同一メール";
 			}
 			else if ($call_minutes >= 60) {
