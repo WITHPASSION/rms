@@ -255,7 +255,7 @@ function get_monthly_total_calls($year_month) {
 		WHERE
 			m.adid = v.advertiser_id AND
 			DATE_FORMAT(v.date_from, '%Y%m') = '$year_month' AND
-			v.dpl_tel_cnt <= 1 AND
+			v.dpl_tel_cnt = 0 AND
 			v.dpl_mail_cnt = 0 AND
 			v.call_minutes >= 60
 		GROUP BY
@@ -284,8 +284,8 @@ function get_monthly_total_mails($year_month) {
 			s.site_type = v.site_type AND
 			m.adid = v.advertiser_id AND
 			DATE_FORMAT(v.register_dt, '%Y%m') = '$year_month' AND
-			v.dpl_tel_cnt <= 0 AND
-			v.dpl_mail_cnt <= 0
+			v.dpl_tel_cnt = 0 AND
+			v.dpl_mail_cnt = 0
 		GROUP BY
 			m.reqid,
 			v.advertiser_id,

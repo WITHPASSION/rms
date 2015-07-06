@@ -119,7 +119,7 @@ function fetch_req_call_data($year_month, $year, $month, $reqid) {
 				tel_from <> 'anonymous' AND
 				redirect_status in(21,22) AND
 				DATE_FORMAT(date_from,'%Y%m') = $year_month AND
-				dpl_tel_cnt <= 1 AND
+				dpl_tel_cnt = 0 AND
 				dpl_mail_cnt = 0 AND
 				call_minutes >= 60
 		");
