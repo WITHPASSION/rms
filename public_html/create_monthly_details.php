@@ -203,11 +203,11 @@ function create_monthly_details($year, $month, $year_month) {
 							break;
 					}
 					#電話重複の確認
-					if($dpl_tel_cnt >= 2 && $dpl_mail_cnt > 0) {
+					if($dpl_tel_cnt > 0 && $dpl_mail_cnt > 0) {
 						$check_call_dpl = "同一電話・メール";
 						$count_invalid_call++;
 					}
-					else if($dpl_tel_cnt >= 2) {
+					else if($dpl_tel_cnt > 0) {
 						$check_call_dpl = "同一電話";
 						$count_invalid_call++;
 					}
@@ -216,7 +216,7 @@ function create_monthly_details($year, $month, $year_month) {
 						$count_invalid_call++;
 					}
 					else if ($call_minutes >= 60) {
-						if ($tel_from == "anonymous" OR ($dpl_tel_cnt < 2 && $dpl_mail_cnt == 0)) {
+						if ($tel_from == "anonymous" OR ($dpl_tel_cnt == 0 && $dpl_mail_cnt == 0)) {
 							if ($redirect_status == 21 || $redirect_status == 22) {
 								$check_call_dpl = "○";
 								$count_valid_call++;
@@ -300,7 +300,7 @@ function create_monthly_details($year, $month, $year_month) {
 			$check_mail_dpl = "○";
 			$count_valid_mail++;
 		}
-		else if ($dpl_tel_cnt >= 1 || $dpl_mail_cnt >= 1) {
+		else if ($dpl_tel_cnt > 0 || $dpl_mail_cnt > 0) {
 			$check_mail_dpl = "重複";
 			$count_invalid_mail++;
 		}

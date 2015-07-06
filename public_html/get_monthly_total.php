@@ -394,10 +394,10 @@ function get_billing_office_list() {
 
 function get_monthly_total_calls($year_month, $is_sample = false) {
 	global $pdo_request;
-	$where = "v.dpl_tel_cnt_for_billing <= 1 AND v.call_minutes >= v.charge_seconds AND";
+	$where = "v.dpl_tel_cnt_for_billing = 0 AND v.call_minutes >= v.charge_seconds AND";
 	if ($is_sample)
 	{
-		$where = "v.dpl_tel_cnt <= 1 AND v.call_minutes >= 60 AND";
+		$where = "v.dpl_tel_cnt = 0 AND v.call_minutes >= 60 AND";
 	}
 	$stmt = $pdo_request->query("
 		SELECT
@@ -491,8 +491,8 @@ function get_monthly_total_mails($year_month, $is_sample = false) {
 			gpm.payment_method_id = pm.id AND
 			CAST(v.register_dt AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
 			DATE_FORMAT(v.register_dt, '%Y%m') = '$year_month' AND
-			v.dpl_tel_cnt <= 0 AND
-			v.dpl_mail_cnt <= 0
+			v.dpl_tel_cnt = 0 AND
+			v.dpl_mail_cnt = 0
 			$where
 		GROUP BY
 			m.bill_payer_id,
