@@ -264,7 +264,8 @@ function get_billing_ids($year, $month) {
 				valid_call_ninibaikyaku is not null OR
 				valid_call_meigihenkou is not null OR
 				valid_call_setsuritsu is not null OR
-				valid_call_keijijiken is not null
+				valid_call_keijijiken is not null OR
+				valid_call_rikon is not null
 			)
 	");
 	$ids = array();
@@ -287,7 +288,8 @@ function get_billing_ids($year, $month) {
 				mail_koutsujiko is not null OR
 				mail_ninibaikyaku is not null OR
 				mail_meigihenkou is not null OR
-				mail_setsuritsu is not null
+				mail_setsuritsu is not null OR
+				mail_rikon is not null
 			)
 	");
 
@@ -313,7 +315,8 @@ function check_valid_call($id,$year,$month){
 			valid_call_koutsujiko,
 			valid_call_meigihenkou,
 			valid_call_setsuritsu,
-			valid_call_keijijiken
+			valid_call_keijijiken,
+			valid_call_rikon
 		FROM
 			ad_monthly_valid_call
 		WHERE
@@ -329,6 +332,7 @@ function check_valid_call($id,$year,$month){
 		$all_call_check += $row['valid_call_meigihenkou'];
 		$all_call_check += $row['valid_call_setsuritsu'];
 		$all_call_check += $row['valid_call_keijijiken'];
+		$all_call_check += $row['valid_call_rikon'];
 	}
 	return $all_call_check;
 }
@@ -343,7 +347,8 @@ function check_valid_mail($id,$year,$month){
 			mail_souzoku,
 			mail_koutsujiko,
 			mail_meigihenkou,
-			mail_setsuritsu
+			mail_setsuritsu,
+			mail_rikon
 		FROM
 			ad_monthly_mail_num
 		WHERE
@@ -358,6 +363,7 @@ function check_valid_mail($id,$year,$month){
 		$all_mail_check += $row['mail_koutsujiko'];
 		$all_mail_check += $row['mail_meigihenkou'];
 		$all_mail_check += $row['mail_setsuritsu'];
+		$all_mail_check += $row['mail_rikon'];
 	}
 	return $all_mail_check;
 }
@@ -374,6 +380,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$all_call_meigihenkou = null;
 	$all_call_setsuritsu = null;
 	$all_call_keijijiken = null;
+	$all_call_rikon = null;
 	#無効も含めた全てのメール数
 	$all_mail_shakkin = null;
 	$all_mail_souzoku = null;
@@ -381,6 +388,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$all_mail_ninibaikyaku = null;
 	$all_mail_meigihenkou = null;
 	$all_mail_setsuritsu = null;
+	$all_mail_rikon = null;
 	#メール日
 	$shakkin_mail_dt = null;
 	$souzoku_mail_dt = null;
@@ -388,6 +396,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$ninibaikyaku_mail_dt = null;
 	$meigihenkou_mail_dt = null;
 	$setsuritsu_mail_dt = null;
+	$rikon_mail_dt = null;
 	$mail_dt = null;
 	#無効詳細内容の取得
 	$inv_shakkin = null;
@@ -397,6 +406,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$inv_meigihenkou = null;
 	$inv_setsuritsu = null;
 	$inv_keijijiken = null;
+	$inv_rikon = null;
 	#メディア毎有効請求
 	$res_shakkin = null;
 	$res_souzoku = null;
@@ -405,6 +415,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$res_meigihenkou = null;
 	$res_setsuritsu = null;
 	$res_keijijiken = null;
+	$res_rikon = null;
 
 	#合計詳細
 	$va_shakkin= null;
@@ -414,6 +425,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$va_meigihenkou = null;
 	$va_setsuritsu = null;
 	$va_keijijiken = null;
+	$va_rikon = null;
 	#template文
 	$all_tmp = null;
 	#空の配列作成
@@ -423,6 +435,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$arr_ninibaikyaku_mail_dt = array();
 	$arr_meigihenkou_mail_dt = array();
 	$arr_setsuritsu_mail_dt = array();
+	$arr_rikon_mail_dt = array();
 
 
 	$sheet_num =0;
@@ -445,6 +458,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$meigihenkou_call = $req_mvc_data['valid_call_meigihenkou'];
 	$setsuritsu_call = $req_mvc_data['valid_call_setsuritsu'];
 	$keijijiken_call = $req_mvc_data['valid_call_keijijiken'];
+	$rikon_call = $req_mvc_data['valid_call_rikon'];
 	$call_sum = $req_mvc_data['call_sum'];
 	####課金メール数請求内容データの取得
 	$stmt2 = $pdo_request->query("
@@ -465,6 +479,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$ninibaikyaku_mail = $req_mail_data['mail_ninibaikyaku'];
 	$meigihenkou_mail = $req_mail_data['mail_meigihenkou'];
 	$setsuritsu_mail = $req_mail_data['mail_setsuritsu'];
+	$rikon_mail = $req_mail_data['mail_rikon'];
 	$mail_sum = $req_mail_data['mail_sum'];
 	#請求合計数の取得
 	$all_sum = $call_sum+$mail_sum;
@@ -511,6 +526,9 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			else if($mi == "G") {
 				$all_call_keijijiken++;
 			}	
+			else if($mi == "H") {
+				$all_call_rikon++;
+			}	
 			else {
 				$all_call_shakkin++;
 			}
@@ -548,15 +566,20 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 				array_push($arr_ninibaikyaku_mail_dt, $mail_day);
 				asort($arr_ninibaikyaku_mail_dt);
 			}
+			else if ($st == 17) {
+				$all_mail_meigihenkou++;
+				array_push($arr_meigihenkou_mail_dt, $mail_day);
+				asort($arr_meigihenkou_mail_dt);
+			}
 			else if ($st == 18) { 
 				$all_mail_setsuritsu++;
 				array_push($arr_setsuritsu_mail_dt, $mail_day);
 				asort($arr_setsuritsu_mail_dt);
 			}
-			else if ($st == 17) {
-				$all_mail_meigihenkou++;
-				array_push($arr_meigihenkou_mail_dt, $mail_day);
-				asort($arr_meigihenkou_mail_dt);
+			else if ($st == 20) { 
+				$all_mail_rikon++;
+				array_push($arr_rikon_mail_dt, $mail_day);
+				asort($arr_rikon_mail_dt);
 			}
 			else {
 				$all_mail_shakkin++;
@@ -590,18 +613,24 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	}
 	$ninibaikyaku_mail_dt = rtrim($ninibaikyaku_mail_dt,'・');
 	$ninibaikyaku_mail_dt = "(".$ninibaikyaku_mail_dt.")";
-	//設立
-	foreach ($arr_setsuritsu_mail_dt as $row) {
-		$setsuritsu_mail_dt .= $row."日・";
-	}
-	$setsuritsu_mail_dt = rtrim($setsuritsu_mail_dt,'・');
-	$setsuritsu_mail_dt = "(".$setsuritsu_mail_dt.")";
 	//名義変更
 	foreach ($arr_meigihenkou_mail_dt as $row) {
 		$meigihenkou_mail_dt .= $row."日・";
 	}
 	$meigihenkou_mail_dt = rtrim($meigihenkou_mail_dt,'・');
 	$meigihenkou_mail_dt = "(".$meigihenkou_mail_dt.")";
+	//設立
+	foreach ($arr_setsuritsu_mail_dt as $row) {
+		$setsuritsu_mail_dt .= $row."日・";
+	}
+	$setsuritsu_mail_dt = rtrim($setsuritsu_mail_dt,'・');
+	$setsuritsu_mail_dt = "(".$setsuritsu_mail_dt.")";
+	//離婚
+	foreach ($arr_rikon_mail_dt as $row) {
+		$rikon_mail_dt .= $row."日・";
+	}
+	$rikon_mail_dt = rtrim($rikon_mail_dt,'・');
+	$rikon_mail_dt = "(".$rikon_mail_dt.")";
 
 	#####事務所情報データの取得
 	$stmt3 = $pdo_request->query("
@@ -635,13 +664,13 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	}
 	#相続all_tmp
 	if ($all_call_souzoku != null && $all_mail_souzoku != null) {
-		$souzoku_all_tmp = "相続サイトで".$all_call_souzoku."件の電話と".$all_mail_souzoku."件のメール".$souzoku_mail_dt;
+		$souzoku_all_tmp = "相続問題サイトで".$all_call_souzoku."件の電話と".$all_mail_souzoku."件のメール".$souzoku_mail_dt;
 	}
 	else if ($all_call_souzoku != null && $all_mail_souzoku == null) {
-		$souzoku_all_tmp = "相続サイトで".$all_call_souzoku."件の電話";
+		$souzoku_all_tmp = "相続問題サイトで".$all_call_souzoku."件の電話";
 	}
 	else if ($all_call_souzoku == null && $all_mail_souzoku != null) {
-		$souzoku_all_tmp = "相続サイトで".$all_mail_souzoku."件のメール".$souzoku_mail_dt;
+		$souzoku_all_tmp = "相続問題サイトで".$all_mail_souzoku."件のメール".$souzoku_mail_dt;
 	}
 	else{
 		$souzoku_all_tmp = "";
@@ -705,6 +734,19 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	else{
 		$keijijiken_all_tmp = "";
 	}
+	#離婚all_tmp
+	if ($all_call_rikon != null && $all_mail_rikon != null) {
+		$rikon_all_tmp = "離婚問題サイトで".$all_call_rikon."件の電話と".$all_mail_rikon."件のメール".$rikon_mail_dt;
+	}
+	else if($all_call_rikon != null && $all_mail_rikon == null) {
+		$rikon_all_tmp = "離婚問題サイトで".$all_call_rikon."件の電話";
+	}
+	else if($all_call_rikon == null && $all_mail_rikon != null){
+		$rikon_all_tmp = "離婚問題サイトで".$all_mail_rikon."件のメール".$rikon_mail_dt;
+	}
+	else{
+		$rikon_all_tmp = "";
+	}
 	#無効件数の計算
 	$res_shakkin = $shakkin_call + $shakkin_mail;
 	$res_souzoku = $souzoku_call + $souzoku_mail;
@@ -713,6 +755,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$res_meigihenkou = $meigihenkou_call + $meigihenkou_mail;
 	$res_setsuritsu = $setsuritsu_call + $setsuritsu_mail;
 	$res_keijijiken = $keijijiken_call ;
+	$res_rikon = $rikon_call + $rikon_mail;
 	$inv_shakkin = $all_call_shakkin + $all_mail_shakkin - $res_shakkin;
 	if ($inv_shakkin > 0) {
 		$inv_tmp_shakkin = "借金問題サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_shakkin."件";
@@ -741,13 +784,17 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	if ($inv_keijijiken > 0){
 		$inv_tmp_keijijiken = "刑事事件サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_keijijiken."件";
 	}
+	$inv_rikon = $all_call_rikon + $all_mail_rikon - $res_rikon;
+	if ($inv_rikon > 0) {
+		$inv_tmp_rikon = "離婚問題サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_setsuritsu."件";
+	}
 
 	#有効件数生成
 	if(!empty($res_shakkin)) {
-		$va_shakkin = "借金".$res_shakkin."件・";
+		$va_shakkin = "借金問題".$res_shakkin."件・";
 	}
 	if(!empty($res_souzoku)) {
-		$va_souzoku = "相続".$res_souzoku."件・";
+		$va_souzoku = "相続問題".$res_souzoku."件・";
 	}
 	if(!empty($res_koutsujiko)) {
 		$va_koutsujiko = "交通事故".$res_koutsujiko."件・";
@@ -763,6 +810,9 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	}
 	if(!empty($res_keijijiken)) {
 		$va_keijijiken = "刑事事件".$res_keijijiken."件・";
+	}
+	if(!empty($res_rikon)) {
+		$va_rikon = "離婚問題".$res_rikon."件・";
 	}
 	//////////////////
 	/////template文生成
@@ -795,6 +845,10 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 		$all_tmp = $all_tmp."
 ".$keijijiken_all_tmp;
 	}
+	if (!empty($rikon_all_tmp)) {
+		$all_tmp = $all_tmp."
+".$rikon_all_tmp;
+	}
 	#inv_tmp
 	if (!empty($inv_tmp_shakkin)) {
 		$inv_tmp = $inv_tmp."
@@ -824,13 +878,17 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 		$inv_tmp = $inv_tmp."
 ".$inv_tmp_keijijiken;
 	}
+	if (!empty($inv_tmp_rikon)) {
+		$inv_tmp = $inv_tmp."
+".$inv_tmp_rikon;
+	}
 	if (!empty($inv_tmp)) {
 		$inv_tmp = $inv_tmp."
 "."を差し引いて";
 	}
 
 	#valid_tmp
-	$va_tmp = $va_shakkin.$va_souzoku.$va_koutsujiko.$va_ninibaikyaku.$va_meigihenkou.$va_setsuritsu.$va_keijijiken;
+	$va_tmp = $va_shakkin.$va_souzoku.$va_koutsujiko.$va_ninibaikyaku.$va_meigihenkou.$va_setsuritsu.$va_keijijiken.$va_rikon;
 	$va_tmp = rtrim($va_tmp,'・');
 
 	###################################
@@ -933,6 +991,20 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 		$sum = ($keijijiken_call) * 10000;
 		$i = $i + 1;
 	}
+	#会社設立
+	if ($rikon_call > 0 OR $rikon_mail > 0) {
+		#月
+		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		#商品名
+		$reviser->addString($sheet_num, $i, 2, "月成果料金(会社設立)");
+		#数量
+		$reviser->addNumber($sheet_num, $i, 4, $rikon_call+$rikon_mail);
+		#単価
+		$reviser->addNumber($sheet_num, $i, 5, 7000);
+		#合計金額
+		$sum =($rikon_call + $rikon_mail) * 7000;
+		$i = $i + 1;
+	}
 	$i = $i + 1;
 	$reviser->addNumber($sheet_num, $i, 0, "2");
 	#月
@@ -990,9 +1062,9 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	########################
 	$sheet_num = 2;
 	#無効も含めた全コール数
-	$all_call = $all_call_shakkin + $all_call_souzoku + $all_call_koutsujiko + $all_call_ninibaikyaku + $all_call_meigihenkou + $all_call_setsuritsu + $all_call_keijijiken;
+	$all_call = $all_call_shakkin + $all_call_souzoku + $all_call_koutsujiko + $all_call_ninibaikyaku + $all_call_meigihenkou + $all_call_setsuritsu + $all_call_keijijiken + $all_call_rikon;
 	#無効も含めた全メール数
-	$all_mail = $all_mail_shakkin + $all_mail_souzoku + $all_mail_koutsujiko + $all_mail_ninibaikyaku + $all_mail_meigihenkou + $all_mail_setsuritsu + $all_mail_keijijiken;
+	$all_mail = $all_mail_shakkin + $all_mail_souzoku + $all_mail_koutsujiko + $all_mail_ninibaikyaku + $all_mail_meigihenkou + $all_mail_setsuritsu + $all_mail_keijijiken + $all_mail_rikon;
 	$reviser->addString($sheet_num, 0, 0, $month."月");
 	#請求通話料金の出力
 	$reviser->addString($sheet_num, 1, 1, "請求通話料金");

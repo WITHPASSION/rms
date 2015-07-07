@@ -156,6 +156,9 @@ function changeYM() {
 							else if (med_keys[z] == "keijijiken") {
 								med_name = "刑事事件";
 							}
+							else if (med_keys[z] == "rikon") {
+								med_name = "離婚問題";
+							}
 							else if (med_keys[z] == "LP") {
 								med_name = "Ｌ　Ｐ　";
 							}

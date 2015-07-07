@@ -42,7 +42,8 @@ $types = array(
 	"ninibaikyaku",
 	"meigihenkou",
 	"setsuritsu",
-	"keijijiken"
+	"keijijiken",
+	"rikon"
 );
 
 #cdrへの接続
@@ -188,6 +189,9 @@ foreach ($call_data as $call) {
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
 		}
+		else if ($media_id == "H"){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["rikon"]["call_count"] += $count;
+		}
 		else if ($media_id == "A-LPPC" || $media_id == "A-LPSmart"){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
@@ -301,6 +305,9 @@ foreach ($mail_data as $mail) {
 		else if ($group == 6){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
+		}
+		else if ($group == 7){
+			$ret[$req_id]["advertisers"][$ad_id]["medias"]["rikon"]["mail_count"] += $count;
 		}
 		else if ($group == 999){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["mail_count"] += $count;
