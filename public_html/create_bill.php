@@ -1155,14 +1155,20 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 		$reviser->addString($sheet_num, 1, 0, "通話データ");
 		$stmt = $pdo_cdr->query("
 			SELECT
-				*
+				dv.*,
+				pm.payment_method_id,
+				pm.charge_seconds
 			FROM
-				call_data_view
+				cdr.call_data_view dv,
+				cdr.office_group_payment_method pm
 			WHERE
-				DATE_FORMAT(date_from,'%Y%m') = $year_month AND
-				advertiser_id = $adid
+				dv.ad_group_id = pm.ad_group_id AND
+				dv.site_group = pm.site_group AND
+				CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date AND
+				DATE_FORMAT(dv.date_from,'%Y%m') = $year_month AND
+				dv.advertiser_id = $adid
 			ORDER BY
-				date_from
+				dv.date_from
 		");
 		$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_call_data as $row) {
@@ -1177,6 +1183,9 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			$dpl_tel_cnt = $row['dpl_tel_cnt'];
 			$dpl_mail_cnt = $row['dpl_mail_cnt'];
 			$redirect_status = $row['redirect_status'];
+			$payment_method_id = $row['payment_method_id'];
+			$charge_seconds = $row['charge_seconds'];
+			$dpl_tel_cnt_for_billing = $row['dpl_tel_cnt_for_billing'];
 			#media_nameの取得
 			$media_name = "";
 			foreach ($arr_media_type_data as $r) {
@@ -1218,6 +1227,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			}
 
 			#電話重複の確認
+			$check_call_dpl = null;
 			if ($call_minutes >= 60 && $dpl_tel_cnt > 0 && $dpl_mail_cnt > 0) {
 				$check_call_dpl = "同一電話・メール";
 			}
@@ -1234,8 +1244,26 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 					}
 				}
 			}
-			else {
-				$check_call_dpl = null;
+
+			#課金対象の確認
+			$check_call_dpl_for_billing = null;
+			if ($payment_method_id < 2) {
+				if ($call_minutes >= $charge_seconds && $dpl_tel_cnt_for_billing > 0 && $dpl_mail_cnt > 0) {
+					$check_call_dpl_for_billing = "同一電話・メール";
+				}
+				else if ($call_minutes >= $charge_seconds && $dpl_tel_cnt_for_billing > 0) {
+					$check_call_dpl_for_billing = "同一電話";
+				}
+				else if ($call_minutes >= $charge_seconds && $dpl_mail_cnt > 0) {
+					$check_call_dpl_for_billing = "同一メール";
+				}
+				else if ($call_minutes >= $charge_seconds) {
+					if ($tel_from == "anonymous" OR ($dpl_tel_cnt_for_billing == 0 && $dpl_mail_cnt == 0)) {
+						if ($redirect_status == 21 || $redirect_status == 22) {
+							$check_call_dpl_for_billing = "○";
+						}
+					}
+				}
 			}
 
 			#Excelへの記入
@@ -1250,6 +1278,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			$reviser->addString($sheet_num, $i, 9, $tel_from);
 			$reviser->addString($sheet_num, $i, 10, $call_status);
 			$reviser->addString($sheet_num, $i, 11, $check_call_dpl);
+			$reviser->addString($sheet_num, $i, 12, $check_call_dpl_for_billing);
 			$i++;
 		}
 	}
