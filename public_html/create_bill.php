@@ -1136,6 +1136,9 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	");
 	$arr_media_type_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+	//エクセル出力用
+	$output_arr = array();
+
 	foreach ($arr_ad_id as $row) {
 		$adid = $row['adid'];
 		#登録事務所名の取得
@@ -1155,14 +1158,20 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 		$reviser->addString($sheet_num, 1, 0, "通話データ");
 		$stmt = $pdo_cdr->query("
 			SELECT
-				*
+				dv.*,
+				pm.payment_method_id,
+				pm.charge_seconds
 			FROM
-				call_data_view
+				cdr.call_data_view dv,
+				cdr.office_group_payment_method pm
 			WHERE
-				DATE_FORMAT(date_from,'%Y%m') = $year_month AND
-				advertiser_id = $adid
+				dv.ad_group_id = pm.ad_group_id AND
+				dv.site_group = pm.site_group AND
+				CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date AND
+				DATE_FORMAT(dv.date_from,'%Y%m') = $year_month AND
+				dv.advertiser_id = $adid
 			ORDER BY
-				date_from
+				dv.date_from
 		");
 		$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_call_data as $row) {
@@ -1177,16 +1186,22 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			$dpl_tel_cnt = $row['dpl_tel_cnt'];
 			$dpl_mail_cnt = $row['dpl_mail_cnt'];
 			$redirect_status = $row['redirect_status'];
+			$payment_method_id = $row['payment_method_id'];
+			$charge_seconds = $row['charge_seconds'];
+			$dpl_tel_cnt_for_billing = $row['dpl_tel_cnt_for_billing'];
 			#media_nameの取得
 			$media_name = "";
+			$site_group = 0;
 			foreach ($arr_media_type_data as $r) {
 				if ($r['freebit_media_id'] == $media_id) {
 					$media_name = $r['media_type_name'];
+					$site_group = $r['site_group'];
 					break;
 				}
-			}
-			if ($media_name == "借金問題") {
-				$media_name = "";
+				else {
+					$media_name = "借金問題";
+					$site_group = "0";
+				}
 			}
 
 			#電話statusの取得
@@ -1218,6 +1233,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			}
 
 			#電話重複の確認
+			$check_call_dpl = null;
 			if ($call_minutes >= 60 && $dpl_tel_cnt > 0 && $dpl_mail_cnt > 0) {
 				$check_call_dpl = "同一電話・メール";
 			}
@@ -1234,27 +1250,84 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 					}
 				}
 			}
-			else {
-				$check_call_dpl = null;
+
+			#課金対象の確認
+			$check_call_dpl_for_billing = null;
+			if ($payment_method_id < 2) {
+				if ($call_minutes >= $charge_seconds && $dpl_tel_cnt_for_billing > 0 && $dpl_mail_cnt > 0) {
+					$check_call_dpl_for_billing = "同一電話・メール";
+				}
+				else if ($call_minutes >= $charge_seconds && $dpl_tel_cnt_for_billing > 0) {
+					$check_call_dpl_for_billing = "同一電話";
+				}
+				else if ($call_minutes >= $charge_seconds && $dpl_mail_cnt > 0) {
+					$check_call_dpl_for_billing = "同一メール";
+				}
+				else if ($call_minutes >= $charge_seconds) {
+					if ($tel_from == "anonymous" OR ($dpl_tel_cnt_for_billing == 0 && $dpl_mail_cnt == 0)) {
+						if ($redirect_status == 21 || $redirect_status == 22) {
+							$check_call_dpl_for_billing = "○";
+						}
+					}
+				}
 			}
 
-			#Excelへの記入
-			$reviser->addString($sheet_num, $i, 0, $adid);
-			$reviser->addString($sheet_num, $i, 1, $ad_name);
-			$reviser->addString($sheet_num, $i, 3, $media_name);
-			$reviser->addString($sheet_num, $i, 4, $tel_to);
-			$reviser->addString($sheet_num, $i, 5, $tel_send);
-			$reviser->addString($sheet_num, $i, 6, $date_from);
-			$reviser->addString($sheet_num, $i, 7, $date_to);
-			$reviser->addNumber($sheet_num, $i, 8, $call_minutes);
-			$reviser->addString($sheet_num, $i, 9, $tel_from);
-			$reviser->addString($sheet_num, $i, 10, $call_status);
-			$reviser->addString($sheet_num, $i, 11, $check_call_dpl);
-			$i++;
+			$arr = array();
+			$arr['adid'] = $adid;
+			$arr['ad_name'] = $ad_name;
+			$arr['media_name'] = $media_name;
+			$arr['site_group'] = $site_group;
+			$arr['tel_to'] = $tel_to;
+			$arr['tel_send'] = $tel_send;
+			$arr['date_from'] = $date_from;
+			$arr['date_to'] = $date_to;
+			$arr['call_minutes'] = $call_minutes;
+			$arr['tel_from'] = $tel_from;
+			$arr['call_status'] = $call_status;
+			$arr['check_call_dpl'] = $check_call_dpl;
+			$arr['check_call_dpl_for_billing'] = $check_call_dpl_for_billing;
+			array_push($output_arr, $arr);
 		}
 	}
+
+	//案件種別、事務所、日付でソート
+	$site_group = array();
+	$adid = array();
+	$date_from = array();
+	foreach ($output_arr as $v) {
+		$site_group[] = $v['site_group'];
+		$adid[] = $v['adid'];
+		$date_from[] = $v['date_from'];
+	}
+
+	array_multisort(
+		$site_group, SORT_NUMERIC, SORT_ASC,
+		$adid, SORT_NUMERIC, SORT_ASC,
+		$date_from, SORT_ASC,
+		$output_arr
+	);
+
+	foreach ($output_arr as $out)
+	{
+			#Excelへの記入
+			$reviser->addString($sheet_num, $i, 0, $out['adid']);
+			$reviser->addString($sheet_num, $i, 1, $out['ad_name']);
+			$reviser->addString($sheet_num, $i, 3, $out['media_name']);
+			$reviser->addString($sheet_num, $i, 4, $out['tel_to']);
+			$reviser->addString($sheet_num, $i, 5, $out['tel_send']);
+			$reviser->addString($sheet_num, $i, 6, $out['date_from']);
+			$reviser->addString($sheet_num, $i, 7, $out['date_to']);
+			$reviser->addNumber($sheet_num, $i, 8, $out['call_minutes']);
+			$reviser->addString($sheet_num, $i, 9, $out['tel_from']);
+			$reviser->addString($sheet_num, $i, 10, $out['call_status']);
+			$reviser->addString($sheet_num, $i, 11, $out['check_call_dpl']);
+			$reviser->addString($sheet_num, $i, 12, $out['check_call_dpl_for_billing']);
+			$i++;
+	}
+
 	//crmシートメールデータ処理
 	$reviser->addString($sheet_num, $i, 0, "メールデータ");
+	$output_arr = array();
 	foreach ($arr_ad_id as $row) {
 		$adid = $row['adid'];
 		#登録事務所名の取得
@@ -1274,18 +1347,26 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 		$sum_crm_mail_data = array();
 		$stmt = $pdo_cdr->query("
 			SELECT
-				*
+				c.*,
+				st.site_group,
+				sg.site_group_name
 			FROM
-				mail_conv
+				cdr.mail_conv c,
+				wordpress.ss_site_type st
+			LEFT OUTER JOIN wordpress.ss_site_group sg
+			ON st.site_group = sg.site_group
 			WHERE
-				advertiser_id = $adid AND
-				DATE_FORMAT(register_dt,'%Y%m') = $year_month
+				c.site_type = st.site_type AND
+				c.advertiser_id = $adid AND
+				DATE_FORMAT(c.register_dt,'%Y%m') = $year_month
 			ORDER BY
 				register_dt
 		");
 		$arr_crm_mail_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_crm_mail_data as $r) {
-			$st = $r['site_type'];
+			$site_type = $r['site_type'];
+			$site_group = $r['site_group'];
+			$site_group_name = $r['site_group_name'];
 			$sender_tel = $r['sender_tel'];
 			$date = $r['register_dt'];
 			$dpl_tel_cnt = $r['dpl_tel_cnt'];
@@ -1305,30 +1386,68 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 				FROM
 					ss_site_type
 				WHERE
-					site_type = $st
+					site_type = $site_type
 			");
 			$arr_st_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
 			foreach ($arr_st_name as $row) {
-				$st_name = $row['site_type_name'];
+				$site_type_name = $row['site_type_name'];
 			}
-			array_push($new_crm_mail_array_data, $ad_name, $st_name, $sender_tel, $date, $check_mail_dpl);
+			array_push($new_crm_mail_array_data, $ad_name, $site_group, $site_group_name, $site_type, $site_type_name, $sender_tel, $date, $check_mail_dpl);
 			array_push($sum_crm_mail_data, $new_crm_mail_array_data);
 		}
 		#配列に代入したメールデータを出力
 		foreach ($sum_crm_mail_data as $row) {
-			$i++;
 			$ad_name = $row['0'];
-			$st_name = $row['1'];
-			$sender_tel = $row['2'];
-			$mail_date = $row['3'];
-			$check_mail_dpl = $row['4'];
-			$reviser->addString($sheet_num, $i, 0, $adid);
-			$reviser->addString($sheet_num, $i, 1, $ad_name);
-			$reviser->addString($sheet_num, $i, 5, $st_name);
-			$reviser->addString($sheet_num, $i, 7, $mail_date);
-			$reviser->addString($sheet_num, $i, 9, $sender_tel);
-			$reviser->addString($sheet_num, $i, 11, $check_mail_dpl);
+			$site_group = $row['1'];
+			$site_group_name = $row['2'];
+			$site_type = $row['3'];
+			$site_type_name = $row['4'];
+			$sender_tel = $row['5'];
+			$mail_date = $row['6'];
+			$check_mail_dpl = $row['7'];
+
+			$arr = array();
+			$arr['adid'] = $adid;
+			$arr['ad_name'] = $ad_name;
+			$arr['site_group'] = $site_group;
+			$arr['site_group_name'] = $site_group_name;
+			$arr['site_type'] = $site_type;
+			$arr['site_type_name'] = $site_type_name;
+			$arr['mail_date'] = $mail_date;
+			$arr['sender_tel'] = $sender_tel;
+			$arr['check_mail_dpl'] = $check_mail_dpl;
+			array_push($output_arr, $arr);
 		}
+	}
+
+	//案件種別、事務所、日付でソート
+	$site_group = array();
+	$adid = array();
+	$mail_date = array();
+	foreach ($output_arr as $v) {
+		$site_group[] = $v['site_group'];
+		$adid[] = $v['adid'];
+		$mail_date[] = $v['mail_date'];
+	}
+
+	array_multisort(
+		$site_group, SORT_NUMERIC, SORT_ASC,
+		$adid, SORT_NUMERIC, SORT_ASC,
+		$mail_date, SORT_ASC,
+		$output_arr
+	);
+
+	foreach ($output_arr as $out)
+	{
+			$i++;
+			#Excelへの記入
+			$reviser->addString($sheet_num, $i, 0, $out['adid']);
+			$reviser->addString($sheet_num, $i, 1, $out['ad_name']);
+			$reviser->addString($sheet_num, $i, 3, $out['site_group_name']);
+			$reviser->addString($sheet_num, $i, 4, $out['site_type_name']);
+			$reviser->addString($sheet_num, $i, 7, $out['mail_date']);
+			$reviser->addString($sheet_num, $i, 9, $out['sender_tel']);
+			$reviser->addString($sheet_num, $i, 11, $out['check_mail_dpl']);
 	}
 
 	#シートネームを設定
