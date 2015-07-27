@@ -1128,13 +1128,13 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	}
 
 	#media_typesへの接続
-	$stmt = $pdo_cdr->query("
+	$stmt = $pdo_wordpress->query("
 		SELECT
 			*
 		FROM
-			media_types
+			ss_site_group
 	");
-	$arr_media_type_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	$arr_site_group_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 	//エクセル出力用
 	$output_arr = array();
@@ -1177,6 +1177,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 		foreach ($arr_call_data as $row) {
 			#配列の値から変数へと代入
 			$media_id = $row['media_id'];
+			$media_type = $row['media_type'];
 			$tel_to = $row['tel_to'];
 			$tel_send = $row['tel_send'];
 			$date_from = $row['date_from'];
@@ -1192,9 +1193,9 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			#media_nameの取得
 			$media_name = "";
 			$site_group = 0;
-			foreach ($arr_media_type_data as $r) {
-				if ($r['freebit_media_id'] == $media_id) {
-					$media_name = $r['media_type_name'];
+			foreach ($arr_site_group_data as $r) {
+				if ($r['media_type'] == $media_type) {
+					$media_name = $r['site_group_name'];
 					$site_group = $r['site_group'];
 					break;
 				}
