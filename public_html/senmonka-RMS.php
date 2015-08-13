@@ -241,7 +241,7 @@ function changeYM() {
 
 function download_bill(bill_payer_id) {
 	document.form
-	form2.change.value = bill_payer_id;
+	form2.bill_payer_id.value = bill_payer_id;
 	return form2.submit();
 }
 
@@ -294,7 +294,7 @@ while (true) {
 <form method="post" name="form2" action="create_bill.php">
 	<input type="hidden" name="year" value="">
 	<input type="hidden" name="month" value="">
-	<input type="hidden" name="change" value="">
+	<input type="hidden" name="bill_payer_id" value="">
 </form>
 <br>
 <table class="offices">

@@ -99,12 +99,12 @@ function create_monthly_details($year, $month, $year_month) {
 	$i = 3;
 	$stmt = $pdo_request->query("
 		SELECT
-			req_id,
-			req_ad_name
+			bill_payer_id,
+			bill_payer_name
 		FROM
-			ad_req_data
+			bill_payers
 	");
-	$arr_req_ad_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	$arr_bill_payers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	#media_typesへの接続
 	$stmt = $pdo_wordpress->query("
 		SELECT
@@ -113,33 +113,37 @@ function create_monthly_details($year, $month, $year_month) {
 			ss_site_group
 	");
 	$arr_site_group_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	foreach ($arr_req_ad_data as $row) {
-		$req_id = $row['req_id'];
-		$req_ad_name = $row['req_ad_name'];
-		$reviser->addString(0, $i, 0, $req_id.$req_ad_name);
+	foreach ($arr_bill_payers as $row) {
+		$bill_payer_id = $row['bill_payer_id'];
+		$bill_payer_name = $row['bill_payer_name'];
+		$reviser->addString(0, $i, 0, $bill_payer_id.$bill_payer_name);
 		$i++;
 		$stmt = $pdo_request->query("
 			SELECT
 				*
 			FROM
-				adid_reqid_matching
+				ad_group_bill_payer
 			WHERE
-				reqid = $req_id
+				bill_payer_id = $bill_payer_id
 		");
-		$arr_ad_id = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		foreach ($arr_ad_id as $row) {
-			$ad_id = $row['adid'];
-			#登録事務所名の取得
+		$arr_bill_payer_id = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		foreach ($arr_bill_payer_id as $row) {
+			$ad_group_id = $row['ad_group_id'];
+			//登録事務所の取得
 			$stmt = $pdo_wordpress->query("
 				SELECT
-					office_name
+					ad.ID,
+					ad.office_name
 				FROM
-					ss_advertisers
+					wordpress.ss_advertisers ad,
+					wordpress.ss_advertiser_ad_group aadg
 				WHERE
-					ID = $ad_id
+					ad.ID = aadg.advertiser_id AND
+					aadg.ad_group_id = $ad_group_id
 			");
 			$arr_ad_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
 			foreach ($arr_ad_name as $row) {
+				$ad_id = $row['ID'];
 				$ad_name = $row['office_name'];
 				$stmt = $pdo_cdr->query("
 					SELECT

@@ -71,22 +71,23 @@ if (empty($year_month)) {
 }
 $year = substr($year_month, 0, 4);
 $month = substr($year_month, 4, 6);
-#req_idの時に処理
+
+//請求対象の取得
 $stmt = $pdo2->query("
 	SELECT
-		req_id
+		bill_payer_id
 	FROM
-		ad_req_data
+		bill_payers
 ");
-$arr_req_id = $stmt->fetchAll(PDO::FETCH_ASSOC);
-foreach ($arr_req_id as $row) {
-	$reqid = $row['req_id'];
-	fetch_req_call_data($year_month, $year, $month, $reqid);
-	fetch_req_mail_data($year_month, $year, $month, $reqid);
+$arr_bill_payer_id = $stmt->fetchAll(PDO::FETCH_ASSOC);
+foreach ($arr_bill_payer_id as $row) {
+	$bill_payer_id = $row['bill_payer_id'];
+	fetch_req_call_data($year_month, $year, $month, $bill_payer_id);
+	fetch_req_mail_data($year_month, $year, $month, $bill_payer_id);
 }
 
 //本番プログラム
-function fetch_req_call_data($year_month, $year, $month, $reqid) {
+function fetch_req_call_data($year_month, $year, $month, $bill_payer_id) {
 	global $pdo, $pdo2;
 	$shakkin = null;
 	$souzoku = null;
@@ -100,15 +101,15 @@ function fetch_req_call_data($year_month, $year, $month, $reqid) {
 	$count_freedial = null;
 	$stmt = $pdo2->query("
 		SELECT
-			adid
+			ad_group_id
 		FROM
-			adid_reqid_matching
+			ad_group_bill_payer
 		WHERE
-			reqid = $reqid
+			bill_payer_id = $bill_payer_id
 	");
-	$arr_adid = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	foreach($arr_adid as $row) {
-		$adid = $row['adid'];
+	$arr_ad_group_id = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	foreach($arr_ad_group_id as $row) {
+		$ad_group_id = $row['ad_group_id'];
 		//call_dataの取得
 		$stmt = $pdo->query("
 			SELECT
@@ -116,7 +117,7 @@ function fetch_req_call_data($year_month, $year, $month, $reqid) {
 			FROM
 				call_data_view
 			WHERE
-				advertiser_id = $adid AND
+				ad_group_id = $ad_group_id AND
 				tel_from <> 'anonymous' AND
 				redirect_status in(21,22) AND
 				DATE_FORMAT(date_from,'%Y%m') = $year_month AND
@@ -159,7 +160,7 @@ function fetch_req_call_data($year_month, $year, $month, $reqid) {
 			FROM
 				call_data_view
 			WHERE
-				advertiser_id = $adid AND
+				ad_group_id = $ad_group_id AND
 				tel_from = 'anonymous' AND
 				DATE_FORMAT(date_from,'%Y%m') = $year_month AND
 				call_minutes >= 60
@@ -199,7 +200,7 @@ function fetch_req_call_data($year_month, $year, $month, $reqid) {
 			FROM
 				call_data_view
 			WHERE
-				advertiser_id = $adid AND
+				ad_group_id = $ad_group_id AND
 				DATE_FORMAT(date_from,'%Y%m') = $year_month
 			GROUP BY
 				tel_to
@@ -226,11 +227,13 @@ function fetch_req_call_data($year_month, $year, $month, $reqid) {
 		//count_freedialの取得
 		$stmt = $pdo->query("
 			SELECT
-				tel
+				ac.tel
 			FROM
-				adsip_conf
+				cdr.adsip_conf ac,
+				wordpress.ss_advertiser_ad_group aadg
 			WHERE
-				office_id = $adid
+				aadg.advertiser_id = ac.office_id AND
+				aadg.ad_group_id = $ad_group_id
 		");
 		$arr_adsip_conf = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_adsip_conf as $row) {
@@ -255,14 +258,14 @@ function fetch_req_call_data($year_month, $year, $month, $reqid) {
 		$call_sum = $shakkin+$souzoku+$koutsujiko+$ninibaikyaku+$meigihenkou+$setsuritsu+$keijijiken+$rikon;
 		$stmt = $pdo2->prepare("
 			REPLACE INTO
-				ad_monthly_valid_call
+				monthly_valid_call
 			VALUES(
 				?,?,?,?,?,?,?,?,?,?,?,?,?,?
 			)
 		");
 		$result = $stmt->execute(
 			array(
-				$reqid,
+				$bill_payer_id,
 				$year,
 				$month,
 				$shakkin,
@@ -283,7 +286,7 @@ function fetch_req_call_data($year_month, $year, $month, $reqid) {
 //end_of_function
 
 //メールデータ本番プログラム
-function fetch_req_mail_data($year_month, $year, $month, $reqid) {
+function fetch_req_mail_data($year_month, $year, $month, $bill_payer_id) {
 	global $pdo,$pdo2;
 	$m_shakkin = null;
 	$m_souzoku = null;
@@ -294,25 +297,27 @@ function fetch_req_mail_data($year_month, $year, $month, $reqid) {
 	$m_rikon = null;
 	$stmt = $pdo2->query("
 		SELECT
-			adid
+			ad_group_id
 		FROM
-			adid_reqid_matching
+			ad_group_bill_payer
 		WHERE
-			reqid = $reqid
+			bill_payer_id = $bill_payer_id
 	");
-	$arr_adid = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	foreach ($arr_adid as $r) {
-		$adid = $r['adid'];
+	$arr_ad_group_id = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	foreach ($arr_ad_group_id as $r) {
+		$ad_group_id = $r['ad_group_id'];
 		$stmt = $pdo->query("
 			SELECT
-				site_type
+				mc.site_type
 			FROM
-				mail_conv
+				cdr.mail_conv mc,
+				wordpress.ss_advertiser_ad_group aadg
 			WHERE
-				dpl_tel_cnt = 0 AND
-				dpl_mail_cnt = 0 AND
-				DATE_FORMAT(register_dt,'%Y%m') = $year_month AND
-				advertiser_id = $adid
+				aadg.advertiser_id = mc.advertiser_id AND
+				mc.dpl_tel_cnt = 0 AND
+				mc.dpl_mail_cnt = 0 AND
+				DATE_FORMAT(mc.register_dt,'%Y%m') = $year_month AND
+				aadg.ad_group_id = $ad_group_id
 		");
 		$mail_result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($mail_result as $row) {
@@ -351,14 +356,14 @@ function fetch_req_mail_data($year_month, $year, $month, $reqid) {
 		$mail_sum =	$m_shakkin+$m_souzoku+$m_koutsujiko+$m_ninibaikyaku+$m_meigihenkou+$m_setsuritsu+$m_rikon;
 		$stmt = $pdo2->prepare("
 			REPLACE INTO
-				ad_monthly_mail_num
+				monthly_mail_num
 			VALUES(
 				?,?,?,?,?,?,?,?,?,?,?
 			)
 		");
 		$result = $stmt->execute(
 			array(
-				$reqid,
+				$bill_payer_id,
 				$year,
 				$month,
 				$m_shakkin,

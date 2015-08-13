@@ -76,8 +76,8 @@ if(!$stmt) {
 	exit($info[2]);
 }
 
-#フォームからの事務所IDの受け取り
-$id = $_POST['change'];
+#フォームからの請求先IDの受け取り
+$bill_payer_id = $_POST['bill_payer_id'];
 #フォームからの年月の受け取り
 $year = $_POST['year'];
 $month = $_POST['month'];
@@ -104,14 +104,14 @@ $year_month = "$year"."$month";
 //一括ダウンロードかどうか
 $pack = $_POST['pack'];
 
-if (!empty($id)) {
+if (!empty($bill_payer_id)) {
 	#チェック関数を呼び出し、nullで無ければExcelに書き出す
-	$call_check = check_valid_call($id,$year,$month);
-	$mail_check = check_valid_mail($id,$year,$month);
+	$call_check = check_valid_call($bill_payer_id,$year,$month);
+	$mail_check = check_valid_mail($bill_payer_id,$year,$month);
 	if (!empty($call_check)|| !empty($mail_check)) {
 		$reviser = NEW Excel_Reviser;
 		$reviser->setInternalCharset('utf-8');	
-		get_each_ad_data($reviser, $id, $year, $month, $year_month);
+		get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month);
 	}
 	else if (empty($call_check) && empty($mail_check)) {
 		print('<!DOCTYPE html>');
@@ -251,9 +251,9 @@ function get_billing_ids($year, $month) {
 	global $pdo_request;
 	$stmt = $pdo_request->query("
 		SELECT
-			req_id
+			bill_payer_id
 		FROM
-			ad_monthly_valid_call
+			monthly_valid_call
 		WHERE
 			year = $year AND
 			month = $month AND
@@ -271,14 +271,14 @@ function get_billing_ids($year, $month) {
 	$ids = array();
 	$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	foreach ($rows as $row) {
-		array_push($ids, $row["req_id"]);
+		array_push($ids, $row["bill_payer_id"]);
 	}
 
 	$stmt = $pdo_request->query("
 		SELECT
-			req_id
+			bill_payer_id
 		FROM
-			smk_request_data.ad_monthly_mail_num
+			smk_request_data.monthly_mail_num
 		WHERE
 			year = $year AND
 			month = $month AND
@@ -295,7 +295,7 @@ function get_billing_ids($year, $month) {
 
 	$rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	foreach ($rows as $row) {
-		array_push($ids, $row["req_id"]);
+		array_push($ids, $row["bill_payer_id"]);
 	}
 
 	$ids = array_unique($ids);
@@ -306,7 +306,7 @@ function get_billing_ids($year, $month) {
 
 
 #call_check関数
-function check_valid_call($id,$year,$month){
+function check_valid_call($bill_payer_id,$year,$month){
 	global $pdo_request;
 	$stmt = $pdo_request->query("
 		SELECT
@@ -318,9 +318,9 @@ function check_valid_call($id,$year,$month){
 			valid_call_keijijiken,
 			valid_call_rikon
 		FROM
-			ad_monthly_valid_call
+			monthly_valid_call
 		WHERE
-			req_id=$id AND
+			bill_payer_id = $bill_payer_id AND
 			year=$year AND
 			month=$month
 	");
@@ -339,7 +339,7 @@ function check_valid_call($id,$year,$month){
 //end_of_function
 
 #mail_check関数
-function check_valid_mail($id,$year,$month){
+function check_valid_mail($bill_payer_id,$year,$month){
 	global $pdo_request;
 	$stmt = $pdo_request->query("
 		SELECT
@@ -350,9 +350,9 @@ function check_valid_mail($id,$year,$month){
 			mail_setsuritsu,
 			mail_rikon
 		FROM
-			ad_monthly_mail_num
+			monthly_mail_num
 		WHERE
-			req_id=$id AND
+			bill_payer_id = $bill_payer_id AND
 			year=$year AND
 			month=$month
 	");
@@ -369,7 +369,7 @@ function check_valid_mail($id,$year,$month){
 }
 //end_of_function
 
-function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath = null) {
+function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, $filepath = null) {
 	#####有効コール請求内容データの取得
 	global $pdo_request,$pdo_cdr,$pdo_wordpress;
 	#無効も含めた全てのコール数
@@ -443,9 +443,9 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 		SELECT
 			*
 		FROM
-			ad_monthly_valid_call
+			monthly_valid_call
 		WHERE
-			req_id = $id AND
+			bill_payer_id = $bill_payer_id AND
 			year = $year AND
 			month = $month
 	");
@@ -465,9 +465,9 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 		SELECT
 			*
 		FROM
-			ad_monthly_mail_num
+			monthly_mail_num
 		WHERE
-			req_id = $id AND
+			bill_payer_id = $bill_payer_id AND
 			year = $year AND
 			month = $month"
 	);
@@ -485,24 +485,24 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$all_sum = $call_sum+$mail_sum;
 	#######無効も含めた全コール数,メール数の取得
 	#無効アリコール数
-	$stmt=$pdo_request->query("
+	$stmt = $pdo_request->query("
 		SELECT
-			*
+			ad_group_id
 		FROM
-			adid_reqid_matching
+			ad_group_bill_payer
 		WHERE
-			reqid = $id
+			bill_payer_id = $bill_payer_id
 	");
-	$arr_ad_id =$stmt->fetchAll(PDO::FETCH_ASSOC);
-	foreach ($arr_ad_id as $row) {
-		$adid = $row['adid'];
+	$arr_ad_group_id =$stmt->fetchAll(PDO::FETCH_ASSOC);
+	foreach ($arr_ad_group_id as $row) {
+		$ad_group_id = $row['ad_group_id'];
 		$stmt = $pdo_cdr->query("
 			SELECT
 				media_id
 			FROM
 				call_data_view
 			WHERE
-				advertiser_id = $adid AND
+				ad_group_id = $ad_group_id AND
 				DATE_FORMAT(date_from,'%Y%m') = $year_month
 		");
 		$arr_all_call_data =$stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -536,18 +536,20 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 		#無効アリメール数,メール日取得
 		$stmt2 = $pdo_cdr->query("
 			SELECT
-				site_type,
-				DATE_FORMAT(register_dt,'%m%d')
+				mc.site_type,
+				DATE_FORMAT(mc.register_dt,'%m%d') as reg_dt
 			FROM
-				mail_conv
+				cdr.mail_conv mc,
+				wordpress.ss_advertiser_ad_group aadg
 			WHERE
-				advertiser_id = $adid AND
-				DATE_FORMAT(register_dt,'%Y%m') = $year_month
+				aadg.advertiser_id = mc.advertiser_id AND
+				DATE_FORMAT(mc.register_dt,'%Y%m') = $year_month AND
+				aadg.ad_group_id = $ad_group_id
 		");
 		$arr_all_mail_data = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 		foreach($arr_all_mail_data as $row) {
 			$st = $row['site_type'];
-			$register_dt = $row["DATE_FORMAT(register_dt,'%m%d')"];
+			$register_dt = $row["reg_dt"];
 			$mail_month = substr($register_dt, 0, 2);
 			$mail_day = substr($register_dt, 2, 2);
 			$mail_day = sprintf('%01d', $mail_day);
@@ -632,22 +634,22 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$rikon_mail_dt = rtrim($rikon_mail_dt,'・');
 	$rikon_mail_dt = "(".$rikon_mail_dt.")";
 
-	#####事務所情報データの取得
+	#####請求対象のの取得
 	$stmt3 = $pdo_request->query("
 		SELECT
 			*
 		FROM
-			ad_req_data
+			bill_payers
 		WHERE
-			req_id = $id
+			bill_payer_id = $bill_payer_id
 	");
-	$ad_data = $stmt3->fetch(PDO::FETCH_ASSOC);
-	$req_ad_name = $ad_data['req_ad_name'];
+	$bill_payer_data = $stmt3->fetch(PDO::FETCH_ASSOC);
+	$bill_payer_name = $bill_payer_data['bill_payer_name'];
 
 	#メール担当者名
-	$recipient_name  = $ad_data['mail_recipient'];
+	$recipient_name  = $bill_payer_data['mail_recipient'];
 	#御担当者名
-	$c_name  = $ad_data['person_in_charge'];
+	$c_name  = $bill_payer_data['person_in_charge'];
 	/*問題毎のメールテンプレート文*/
 	#借金all_tmp
 	if ($all_call_shakkin != null && $all_mail_shakkin != null) {
@@ -897,12 +899,12 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	#monthを表示用数字に変更
 	$month = sprintf('%01d', $month);
 	#郵便番号
-	$reviser->addString($sheet_num, 4, 2, "〒".$ad_data['postal_code']);
+	$reviser->addString($sheet_num, 4, 2, "〒".$bill_payer_data['postal_code']);
 	#住所
-	$reviser->addString($sheet_num, 5, 2, $ad_data['address_1']);
-	$reviser->addString($sheet_num, 6, 2, " ".$ad_data['address_2']);
+	$reviser->addString($sheet_num, 5, 2, $bill_payer_data['address_1']);
+	$reviser->addString($sheet_num, 6, 2, " ".$bill_payer_data['address_2']);
 	#貴社名/御氏名
-	$reviser->addString($sheet_num, 7, 2, $ad_data['req_ad_name']);
+	$reviser->addString($sheet_num, 7, 2, $bill_payer_data['bill_payer_name']);
 	$reviser->addString($sheet_num, 8, 2, $c_name."　様");
 	#行数の定義
 	$i = 18;
@@ -1085,21 +1087,22 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	$i = 2;
 	//crmシートコールデータ処理
 	#発番毎の請求料金の取得
-	foreach ($arr_ad_id as $row) {
-		$adid = $row['adid'];
+	foreach ($arr_ad_group_id as $row) {
+		$ad_group_id = $row['ad_group_id'];
 		$stmt = $pdo_cdr->query("
 			SELECT
 				*
 			FROM
 				call_data_view
 			WHERE
-				DATE_FORMAT(date_from,'%Y%m') = $year_month AND
-				advertiser_id = $adid
+				ad_group_id = $ad_group_id AND
+				DATE_FORMAT(date_from,'%Y%m') = $year_month
 			GROUP BY
 				tel_to
 		");
 		$arr_each_tel_to = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_each_tel_to as $row) {
+			$each_advertiser_id = $row['advertiser_id'];
 			$each_tel_to = $row['tel_to'];
 			$each_media_type = $row['media_type'];
 			$stmt = $pdo_cdr->query("
@@ -1119,7 +1122,7 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			foreach ($arr_each_bill_data as $row) {
 				$each_bill_data = $row['tel_to'];
 				$each_call_charge = $row['call_charge'];
-				$reviser->addString($sheet_num, $i, 0, $adid."-".$each_media_type);
+				$reviser->addString($sheet_num, $i, 0, $each_advertiser_id."-".$each_media_type);
 				$reviser->addString($sheet_num, $i, 1, $each_bill_data);
 				$reviser->addString($sheet_num, $i, 2, $each_call_charge);
 				$i++;
@@ -1139,43 +1142,36 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	//エクセル出力用
 	$output_arr = array();
 
-	foreach ($arr_ad_id as $row) {
-		$adid = $row['adid'];
-		#登録事務所名の取得
-		$stmt = $pdo_wordpress->query("
-			SELECT
-				office_name
-			FROM
-				ss_advertisers
-			WHERE
-				ID = $adid
-		");
-		$arr_ad_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		foreach ($arr_ad_name as $row ) {
-			$ad_name = $row['office_name'];
-		}
+	foreach ($arr_ad_group_id as $row) {
+		$ad_group_id = $row['ad_group_id'];
 		####通話情報の生成
 		$reviser->addString($sheet_num, 1, 0, "通話データ");
 		$stmt = $pdo_cdr->query("
 			SELECT
+				ad.ID as advertiser_id,
+				ad.office_name,
 				dv.*,
 				pm.payment_method_id,
 				pm.charge_seconds
 			FROM
+				wordpress.ss_advertisers ad,
 				cdr.call_data_view dv,
 				cdr.office_group_payment_method pm
 			WHERE
+				dv.advertiser_id = ad.ID AND
 				dv.ad_group_id = pm.ad_group_id AND
 				dv.site_group = pm.site_group AND
 				CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date AND
 				DATE_FORMAT(dv.date_from,'%Y%m') = $year_month AND
-				dv.advertiser_id = $adid
+				dv.ad_group_id = $ad_group_id
 			ORDER BY
 				dv.date_from
 		");
 		$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_call_data as $row) {
 			#配列の値から変数へと代入
+			$advertiser_id = $row['advertiser_id'];
+			$office_name = $row['office_name'];
 			$media_id = $row['media_id'];
 			$media_type = $row['media_type'];
 			$tel_to = $row['tel_to'];
@@ -1274,8 +1270,8 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			}
 
 			$arr = array();
-			$arr['adid'] = $adid;
-			$arr['ad_name'] = $ad_name;
+			$arr['advertiser_id'] = $advertiser_id;
+			$arr['office_name'] = $office_name;
 			$arr['media_name'] = $media_name;
 			$arr['site_group'] = $site_group;
 			$arr['tel_to'] = $tel_to;
@@ -1293,17 +1289,17 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 
 	//案件種別、事務所、日付でソート
 	$site_group = array();
-	$adid = array();
+	$advertiser_id = array();
 	$date_from = array();
 	foreach ($output_arr as $v) {
 		$site_group[] = $v['site_group'];
-		$adid[] = $v['adid'];
+		$advertiser_id[] = $v['advertiser_id'];
 		$date_from[] = $v['date_from'];
 	}
 
 	array_multisort(
 		$site_group, SORT_NUMERIC, SORT_ASC,
-		$adid, SORT_NUMERIC, SORT_ASC,
+		$advertiser_id, SORT_NUMERIC, SORT_ASC,
 		$date_from, SORT_ASC,
 		$output_arr
 	);
@@ -1311,8 +1307,8 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	foreach ($output_arr as $out)
 	{
 			#Excelへの記入
-			$reviser->addString($sheet_num, $i, 0, $out['adid']);
-			$reviser->addString($sheet_num, $i, 1, $out['ad_name']);
+			$reviser->addString($sheet_num, $i, 0, $out['advertiser_id']);
+			$reviser->addString($sheet_num, $i, 1, $out['office_name']);
 			$reviser->addString($sheet_num, $i, 3, $out['media_name']);
 			$reviser->addString($sheet_num, $i, 4, $out['tel_to']);
 			$reviser->addString($sheet_num, $i, 5, $out['tel_send']);
@@ -1329,42 +1325,37 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	//crmシートメールデータ処理
 	$reviser->addString($sheet_num, $i, 0, "メールデータ");
 	$output_arr = array();
-	foreach ($arr_ad_id as $row) {
-		$adid = $row['adid'];
+	foreach ($arr_ad_group_id as $row) {
+		$ad_group_id = $row['ad_group_id'];
 		#登録事務所名の取得
-		$stmt = $pdo_wordpress->query("
-			SELECT
-				office_name
-			FROM
-				ss_advertisers
-			WHERE
-				ID = $adid
-		");
-		$arr_ad_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		foreach ($arr_ad_name as $row) {
-			$ad_name = $row['office_name'];
-		}
-		#全てのメール情報の入る配列
 		$sum_crm_mail_data = array();
 		$stmt = $pdo_cdr->query("
 			SELECT
+				ad.ID as advertiser_id,
+				ad.office_name,
 				c.*,
 				st.site_group,
 				sg.site_group_name
 			FROM
 				cdr.mail_conv c,
+				wordpress.ss_advertisers ad,
+				wordpress.ss_advertiser_ad_group aadg,
 				wordpress.ss_site_type st
 			LEFT OUTER JOIN wordpress.ss_site_group sg
 			ON st.site_group = sg.site_group
 			WHERE
+				c.advertiser_id = ad.ID AND
+				c.advertiser_id = aadg.advertiser_id AND
 				c.site_type = st.site_type AND
-				c.advertiser_id = $adid AND
-				DATE_FORMAT(c.register_dt,'%Y%m') = $year_month
+				DATE_FORMAT(c.register_dt,'%Y%m') = $year_month AND
+				aadg.ad_group_id = $ad_group_id
 			ORDER BY
 				register_dt
 		");
 		$arr_crm_mail_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_crm_mail_data as $r) {
+			$advertiser_id = $r['advertiser_id'];
+			$office_name = $r['office_name'];
 			$site_type = $r['site_type'];
 			$site_group = $r['site_group'];
 			$site_group_name = $r['site_group_name'];
@@ -1393,12 +1384,12 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			foreach ($arr_st_name as $row) {
 				$site_type_name = $row['site_type_name'];
 			}
-			array_push($new_crm_mail_array_data, $ad_name, $site_group, $site_group_name, $site_type, $site_type_name, $sender_tel, $date, $check_mail_dpl);
+			array_push($new_crm_mail_array_data, $office_name, $site_group, $site_group_name, $site_type, $site_type_name, $sender_tel, $date, $check_mail_dpl);
 			array_push($sum_crm_mail_data, $new_crm_mail_array_data);
 		}
 		#配列に代入したメールデータを出力
 		foreach ($sum_crm_mail_data as $row) {
-			$ad_name = $row['0'];
+			$office_name = $row['0'];
 			$site_group = $row['1'];
 			$site_group_name = $row['2'];
 			$site_type = $row['3'];
@@ -1408,8 +1399,8 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 			$check_mail_dpl = $row['7'];
 
 			$arr = array();
-			$arr['adid'] = $adid;
-			$arr['ad_name'] = $ad_name;
+			$arr['advertiser_id'] = $advertiser_id;
+			$arr['office_name'] = $office_name;
 			$arr['site_group'] = $site_group;
 			$arr['site_group_name'] = $site_group_name;
 			$arr['site_type'] = $site_type;
@@ -1423,17 +1414,17 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 
 	//案件種別、事務所、日付でソート
 	$site_group = array();
-	$adid = array();
+	$advertiser_id = array();
 	$mail_date = array();
 	foreach ($output_arr as $v) {
 		$site_group[] = $v['site_group'];
-		$adid[] = $v['adid'];
+		$advertiser_id[] = $v['advertiser_id'];
 		$mail_date[] = $v['mail_date'];
 	}
 
 	array_multisort(
 		$site_group, SORT_NUMERIC, SORT_ASC,
-		$adid, SORT_NUMERIC, SORT_ASC,
+		$advertiser_id, SORT_NUMERIC, SORT_ASC,
 		$mail_date, SORT_ASC,
 		$output_arr
 	);
@@ -1442,8 +1433,8 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	{
 			$i++;
 			#Excelへの記入
-			$reviser->addString($sheet_num, $i, 0, $out['adid']);
-			$reviser->addString($sheet_num, $i, 1, $out['ad_name']);
+			$reviser->addString($sheet_num, $i, 0, $out['advertiser_id']);
+			$reviser->addString($sheet_num, $i, 1, $out['office_name']);
 			$reviser->addString($sheet_num, $i, 3, $out['site_group_name']);
 			$reviser->addString($sheet_num, $i, 4, $out['site_type_name']);
 			$reviser->addString($sheet_num, $i, 7, $out['mail_date']);
@@ -1452,9 +1443,9 @@ function get_each_ad_data($reviser, $id, $year, $month, $year_month, $filepath =
 	}
 
 	#シートネームを設定
-	$reviser->setSheetname($sheet_num, $req_ad_name);
+	$reviser->setSheetname($sheet_num, $bill_payer_name);
 	#事務所毎でのsheetの名前
-	$sheet_name = "請求書（".$req_ad_name.$year."年".$month."月分）";
+	$sheet_name = "請求書（".$bill_payer_name.$year."年".$month."月分）";
 	#テンプレを読み込み、出力する
 	$readfile = "./template.xls";	
 	$outfile = $sheet_name.".xls";
