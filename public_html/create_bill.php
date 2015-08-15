@@ -998,7 +998,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月成果料金(会社設立)");
+		$reviser->addString($sheet_num, $i, 2, "月成果料金(離婚)");
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $rikon_call+$rikon_mail);
 		#単価
