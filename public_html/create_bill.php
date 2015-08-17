@@ -1145,7 +1145,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$reviser->addString($sheet_num, $i, 10, "通話状態");
 	$reviser->addString($sheet_num, $i, 11, "有効無効(60秒)");
 	$reviser->addString($sheet_num, $i, 12, "有効無効");
-	$reviser->addString($sheet_num, $i, 13, "課金秒数");
+	$reviser->addString($sheet_num, $i, 13, "有効秒数");
 
 	$i++;
 
