@@ -1130,6 +1130,25 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		}
 	}
 
+	$i++;//一行開ける
+
+	//有効秒数等のヘッダの表示
+	$reviser->addString($sheet_num, $i, 0, "事務所ID");
+	$reviser->addString($sheet_num, $i, 1, "事務所名");
+	$reviser->addString($sheet_num, $i, 3, "サイト種別");
+	$reviser->addString($sheet_num, $i, 4, "電話番号");
+	$reviser->addString($sheet_num, $i, 5, "転送先番号");
+	$reviser->addString($sheet_num, $i, 6, "通話開始日時");
+	$reviser->addString($sheet_num, $i, 7, "通話終了日時");
+	$reviser->addString($sheet_num, $i, 8, "通話秒数");
+	$reviser->addString($sheet_num, $i, 9, "発信元番号");
+	$reviser->addString($sheet_num, $i, 10, "通話状態");
+	$reviser->addString($sheet_num, $i, 11, "有効無効(60秒)");
+	$reviser->addString($sheet_num, $i, 12, "有効無効");
+	$reviser->addString($sheet_num, $i, 13, "課金秒数");
+
+	$i++;
+
 	#media_typesへの接続
 	$stmt = $pdo_wordpress->query("
 		SELECT
@@ -1283,6 +1302,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			$arr['call_status'] = $call_status;
 			$arr['check_call_dpl'] = $check_call_dpl;
 			$arr['check_call_dpl_for_billing'] = $check_call_dpl_for_billing;
+			$arr['charge_seconds'] = $charge_seconds;
 			array_push($output_arr, $arr);
 		}
 	}
@@ -1319,6 +1339,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			$reviser->addString($sheet_num, $i, 10, $out['call_status']);
 			$reviser->addString($sheet_num, $i, 11, $out['check_call_dpl']);
 			$reviser->addString($sheet_num, $i, 12, $out['check_call_dpl_for_billing']);
+			$reviser->addString($sheet_num, $i, 13, $out['charge_seconds']);
 			$i++;
 	}
 
