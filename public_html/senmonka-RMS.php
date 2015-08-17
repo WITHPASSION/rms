@@ -42,6 +42,10 @@
 	font-weight: bold;
 	color: blue;
 }
+.bold_red {
+	font-weight: bold;
+	color: red;
+}
 .gray_down {
 	color: #AAAAAA;
 }
@@ -66,6 +70,10 @@ function changeYM() {
 		function(json) {
 			var html = "<body>";
 			var keys = Object.keys(json);
+			var total_call_count = 0;
+			var total_sample_call_count = 0;
+			var total_mail_count = 0;
+			var total_sample_mail_count = 0;
 			for (i = 0; i < keys.length; i++) {
 				var bill_payer_id = keys[i];
 				var bill_payer = json[bill_payer_id];
@@ -231,8 +239,19 @@ function changeYM() {
 					html += "<td class='right_txt gray_down'>" + bill_payer.mail_count + "</td>";
 					html += "<td class='gray_down'><small>(" + bill_payer.sample_mail_count + ")</small></td>";
 				}
+				total_call_count += parseInt(bill_payer.call_count);
+				total_sample_call_count += parseInt(bill_payer.sample_call_count);
+				total_mail_count += parseInt(bill_payer.mail_count);
+				total_sample_mail_count += parseInt(bill_payer.sample_mail_count);
 				html += "</tr>";
 			}
+			html += "<tr>";
+			html += "<td colspan='4' class='right_txt bold_red'><big>全請求計</big></td>";
+			html += "<td class='right_txt bold_red'><big>" + total_call_count + "</big></td>";
+			html += "<td class=''>(" + total_sample_call_count + ")</td>";
+			html += "<td class='right_txt bold_red'><big>" + total_mail_count + "</big></td>";
+			html += "<td class=''>(" + total_sample_mail_count + ")</td>";
+			html += "</tr>";
 			html += "</body>";
 			$("#office_table").html(html);
 		}
