@@ -1,4 +1,7 @@
 <?php
+#共通関数のインクルード
+include 'common_functions.php';
+
 #エラーを画面に表示させない処理
 //ini_set("display_errors", "off");
 #データベース接続処理
@@ -93,10 +96,10 @@ $month = sprintf("%02d",$month);
 $year_month = "$year"."$month";
 
 $billing_offices = get_billing_office_list();
-$call_data = get_monthly_total_calls($year_month, false);
-$sample_call_data = get_monthly_total_calls($year_month, true);
-$mail_data = get_monthly_total_mails($year_month, false);
-$sample_mail_data = get_monthly_total_mails($year_month, true);
+$call_data = get_monthly_total_calls($year_month, CALL_TYPE_VALID);
+$sample_call_data = get_monthly_total_calls($year_month, CALL_TYPE_SAMPLE);
+$mail_data = get_monthly_total_mails($year_month, MAIL_TYPE_VALID);
+$sample_mail_data = get_monthly_total_mails($year_month, MAIL_TYPE_SAMPLE);
 
 $ret = array();
 foreach ($billing_offices as $office) {
@@ -153,7 +156,7 @@ foreach ($call_data as $call) {
 	$ad_group_id = $call["ad_group_id"];
 	$ad_id = $call["advertiser_id"];
 	$media_id = $call["media_id"];
-	$count = $call["valid_tel_count"];
+	$count = $call["tel_count"];
 	$payment_method = $call["payment_method"];
 	if ($ad_group_id == null) {
 		$ret[$bill_payer_id]["call_count"] = $count;
@@ -212,7 +215,7 @@ foreach ($sample_call_data as $call) {
 	$ad_group_id = $call["ad_group_id"];
 	$ad_id = $call["advertiser_id"];
 	$media_id = $call["media_id"];
-	$count = $call["valid_tel_count"];
+	$count = $call["tel_count"];
 	$payment_method = $call["payment_method"];
 	if ($ad_group_id == null) {
 		$ret[$bill_payer_id]["sample_call_count"] = $count;
@@ -271,7 +274,7 @@ foreach ($mail_data as $mail) {
 	$ad_group_id = $mail["ad_group_id"];
 	$ad_id = $mail["advertiser_id"];
 	$group = $mail["site_group"];
-	$count = $mail["valid_mail_count"];
+	$count = $mail["mail_count"];
 	$payment_method = $mail["payment_method"];
 	if ($ad_group_id == null) {
 		$ret[$bill_payer_id]["mail_count"] = $count;
@@ -329,7 +332,7 @@ foreach ($sample_mail_data as $mail) {
 	}
 	$ad_id = $mail["advertiser_id"];
 	$group = $mail["site_group"];
-	$count = $mail["valid_mail_count"];
+	$count = $mail["mail_count"];
 	$payment_method = $mail["payment_method"];
 	if ($ad_group_id == null) {
 		$ret[$bill_payer_id]["sample_mail_count"] = $count;
@@ -382,143 +385,4 @@ foreach ($sample_mail_data as $mail) {
 
 echo json_encode($ret);
 
-function get_billing_office_list() {
-	global $pdo_request;
-	$stmt = $pdo_request->query("
-		SELECT
-			r.bill_payer_id as bill_payer_id,
-			r.bill_payer_name as bill_payer_name,
-			ag.ID as ad_group_id,
-			ag.group_name,
-			a.ID as advertiser_id,
-			a.office_name as office_name
-		FROM
-			smk_request_data.ad_group_bill_payer as m,
-			smk_request_data.bill_payers as r,
-			wordpress.ss_advertisers as a,
-			wordpress.ss_advertiser_ad_group aag,
-			wordpress.ss_ad_groups ag
-		WHERE
-			r.bill_payer_id = m.bill_payer_id AND
-			ag.ID = m.ad_group_id AND
-			aag.advertiser_id = a.ID AND
-			aag.ad_group_id = ag.ID
-		ORDER BY r.bill_payer_id, a.ID
-	");
-	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	return $res_arr;
-}
-
-function get_monthly_total_calls($year_month, $is_sample = false) {
-	global $pdo_request;
-	$where = "v.dpl_tel_cnt_for_billing = 0 AND v.call_minutes >= v.charge_seconds AND";
-	if ($is_sample)
-	{
-		$where = "v.dpl_tel_cnt = 0 AND v.call_minutes >= 60 AND";
-	}
-	$stmt = $pdo_request->query("
-		SELECT
-			m.bill_payer_id as bill_payer_id,
-			v.ad_group_id,
-			v.advertiser_id as advertiser_id,
-			v.media_id as media_id,
-			group_concat(distinct pm.method) as payment_method,
-			count(v.id) as valid_tel_count
-		FROM
-			(
-				SELECT
-					dv.id,
-					dv.ad_group_id,
-					CAST(dv.advertiser_id AS UNSIGNED) as advertiser_id,
-					(case
-						when (dv.media_id like 'A-Portal%') then 'A'
-						when (dv.media_id like '') then 'A'
-						else dv.media_id
-					end) AS media_id,
-					dv.dpl_tel_cnt,
-					dv.dpl_mail_cnt,
-					dv.dpl_tel_cnt_for_billing,
-					dv.date_from,
-					dv.call_minutes,
-					pm.payment_method_id,
-					pm.charge_seconds,
-					sg.site_group
-				FROM
-					cdr.call_data_view dv,
-					cdr.office_group_payment_method pm,
-					wordpress.ss_site_group sg
-				WHERE
-					dv.ad_group_id = pm.ad_group_id AND
-					sg.media_type = dv.media_type AND
-					sg.site_group = pm.site_group AND
-					CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date
-				ORDER BY dv.ad_group_id, dv.advertiser_id, dv.id
-			) v,
-			smk_request_data.ad_group_bill_payer m,
-			cdr.office_group_payment_method gpm,
-			cdr.payment_method pm
-		WHERE
-			m.ad_group_id = v.ad_group_id AND
-			v.ad_group_id = gpm.ad_group_id AND
-			gpm.payment_method_id = pm.id AND
-			CAST(v.date_from AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
-			DATE_FORMAT(v.date_from, '%Y%m') = '$year_month' AND
-			gpm.site_group = v.site_group AND
-			$where
-			v.dpl_mail_cnt = 0
-		GROUP BY
-			m.bill_payer_id,
-			v.ad_group_id,
-			v.advertiser_id,
-			v.media_id
-		WITH ROLLUP
-	");
-	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	return $res_arr;
-}
-
-function get_monthly_total_mails($year_month, $is_sample = false) {
-	global $pdo_request;
-	$where = "AND pm.id <> 2";
-	if ($is_sample)
-	{
-		$where = "";
-	}
-	$stmt = $pdo_request->query("
-		SELECT
-			m.bill_payer_id as bill_payer_id,
-			adg.ad_group_id as ad_group_id,
-			v.advertiser_id as advertiser_id,
-			s.site_group as site_group,
-			group_concat(distinct pm.method) as payment_method,
-			count(v.ID) as valid_mail_count
-		FROM
-			cdr.mail_conv v,
-			smk_request_data.ad_group_bill_payer m,
-			wordpress.ss_site_type s,
-			wordpress.ss_advertiser_ad_group adg,
-			cdr.office_group_payment_method gpm,
-			cdr.payment_method pm
-		WHERE
-			s.site_type = v.site_type AND
-			m.ad_group_id = adg.ad_group_id AND
-			adg.advertiser_id = v.advertiser_id AND
-			adg.ad_group_id = gpm.ad_group_id AND
-			(gpm.site_group = s.site_group OR (s.site_group = 999 AND gpm.site_group = 0)) AND
-			gpm.payment_method_id = pm.id AND
-			CAST(v.register_dt AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
-			DATE_FORMAT(v.register_dt, '%Y%m') = '$year_month' AND
-			v.dpl_tel_cnt = 0 AND
-			v.dpl_mail_cnt = 0
-			$where
-		GROUP BY
-			m.bill_payer_id,
-			adg.ad_group_id,
-			v.advertiser_id,
-			s.site_group
-		WITH ROLLUP
-	");
-	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
-	return $res_arr;
-}
 ?>

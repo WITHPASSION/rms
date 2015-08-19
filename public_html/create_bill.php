@@ -1,4 +1,7 @@
 <?php
+#共通関数のインクルード
+include 'common_functions.php';
+
 #エラーを画面に表示させない処理
 ini_set("display_errors", "off");
 #reviser呼び出し
@@ -1068,23 +1071,25 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	#無効も含めた全メール数
 	$all_mail = $all_mail_shakkin + $all_mail_souzoku + $all_mail_koutsujiko + $all_mail_ninibaikyaku + $all_mail_meigihenkou + $all_mail_setsuritsu + $all_mail_keijijiken + $all_mail_rikon;
 	$reviser->addString($sheet_num, 0, 0, $month."月");
+	#案件名ヘッダ	
+	$reviser->addString($sheet_num, 2, 0, "全事務所合計");
+
+	$reviser->addString($sheet_num, 1, 1, "発番電話番号");
+	$reviser->addString($sheet_num, 2, 1, "-");
 	#請求通話料金の出力
-	$reviser->addString($sheet_num, 1, 1, "請求通話料金");
-	$reviser->addString($sheet_num, 1, 2, $req_mvc_data['call_charge']);
+	$reviser->addString($sheet_num, 1, 2, "請求通話料金");
+	$reviser->addString($sheet_num, 2, 2, $req_mvc_data['call_charge']);
 	#全体コール数の出力
 	$reviser->addString($sheet_num, 1, 3, "全体コール");
-	$reviser->addString($sheet_num, 1, 4, $all_call);
-	#全体メール数の出力
-	$reviser->addString($sheet_num, 1, 5, "全体メール");
-	$reviser->addString($sheet_num, 1, 6, $all_mail);
-	#有効コール数の出力
-	$reviser->addString($sheet_num, 2, 3, "有効コール");
+	$reviser->addString($sheet_num, 2, 3, $all_call);
+	#参考コール数の出力
+	$reviser->addString($sheet_num, 1, 4, "参考コール");
 	$reviser->addString($sheet_num, 2, 4, $call_sum);
-	#有効メール数の出力
-	$reviser->addString($sheet_num, 2, 5, "有効メール");
-	$reviser->addString($sheet_num, 2, 6, $mail_sum);
+	#有効コール数の出力
+	$reviser->addString($sheet_num, 1, 5, "有効コール");
+	$reviser->addString($sheet_num, 2, 5, 0);
 	#行数を変数に指定
-	$i = 2;
+	$i = 3;
 	//crmシートコールデータ処理
 	#発番毎の請求料金の取得
 	foreach ($arr_ad_group_id as $row) {
@@ -1105,6 +1110,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			$each_advertiser_id = $row['advertiser_id'];
 			$each_tel_to = $row['tel_to'];
 			$each_media_type = $row['media_type'];
+			$each_site_group = $row['site_group'];
 			$stmt = $pdo_cdr->query("
 				SELECT
 					tel_to,
@@ -1115,21 +1121,130 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 					tel_to = $each_tel_to AND
 					year = $year AND
 					month = $month
-				GROUP BY
-					tel_to
 			");
 			$arr_each_bill_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-			foreach ($arr_each_bill_data as $row) {
-				$each_bill_data = $row['tel_to'];
-				$each_call_charge = $row['call_charge'];
-				$reviser->addString($sheet_num, $i, 0, $each_advertiser_id."-".$each_media_type);
-				$reviser->addString($sheet_num, $i, 1, $each_bill_data);
-				$reviser->addString($sheet_num, $i, 2, $each_call_charge);
+			if (count($arr_each_bill_data) <= 0) {
+				continue;
+			}
+			$row = $arr_each_bill_data[0];
+			$each_bill_data = $row['tel_to'];
+			$each_call_charge = $row['call_charge'];
+			$reviser->addString($sheet_num, $i, 0, $each_advertiser_id."-".$each_media_type);
+			$reviser->addString($sheet_num, $i, 1, $each_bill_data);
+			$reviser->addString($sheet_num, $i, 2, $each_call_charge);
+
+			$all_call_data = get_monthly_total_calls($year_month, CALL_TYPE_ALL, $each_advertiser_id, $each_media_type);
+			if (count($all_call_data) > 0) {
+				$reviser->addString($sheet_num, $i, 3, $all_call_data[0]['tel_count']);
+			}
+			$sample_call_data = get_monthly_total_calls($year_month, CALL_TYPE_SAMPLE, $each_advertiser_id, $each_media_type);
+			if (count($sample_call_data) > 0) {
+				$reviser->addString($sheet_num, $i, 4, $sample_call_data[0]['tel_count']);
+			}
+			$valid_call_data = get_monthly_total_calls($year_month, CALL_TYPE_VALID, $each_advertiser_id, $each_media_type);
+			if (count($valid_call_data) > 0) {
+				$reviser->addString($sheet_num, $i, 5, $valid_call_data[0]['tel_count']);
+			}
+
+			$i++;
+		}
+	}
+
+	$i++;//一行空ける
+
+	#全体メール数の出力
+	$reviser->addString($sheet_num, $i, 1, "全体メール");
+	#参考メール数の出力
+	$reviser->addString($sheet_num, $i, 2, "参考メール");
+	#参考メール数の出力
+	$reviser->addString($sheet_num, $i, 3, "有効メール");
+
+	$i++;
+
+	//メールの合計情報の収集
+	$bp_total = array();
+	$adg_total = array();
+	$sgp_total = array();
+	foreach ($arr_ad_group_id as $row) {
+		$ad_group_id = $row['ad_group_id'];
+		$all_mail_data = get_monthly_total_mails($year_month, MAIL_TYPE_ALL, $ad_group_id);
+		$sample_mail_data = get_monthly_total_mails($year_month, MAIL_TYPE_SAMPLE, $ad_group_id);
+		$valid_mail_data = get_monthly_total_mails($year_month, MAIL_TYPE_VALID, $ad_group_id);
+		append_mail_counts($ad_group_id, $all_mail_data, $bp_total, $adg_total, $sgp_total, MAIL_TYPE_ALL);
+		append_mail_counts($ad_group_id, $sample_mail_data, $bp_total, $adg_total, $sgp_total, MAIL_TYPE_SAMPLE);
+		append_mail_counts($ad_group_id, $valid_mail_data, $bp_total, $adg_total, $sgp_total, MAIL_TYPE_VALID);
+	}
+	//請求先全事務所合計
+	if (count($bp_total) > 0) {
+		foreach (array_keys($bp_total) as $sg_key) {
+			if ($sg_key === 'total') {
+				$reviser->addString($sheet_num, $i, 0, "全事務所合計");
+			}
+			else {
+				$reviser->addString($sheet_num, $i, 0, "案件種別：$sg_key 合計");
+			}
+			$reviser->addString($sheet_num, $i, 1, $bp_total[$sg_key][MAIL_TYPE_ALL]);
+			$reviser->addString($sheet_num, $i, 2, $bp_total[$sg_key][MAIL_TYPE_SAMPLE]);
+			$reviser->addString($sheet_num, $i, 3, $bp_total[$sg_key][MAIL_TYPE_VALID]);
+			$i++;
+		}
+	}
+	//グループ別合計
+	if (count($adg_total)) {
+		foreach ($arr_ad_group_id as $row) {
+			$ad_group_id = $row['ad_group_id'];
+			foreach (array_keys($adg_total[$ad_group_id]) as $ad_key) {
+				if ($ad_key === 'total') {
+					$reviser->addString($sheet_num, $i, 0, "グループ：$ad_group_id 合計");
+					$reviser->addString($sheet_num, $i, 1, $adg_total[$ad_group_id][$ad_key][MAIL_TYPE_ALL]);
+					$reviser->addString($sheet_num, $i, 2, $adg_total[$ad_group_id][$ad_key][MAIL_TYPE_SAMPLE]);
+					$reviser->addString($sheet_num, $i, 3, $adg_total[$ad_group_id][$ad_key][MAIL_TYPE_VALID]);
+					$i++;
+				}
+			}
+		}
+	}
+	//グループ案件別合計
+	if (count($sgp_total)) {
+		foreach ($arr_ad_group_id as $row) {
+			$ad_group_id = $row['ad_group_id'];
+			foreach (array_keys($sgp_total[$ad_group_id]) as $sg_key) {
+				$reviser->addString($sheet_num, $i, 0, "グループ：$ad_group_id 案件種別：$sg_key 合計");
+				$reviser->addString($sheet_num, $i, 1, $sgp_total[$ad_group_id][$sg_key][MAIL_TYPE_ALL]);
+				$reviser->addString($sheet_num, $i, 2, $sgp_total[$ad_group_id][$sg_key][MAIL_TYPE_SAMPLE]);
+				$reviser->addString($sheet_num, $i, 3, $sgp_total[$ad_group_id][$sg_key][MAIL_TYPE_VALID]);
 				$i++;
 			}
 		}
 	}
+	//事務所別合計
+	if (count($adg_total)) {
+		foreach ($arr_ad_group_id as $row) {
+			$ad_group_id = $row['ad_group_id'];
+			foreach (array_keys($adg_total[$ad_group_id]) as $ad_key) {
+				if ($ad_key !== 'total') {
+					foreach (array_keys($adg_total[$ad_group_id][$ad_key]) as $sg_key) {
+						if ($sg_key === 'total') {
+							$reviser->addString($sheet_num, $i, 0, "事務所ID：$ad_key 全案件合計");
+						}
+						else {
+							$reviser->addString($sheet_num, $i, 0, "事務所ID：$ad_key 案件種別：$sg_key 合計");
+						}
+						$reviser->addString($sheet_num, $i, 1, $adg_total[$ad_group_id][$ad_key][$sg_key][MAIL_TYPE_ALL]);
+						$reviser->addString($sheet_num, $i, 2, $adg_total[$ad_group_id][$ad_key][$sg_key][MAIL_TYPE_SAMPLE]);
+						$reviser->addString($sheet_num, $i, 3, $adg_total[$ad_group_id][$ad_key][$sg_key][MAIL_TYPE_VALID]);
+						$i++;
+					}
+				}
+			}
+		}
+	}
+	//var_dump($bp_total);
+	//var_dump($adg_total);
+	//var_dump($sgp_total);
 
+	$i++;//一行開ける
+	$reviser->addString($sheet_num, $i, 0, "通話データ");
 	$i++;//一行開ける
 
 	//有効秒数等のヘッダの表示
@@ -1164,7 +1279,6 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	foreach ($arr_ad_group_id as $row) {
 		$ad_group_id = $row['ad_group_id'];
 		####通話情報の生成
-		$reviser->addString($sheet_num, 1, 0, "通話データ");
 		$stmt = $pdo_cdr->query("
 			SELECT
 				ad.ID as advertiser_id,
