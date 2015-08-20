@@ -155,7 +155,7 @@ foreach ($call_data as $call) {
 	}
 	$ad_group_id = $call["ad_group_id"];
 	$ad_id = $call["advertiser_id"];
-	$media_id = $call["media_id"];
+	$site_group = $call["site_group"];
 	$count = $call["tel_count"];
 	$payment_method = $call["payment_method"];
 	if ($ad_group_id == null) {
@@ -164,39 +164,39 @@ foreach ($call_data as $call) {
 	else if ($ad_id == null) {
 		$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["call_count"] = $count;
 	}
-	else if ($media_id == null) {
+	else if ($site_group == null) {
 		$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["call_count"] = $count;
 	}
 	else {
-		if ($media_id == "B"){
+		if ($site_group === 1){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
 		}
-		else if ($media_id == "C"){
+		else if ($site_group === 2){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
 			}
-		else if ($media_id == "D"){
+		else if ($site_group === 3){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaykyaku"]["payment_method"] = $payment_method;
 		}
-		else if ($media_id == "E"){
+		else if ($site_group === 4){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
 		}
-		else if ($media_id == "F"){
+		else if ($site_group === 5){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
 		}
-		else if ($media_id == "G"){
+		else if ($site_group === 6){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
 		}
-		else if ($media_id == "H"){
+		else if ($site_group === 7){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["rikon"]["call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["rikon"]["payment_method"] = $payment_method;
 		}
-		else if ($media_id == "A-LPPC" || $media_id == "A-LPSmart"){
+		else if ($site_group === 999){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
 		}
@@ -214,7 +214,7 @@ foreach ($sample_call_data as $call) {
 	}
 	$ad_group_id = $call["ad_group_id"];
 	$ad_id = $call["advertiser_id"];
-	$media_id = $call["media_id"];
+	$site_group = $call["site_group"];
 	$count = $call["tel_count"];
 	$payment_method = $call["payment_method"];
 	if ($ad_group_id == null) {
@@ -223,39 +223,39 @@ foreach ($sample_call_data as $call) {
 	else if ($ad_id == null) {
 		$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["sample_call_count"] = $count;
 	}
-	else if ($media_id == null) {
+	else if ($site_group == null) {
 		$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["sample_call_count"] = $count;
 	}
 	else {
-		if ($media_id == "B"){
+		if ($site_group === 1){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["sample_call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
 		}
-		else if ($media_id == "C"){
+		else if ($site_group === 2){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["sample_call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
 			}
-		else if ($media_id == "D"){
+		else if ($site_group === 3){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["sample_call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaykyaku"]["payment_method"] = $payment_method;
 		}
-		else if ($media_id == "E"){
+		else if ($site_group === 4){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["sample_call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
 		}
-		else if ($media_id == "F"){
+		else if ($site_group === 5){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["sample_call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
 		}
-		else if ($media_id == "G"){
+		else if ($site_group === 6){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["sample_call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
 		}
-		else if ($media_id == "H"){
+		else if ($site_group === 7){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["rikon"]["sample_call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["rikon"]["payment_method"] = $payment_method;
 		}
-		else if ($media_id == "A-LPPC" || $media_id == "A-LPSmart"){
+		else if ($site_group === 999){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["sample_call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
 		}
@@ -286,39 +286,39 @@ foreach ($mail_data as $mail) {
 		$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["mail_count"] = $count;
 	}
 	else {
-		if ($group == 0){
+		if ($group === 0){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 1){
+		else if ($group === 1){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 2){
+		else if ($group === 2){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
 			}
-		else if ($group == 3){
+		else if ($group === 3){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 4){
+		else if ($group === 4){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 5){
+		else if ($group === 5){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 6){
+		else if ($group === 6){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 7){
+		else if ($group === 7){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["rikon"]["mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["rikon"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 999){
+		else if ($group === 999){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
 		}
@@ -344,39 +344,39 @@ foreach ($sample_mail_data as $mail) {
 		$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["sample_mail_count"] = $count;
 	}
 	else {
-		if ($group == 0){
+		if ($group === 0){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["sample_mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 1){
+		else if ($group === 1){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["sample_mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["souzoku"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 2){
+		else if ($group === 2){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["sample_mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["koutsujiko"]["payment_method"] = $payment_method;
 			}
-		else if ($group == 3){
+		else if ($group === 3){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["sample_mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["ninibaikyaku"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 4){
+		else if ($group === 4){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["sample_mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["meigihenkou"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 5){
+		else if ($group === 5){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["sample_mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["setsuritsu"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 6){
+		else if ($group === 6){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["sample_mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["keijijiken"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 7){
+		else if ($group === 7){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["rikon"]["sample_mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["rikon"]["payment_method"] = $payment_method;
 		}
-		else if ($group == 999){
+		else if ($group === 999){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["sample_mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["LP"]["payment_method"] = $payment_method;
 		}

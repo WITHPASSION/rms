@@ -36,8 +36,7 @@ function get_billing_office_list() {
 function get_monthly_total_calls(
 	$year_month,
 	$call_type = CALL_TYPE_ALL,
-	$advertiser_id = null,
-	$media_type = null
+	$ad_group_id = null
 ) {
 	global $pdo_request;
 	$where = "";
@@ -49,32 +48,16 @@ function get_monthly_total_calls(
 	{
 		$where = " AND v.dpl_tel_cnt = 0 AND v.call_minutes >= 60 AND v.dpl_mail_cnt = 0";
 	}
-	$group_by = "";
-	if ($advertiser_id != null)
+	if ($ad_group_id != null)
 	{
-		$where .= " AND v.advertiser_id = $advertiser_id";
-	}
-	else
-	{
-		$group_by = "
-			GROUP BY
-				m.bill_payer_id,
-				v.ad_group_id,
-				v.advertiser_id,
-				v.media_id
-			WITH ROLLUP
-		";
-	}
-	if ($media_type != null)
-	{
-		$where .= " AND v.media_type like '".$media_type."'";
+		$where .= " AND v.ad_group_id = $ad_group_id";
 	}
 	$stmt = $pdo_request->query("
 		SELECT
 			m.bill_payer_id as bill_payer_id,
 			v.ad_group_id,
 			v.advertiser_id as advertiser_id,
-			v.media_id as media_id,
+			v.site_group as site_group,
 			group_concat(distinct pm.method) as payment_method,
 			count(v.id) as tel_count
 		FROM
@@ -119,7 +102,12 @@ function get_monthly_total_calls(
 			DATE_FORMAT(v.date_from, '%Y%m') = '$year_month' AND
 			gpm.site_group = v.site_group
 			$where
-		$group_by
+		GROUP BY
+			m.bill_payer_id,
+			v.ad_group_id,
+			v.advertiser_id,
+			v.site_group
+		WITH ROLLUP
 	");
 	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	return $res_arr;
@@ -178,6 +166,48 @@ function get_monthly_total_mails(
 	");
 	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	return $res_arr;
+}
+
+function append_call_counts($ad_group_id, $call_data_arr, &$bp_arr, &$adg_arr, &$sgp_arr, $count_type)
+{
+	foreach ($call_data_arr as $call_data) {
+		if ($call_data['ad_group_id'] == null)
+		{
+			continue;
+		}
+		$ad_id = $call_data['advertiser_id'];
+		$site_group = $call_data['site_group'];
+		$tel_count = $call_data['tel_count'];
+		if ($ad_id != null && $site_group != null)
+		{
+			if (!isset($adg_arr[$ad_group_id]['total'][$count_type])) {
+				$adg_arr[$ad_group_id]['total'][$count_type] = 0;
+			}
+			$adg_arr[$ad_group_id]['total'][$count_type] += intval($tel_count);
+			if (!isset($adg_arr[$ad_group_id][$ad_id]['total'][$count_type])) {
+				$adg_arr[$ad_group_id][$ad_id]['total'][$count_type] = 0;
+			}
+			$adg_arr[$ad_group_id][$ad_id]['total'][$count_type] += intval($tel_count);
+			if (!isset($adg_arr[$ad_group_id][$ad_id][$site_group][$count_type])) {
+				$adg_arr[$ad_group_id][$ad_id][$site_group][$count_type] = 0;
+			}
+			$adg_arr[$ad_group_id][$ad_id][$site_group][$count_type] = intval($tel_count);
+
+			if (!isset($sgp_arr[$ad_group_id][$site_group][$count_type])) {
+				$sgp_arr[$ad_group_id][$site_group][$count_type] = 0;
+			}
+			$sgp_arr[$ad_group_id][$site_group][$count_type] += intval($tel_count);
+
+			if (!isset($bp_arr['total'][$count_type])) {
+				$bp_arr['total'][$count_type] = 0;
+			}
+			$bp_arr['total'][$count_type] += intval($tel_count);
+			if (!isset($bp_arr[$site_group][$count_type])) {
+				$bp_arr[$site_group][$count_type] = 0;
+			}
+			$bp_arr[$site_group][$count_type] += intval($tel_count);
+		}
+	}
 }
 
 function append_mail_counts($ad_group_id, $mail_data_arr, &$bp_arr, &$adg_arr, &$sgp_arr, $count_type)
