@@ -1605,19 +1605,20 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			foreach ($arr_st_name as $row) {
 				$site_type_name = $row['site_type_name'];
 			}
-			array_push($new_crm_mail_array_data, $office_name, $site_group, $site_group_name, $site_type, $site_type_name, $sender_tel, $date, $check_mail_dpl);
+			array_push($new_crm_mail_array_data, $advertiser_id, $office_name, $site_group, $site_group_name, $site_type, $site_type_name, $sender_tel, $date, $check_mail_dpl);
 			array_push($sum_crm_mail_data, $new_crm_mail_array_data);
 		}
 		#配列に代入したメールデータを出力
 		foreach ($sum_crm_mail_data as $row) {
-			$office_name = $row['0'];
-			$site_group = $row['1'];
-			$site_group_name = $row['2'];
-			$site_type = $row['3'];
-			$site_type_name = $row['4'];
-			$sender_tel = $row['5'];
-			$mail_date = $row['6'];
-			$check_mail_dpl = $row['7'];
+			$advertiser_id = $row['0'];
+			$office_name = $row['1'];
+			$site_group = $row['2'];
+			$site_group_name = $row['3'];
+			$site_type = $row['4'];
+			$site_type_name = $row['5'];
+			$sender_tel = $row['6'];
+			$mail_date = $row['7'];
+			$check_mail_dpl = $row['8'];
 
 			$arr = array();
 			$arr['advertiser_id'] = $advertiser_id;
