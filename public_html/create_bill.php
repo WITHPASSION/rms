@@ -1143,6 +1143,10 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			$site_group = $row['site_group'];
 			$call_charge = $row['call_charge'];
 			if ($ad_id == null) {
+				if (!isset($bp_call['total']['call_charge'])) {
+					$bp_call['total']['call_charge'] = 0;
+				}
+				$bp_call['total']['call_charge'] += $call_charge;
 				$adg_call[$ad_group_id]['total']['call_charge'] = $call_charge;
 			}
 			else if ($tel_to == null) {
@@ -1151,6 +1155,16 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			else {
 				$adg_call[$ad_group_id][$ad_id][$site_group]['tel_to'] = $tel_to;
 				$adg_call[$ad_group_id][$ad_id][$site_group]['call_charge'] = $call_charge;
+
+				if (!isset($sgp_call[$ad_group_id][$site_group]['call_charge'])) {
+					$sgp_call[$ad_group_id][$site_group]['call_charge'] = 0;
+				}
+				$sgp_call[$ad_group_id][$site_group]['call_charge'] += $call_charge;
+
+				if (!isset($bp_call[$site_group]['call_charge'])) {
+					$bp_call[$site_group]['call_charge'] = 0;
+				}
+				$bp_call[$site_group]['call_charge'] += $call_charge;
 			}
 		}
 
@@ -1161,6 +1175,26 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		append_call_counts($ad_group_id, $sample_call_data, $bp_call, $adg_call, $sgp_call, CALL_TYPE_SAMPLE);
 		append_call_counts($ad_group_id, $valid_call_data, $bp_call, $adg_call, $sgp_call, CALL_TYPE_VALID);
 	}
+
+	//bpは案件種別ソート
+	krsort($bp_call);
+	ksort($bp_call);
+
+	//sgpはグループID, 案件種別ソート
+	krsort($sgp_call);
+	ksort($sgp_call);
+	foreach ($sgp_call as $key => &$val) {
+		ksort($val);
+	}
+
+	//adgは事務所ID, 案件種別ソート
+	foreach ($adg_call as $key => &$val) {
+		ksort($val);
+		foreach ($val as $key2 => &$val2) {
+			ksort($val2);
+		}
+	}
+
 	//請求先全事務所合計
 	if (count($bp_call) > 0) {
 		foreach (array_keys($bp_call) as $sg_key) {
@@ -1173,6 +1207,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			$reviser->addString($sheet_num, $i, 1, $bp_call[$sg_key][CALL_TYPE_ALL]);
 			$reviser->addString($sheet_num, $i, 2, $bp_call[$sg_key][CALL_TYPE_SAMPLE]);
 			$reviser->addString($sheet_num, $i, 3, $bp_call[$sg_key][CALL_TYPE_VALID]);
+			$reviser->addString($sheet_num, $i, 5, $bp_call[$sg_key]['call_charge']);
 			$i++;
 		}
 	}
@@ -1186,6 +1221,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 					$reviser->addString($sheet_num, $i, 1, $adg_call[$ad_group_id][$ad_key][CALL_TYPE_ALL]);
 					$reviser->addString($sheet_num, $i, 2, $adg_call[$ad_group_id][$ad_key][CALL_TYPE_SAMPLE]);
 					$reviser->addString($sheet_num, $i, 3, $adg_call[$ad_group_id][$ad_key][CALL_TYPE_VALID]);
+					$reviser->addString($sheet_num, $i, 5, $adg_call[$ad_group_id][$ad_key]['call_charge']);
 					$i++;
 				}
 			}
@@ -1200,6 +1236,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 				$reviser->addString($sheet_num, $i, 1, $sgp_call[$ad_group_id][$sg_key][CALL_TYPE_ALL]);
 				$reviser->addString($sheet_num, $i, 2, $sgp_call[$ad_group_id][$sg_key][CALL_TYPE_SAMPLE]);
 				$reviser->addString($sheet_num, $i, 3, $sgp_call[$ad_group_id][$sg_key][CALL_TYPE_VALID]);
+				$reviser->addString($sheet_num, $i, 5, $sgp_call[$ad_group_id][$sg_key]['call_charge']);
 				$i++;
 			}
 		}
@@ -1219,13 +1256,11 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 							if (isset($adg_call[$ad_group_id][$ad_key][$sg_key]['tel_to'])) {
 								$reviser->addString($sheet_num, $i, 4, $adg_call[$ad_group_id][$ad_key][$sg_key]['tel_to']);
 							}
-							if (isset($adg_call[$ad_group_id][$ad_key][$sg_key]['call_charge'])) {
-								$reviser->addString($sheet_num, $i, 5, $adg_call[$ad_group_id][$ad_key][$sg_key]['call_charge']);
-							}
 						}
 						$reviser->addString($sheet_num, $i, 1, $adg_call[$ad_group_id][$ad_key][$sg_key][CALL_TYPE_ALL]);
 						$reviser->addString($sheet_num, $i, 2, $adg_call[$ad_group_id][$ad_key][$sg_key][CALL_TYPE_SAMPLE]);
 						$reviser->addString($sheet_num, $i, 3, $adg_call[$ad_group_id][$ad_key][$sg_key][CALL_TYPE_VALID]);
+						$reviser->addString($sheet_num, $i, 5, $adg_call[$ad_group_id][$ad_key][$sg_key]['call_charge']);
 						$i++;
 					}
 				}
@@ -1260,6 +1295,26 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		append_mail_counts($ad_group_id, $sample_mail_data, $bp_mail, $adg_mail, $sgp_mail, MAIL_TYPE_SAMPLE);
 		append_mail_counts($ad_group_id, $valid_mail_data, $bp_mail, $adg_mail, $sgp_mail, MAIL_TYPE_VALID);
 	}
+
+	//bpは案件種別ソート
+	krsort($bp_mail);
+	ksort($bp_mail);
+
+	//sgpはグループID, 案件種別ソート
+	krsort($sgp_mail);
+	ksort($sgp_mail);
+	foreach ($sgp_mail as $key => &$val) {
+		ksort($val);
+	}
+
+	//adgは事務所ID, 案件種別ソート
+	foreach ($adg_mail as $key => &$val) {
+		ksort($val);
+		foreach ($val as $key2 => &$val2) {
+			ksort($val2);
+		}
+	}
+
 	//請求先全事務所合計
 	if (count($bp_mail) > 0) {
 		foreach (array_keys($bp_mail) as $sg_key) {
