@@ -330,6 +330,7 @@ foreach ($sample_mail_data as $mail) {
 	if ($bill_payer_id == null) {
 		continue;
 	}
+	$ad_group_id = $mail["ad_group_id"];
 	$ad_id = $mail["advertiser_id"];
 	$group = $mail["site_group"];
 	$count = $mail["mail_count"];
