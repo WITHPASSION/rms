@@ -42,7 +42,7 @@ function get_monthly_total_calls(
 	$where = "";
 	if ($call_type == CALL_TYPE_VALID)
 	{
-		$where = " AND v.dpl_tel_cnt_for_billing = 0 AND v.call_minutes >= v.charge_seconds AND v.dpl_mail_cnt = 0";
+		$where = " AND pm.id <> 2 AND v.dpl_tel_cnt_for_billing = 0 AND v.call_minutes >= v.charge_seconds AND v.dpl_mail_cnt = 0";
 	}
 	else if ($call_type == CALL_TYPE_SAMPLE)
 	{
