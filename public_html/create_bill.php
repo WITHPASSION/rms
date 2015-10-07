@@ -902,13 +902,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	#monthを表示用数字に変更
 	$month = sprintf('%01d', $month);
 	#郵便番号
-	$reviser->addString($sheet_num, 2, 2, "〒".$bill_payer_data['postal_code']);
+	$reviser->addString($sheet_num, 1, 2, "〒".$bill_payer_data['postal_code']);
 	#住所
-	$reviser->addString($sheet_num, 3, 2, $bill_payer_data['address_1']);
-	$reviser->addString($sheet_num, 4, 2, " ".$bill_payer_data['address_2']);
+	$reviser->addString($sheet_num, 2, 2, $bill_payer_data['address_1']);
+	$reviser->addString($sheet_num, 3, 2, " ".$bill_payer_data['address_2']);
 	#貴社名/御氏名
-	$reviser->addString($sheet_num, 7, 2, $bill_payer_data['bill_payer_name']);
-	$reviser->addString($sheet_num, 8, 2, $c_name."　様");
+	$reviser->addString($sheet_num, 5, 2, $bill_payer_data['bill_payer_name']);
+	$reviser->addString($sheet_num, 6, 2, $c_name."　様");
 	#行数の定義
 	$i = 18;
 	$reviser->addNumber($sheet_num, $i, 0, "1");
