@@ -910,7 +910,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$reviser->addString($sheet_num, 5, 2, $bill_payer_data['bill_payer_name']);
 	$reviser->addString($sheet_num, 6, 2, $c_name."　様");
 	#行数の定義
-	$i = 18;
+	$i = 19;
 	$reviser->addNumber($sheet_num, $i, 0, "1");
 	#借金問題
 	if ($shakkin_call > 0 || $shakkin_mail > 0) {
