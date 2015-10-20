@@ -105,7 +105,10 @@ $year_month = "$year"."$month";
 #請求有効件数が0であった場合には出力しない
 
 //一括ダウンロードかどうか
-$pack = $_POST['pack'];
+$pack = null;
+if (isset($_POST['pack'])) {
+	$pack = $_POST['pack'];
+}
 
 if (!empty($bill_payer_id)) {
 	#チェック関数を呼び出し、nullで無ければExcelに書き出す
@@ -360,6 +363,7 @@ function check_valid_mail($bill_payer_id,$year,$month){
 			month=$month
 	");
 	$arr_mail_check = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	$all_mail_check = "";
 	foreach ($arr_mail_check as $row) {
 		$all_mail_check += $row['mail_shakkin'];
 		$all_mail_check += $row['mail_souzoku'];
@@ -490,11 +494,14 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	#無効アリコール数
 	$stmt = $pdo_request->query("
 		SELECT
-			ad_group_id
+			abp.ad_group_id,
+			ag.group_name
 		FROM
-			ad_group_bill_payer
+			smk_request_data.ad_group_bill_payer abp,
+			wordpress.ss_ad_groups ag
 		WHERE
-			bill_payer_id = $bill_payer_id
+			abp.ad_group_id = ag.ID AND
+			abp.bill_payer_id = $bill_payer_id
 	");
 	$arr_ad_group_id =$stmt->fetchAll(PDO::FETCH_ASSOC);
 	foreach ($arr_ad_group_id as $row) {
@@ -1062,14 +1069,61 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 今後ともよろしくお願い致します。"
 	);
 
+	// 事務所グループ毎にシートを作る
+	// 請求先全体シート
+	get_each_ad_details_data(
+		$reviser,
+		2,
+		$arr_ad_group_id,
+		$year,
+		$month,
+		$year_month,
+		$bill_payer_name
+	);
+	$sn = 3;
+	foreach ($arr_ad_group_id as $row) {
+		$ad_group_id = $row['ad_group_id'];
+		$arr = array();
+		array_push($arr, $row);
+		get_each_ad_details_data(
+			$reviser,
+			$sn,
+			$arr,
+			$year,
+			$month,
+			$year_month,
+			$row['group_name']
+		);
+		$sn++;
+	}
+
+	#事務所毎でのsheetの名前
+	$xls_name = "請求書（".$bill_payer_name.$year."年".$month."月分）";
+	#テンプレを読み込み、出力する
+	$readfile = "./template.xls";	
+	$outfile = $xls_name.".xls";
+	if ($filepath != null) {
+		$reviser->revisefile($readfile, $outfile, $filepath);
+	}
+	else {
+		$reviser->revisefile($readfile, $outfile);
+	}
+}
+#end_of_function/get_each_ad_data
+
+function get_each_ad_details_data(
+	$reviser,
+	$sheet_num,
+	$arr_ad_group_id,
+	$year,
+	$month,
+	$year_month,
+	$sheet_name
+) {
+	global $pdo_request,$pdo_cdr,$pdo_wordpress;
 	########################
 	###CRMシートに載せる内容###
 	########################
-	$sheet_num = 2;
-	#無効も含めた全コール数
-	$all_call = $all_call_shakkin + $all_call_souzoku + $all_call_koutsujiko + $all_call_ninibaikyaku + $all_call_meigihenkou + $all_call_setsuritsu + $all_call_keijijiken + $all_call_rikon;
-	#無効も含めた全メール数
-	$all_mail = $all_mail_shakkin + $all_mail_souzoku + $all_mail_koutsujiko + $all_mail_ninibaikyaku + $all_mail_meigihenkou + $all_mail_setsuritsu + $all_mail_keijijiken + $all_mail_rikon;
 	$reviser->addString($sheet_num, 0, 0, $month."月");
 	#全体コール数の出力
 	$reviser->addString($sheet_num, 1, 1, "発生コール");
@@ -1215,6 +1269,9 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if (count($adg_call)) {
 		foreach ($arr_ad_group_id as $row) {
 			$ad_group_id = $row['ad_group_id'];
+			if (!array_key_exists($ad_group_id, $adg_call)) {
+				continue;
+			}
 			foreach (array_keys($adg_call[$ad_group_id]) as $ad_key) {
 				if ($ad_key === 'total') {
 					$reviser->addString($sheet_num, $i, 0, "グループID：$ad_group_id 合計");
@@ -1231,6 +1288,9 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if (count($sgp_call)) {
 		foreach ($arr_ad_group_id as $row) {
 			$ad_group_id = $row['ad_group_id'];
+			if (!array_key_exists($ad_group_id, $sgp_call)) {
+				continue;
+			}
 			foreach (array_keys($sgp_call[$ad_group_id]) as $sg_key) {
 				$reviser->addString($sheet_num, $i, 0, "グループID：$ad_group_id 案件種別：$sg_key 合計");
 				$reviser->addString($sheet_num, $i, 1, $sgp_call[$ad_group_id][$sg_key][CALL_TYPE_ALL]);
@@ -1245,6 +1305,9 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if (count($adg_call)) {
 		foreach ($arr_ad_group_id as $row) {
 			$ad_group_id = $row['ad_group_id'];
+			if (!array_key_exists($ad_group_id, $adg_call)) {
+				continue;
+			}
 			foreach (array_keys($adg_call[$ad_group_id]) as $ad_key) {
 				if ($ad_key !== 'total') {
 					foreach (array_keys($adg_call[$ad_group_id][$ad_key]) as $sg_key) {
@@ -1334,6 +1397,9 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if (count($adg_mail)) {
 		foreach ($arr_ad_group_id as $row) {
 			$ad_group_id = $row['ad_group_id'];
+			if (!array_key_exists($ad_group_id, $adg_mail)) {
+				continue;
+			}
 			foreach (array_keys($adg_mail[$ad_group_id]) as $ad_key) {
 				if ($ad_key === 'total') {
 					$reviser->addString($sheet_num, $i, 0, "グループID：$ad_group_id 合計");
@@ -1349,6 +1415,9 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if (count($sgp_mail)) {
 		foreach ($arr_ad_group_id as $row) {
 			$ad_group_id = $row['ad_group_id'];
+			if (!array_key_exists($ad_group_id, $sgp_mail)) {
+				continue;
+			}
 			foreach (array_keys($sgp_mail[$ad_group_id]) as $sg_key) {
 				$reviser->addString($sheet_num, $i, 0, "グループID：$ad_group_id 案件種別：$sg_key 合計");
 				$reviser->addString($sheet_num, $i, 1, $sgp_mail[$ad_group_id][$sg_key][MAIL_TYPE_ALL]);
@@ -1362,6 +1431,9 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if (count($adg_mail)) {
 		foreach ($arr_ad_group_id as $row) {
 			$ad_group_id = $row['ad_group_id'];
+			if (!array_key_exists($ad_group_id, $adg_mail)) {
+				continue;
+			}
 			foreach (array_keys($adg_mail[$ad_group_id]) as $ad_key) {
 				if ($ad_key !== 'total') {
 					foreach (array_keys($adg_mail[$ad_group_id][$ad_key]) as $sg_key) {
@@ -1720,18 +1792,6 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	}
 
 	#シートネームを設定
-	$reviser->setSheetname($sheet_num, $bill_payer_name);
-	#事務所毎でのsheetの名前
-	$sheet_name = "請求書（".$bill_payer_name.$year."年".$month."月分）";
-	#テンプレを読み込み、出力する
-	$readfile = "./template.xls";	
-	$outfile = $sheet_name.".xls";
-	if ($filepath != null) {
-		$reviser->revisefile($readfile, $outfile, $filepath);
-	}
-	else {
-		$reviser->revisefile($readfile, $outfile);
-	}
+	$reviser->setSheetname($sheet_num, $sheet_name);
 }
-#end_of_function/get_each_ad_data
 ?>
