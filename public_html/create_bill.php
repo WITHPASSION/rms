@@ -518,25 +518,25 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$arr_all_call_data =$stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach($arr_all_call_data as $row) {
 			$mi = $row['media_id'];
-			if($mi == "B") {
+			if(substr($mi, 0, 1) == "B") {
 				$all_call_souzoku++;
 			}
-			else if($mi == "C") {
+			else if(substr($mi, 0, 1) == "C") {
 				$all_call_koutsujiko++;
 			}
-			else if($mi == "D") {
+			else if(substr($mi, 0, 1) == "D") {
 				$all_call_ninibaikyaku++;
 			}
-			else if($mi == "E") {
+			else if(substr($mi, 0, 1) == "E") {
 				$all_call_meigihenkou++;
 			}
-			else if($mi == "F") {
+			else if(substr($mi, 0, 1) == "F") {
 				$all_call_setsuritsu++;
 			}
-			else if($mi == "G") {
+			else if(substr($mi, 0, 1) == "G") {
 				$all_call_keijijiken++;
 			}	
-			else if($mi == "H") {
+			else if(substr($mi, 0, 1) == "H") {
 				$all_call_rikon++;
 			}	
 			else {

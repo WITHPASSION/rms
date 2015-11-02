@@ -128,25 +128,25 @@ function fetch_req_call_data($year_month, $year, $month, $bill_payer_id) {
 		$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_call_data as $r) {
 			$mi = $r['media_id'];
-			if ($mi == "B"){
+			if (substr($mi, 0, 1) == "B"){
 				$souzoku++;
 			}
-			else if ($mi == "C"){
+			else if (substr($mi, 0, 1) == "C"){
 				$koutsujiko++;
 			}
-			else if ($mi == "D"){
+			else if (substr($mi, 0, 1) == "D"){
 				$ninibaikyaku++;
 			}
-			else if ($mi == "E"){
+			else if (substr($mi, 0, 1) == "E"){
 				$meigihenkou++;
 			}
-			else if ($mi == "F"){
+			else if (substr($mi, 0, 1) == "F"){
 				$setsuritsu++;
 			}
-			else if ($mi == "G"){
+			else if (substr($mi, 0, 1) == "G"){
 				$keijijiken++;
 			}
-			else if ($mi == "H"){
+			else if (substr($mi, 0, 1) == "H"){
 				$rikon++;
 			}
 			else {
@@ -168,25 +168,25 @@ function fetch_req_call_data($year_month, $year, $month, $bill_payer_id) {
 		$arr_anonymous_call_data = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_anonymous_call_data as $r) {
 			$mi = $r['media_id'];
-			if ($mi == "B") {
+			if (substr($mi, 0, 1) == "B") {
 				$souzoku++;
 			}
-			else if ($mi == "C") {
+			else if (substr($mi, 0, 1) == "C") {
 				$koutsujiko++;
 			}
-			else if ($mi == "D") {
+			else if (substr($mi, 0, 1) == "D") {
 				$ninibaikyaku++;
 			}
-			else if ($mi == "E") {
+			else if (substr($mi, 0, 1) == "E") {
 				$meigihenkou++;
 			}
-			else if ($mi == "F") {
+			else if (substr($mi, 0, 1) == "F") {
 				$setsuritsu++;
 			}
-			else if ($mi == "G") {
+			else if (substr($mi, 0, 1) == "G") {
 				$keijijiken++;
 			}
-			else if ($mi == "H") {
+			else if (substr($mi, 0, 1) == "H") {
 				$rikon++;
 			}
 			else {
