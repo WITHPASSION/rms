@@ -1092,7 +1092,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			$year,
 			$month,
 			$year_month,
-			$row['group_name']
+			"G_".$row['group_name']
 		);
 		$sn++;
 	}
