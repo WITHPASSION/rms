@@ -152,7 +152,7 @@ function get_monthly_total_mails(
 			m.ad_group_id = adg.ad_group_id AND
 			adg.advertiser_id = v.advertiser_id AND
 			adg.ad_group_id = gpm.ad_group_id AND
-			(gpm.site_group = s.site_group OR (s.site_group = 999 AND gpm.site_group = 0)) AND
+			gpm.site_group = s.site_group AND
 			gpm.payment_method_id = pm.id AND
 			CAST(v.register_dt AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
 			DATE_FORMAT(v.register_dt, '%Y%m') = '$year_month'
