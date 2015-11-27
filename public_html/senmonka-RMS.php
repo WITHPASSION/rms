@@ -167,9 +167,6 @@ function changeYM() {
 							else if (med_keys[z] == "rikon") {
 								med_name = "離婚問題";
 							}
-							else if (med_keys[z] == "LP") {
-								med_name = "Ｌ　Ｐ　";
-							}
 							if (med.payment_method.lastIndexOf('月額固定', 0) === 0) {
 								//月額固定費の案件が有ればダウンロードボタン表示
 								has_bill = true;

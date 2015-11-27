@@ -546,57 +546,55 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#無効アリメール数,メール日取得
 		$stmt2 = $pdo_cdr->query("
 			SELECT
-				mc.site_type,
+				mc.site_group,
 				DATE_FORMAT(mc.register_dt,'%m%d') as reg_dt
 			FROM
-				cdr.mail_conv mc,
-				wordpress.ss_advertiser_ad_group aadg
+				cdr.mail_conv_view mc
 			WHERE
-				aadg.advertiser_id = mc.advertiser_id AND
 				DATE_FORMAT(mc.register_dt,'%Y%m') = $year_month AND
-				aadg.ad_group_id = $ad_group_id
+				mc.ad_group_id = $ad_group_id
 		");
 		$arr_all_mail_data = $stmt2->fetchAll(PDO::FETCH_ASSOC);
 		foreach($arr_all_mail_data as $row) {
-			$st = $row['site_type'];
+			$sg = $row['site_group'];
 			$register_dt = $row["reg_dt"];
 			$mail_month = substr($register_dt, 0, 2);
 			$mail_day = substr($register_dt, 2, 2);
 			$mail_day = sprintf('%01d', $mail_day);
-			if ($st == 3) {
+			if ($sg == 0) {
+				$all_mail_shakkin++;
+				array_push($arr_shakkin_mail_dt, $mail_day);
+				asort($arr_shakkin_mail_dt);
+			}
+			else if ($sg == 1) {
 				$all_mail_souzoku++;
 				array_push($arr_souzoku_mail_dt, $mail_day);
 				asort($arr_souzoku_mail_dt);
 			}
-			else if ($st == 14) {
+			else if ($sg == 2) {
 				$all_mail_koutsujiko++;
 				array_push($arr_koutsujiko_mail_dt, $mail_day);
 				asort($arr_koutsujiko_mail_dt);
 			}
-			else if ($st == 16) {
+			else if ($sg == 3) {
 				$all_mail_ninibaikyaku++;
 				array_push($arr_ninibaikyaku_mail_dt, $mail_day);
 				asort($arr_ninibaikyaku_mail_dt);
 			}
-			else if ($st == 17) {
+			else if ($sg == 4) {
 				$all_mail_meigihenkou++;
 				array_push($arr_meigihenkou_mail_dt, $mail_day);
 				asort($arr_meigihenkou_mail_dt);
 			}
-			else if ($st == 18) { 
+			else if ($sg == 5) { 
 				$all_mail_setsuritsu++;
 				array_push($arr_setsuritsu_mail_dt, $mail_day);
 				asort($arr_setsuritsu_mail_dt);
 			}
-			else if ($st == 20) { 
+			else if ($sg == 7) { 
 				$all_mail_rikon++;
 				array_push($arr_rikon_mail_dt, $mail_day);
 				asort($arr_rikon_mail_dt);
-			}
-			else {
-				$all_mail_shakkin++;
-				array_push($arr_shakkin_mail_dt, $mail_day);
-				asort($arr_shakkin_mail_dt);
 			}
 		}
 	}

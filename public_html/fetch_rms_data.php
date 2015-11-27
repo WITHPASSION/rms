@@ -308,40 +308,38 @@ function fetch_req_mail_data($year_month, $year, $month, $bill_payer_id) {
 		$ad_group_id = $r['ad_group_id'];
 		$stmt = $pdo->query("
 			SELECT
-				mc.site_type
+				mc.site_group
 			FROM
-				cdr.mail_conv mc,
-				wordpress.ss_advertiser_ad_group aadg
+				cdr.mail_conv_view mc
 			WHERE
-				aadg.advertiser_id = mc.advertiser_id AND
 				mc.dpl_tel_cnt = 0 AND
 				mc.dpl_mail_cnt = 0 AND
 				DATE_FORMAT(mc.register_dt,'%Y%m') = $year_month AND
-				aadg.ad_group_id = $ad_group_id
+				mc.ad_group_id = $ad_group_id
 		");
 		$mail_result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($mail_result as $row) {
-			$site_type = $row['site_type'];
-			if ($site_type == 3) {
+			$site_group = $row['site_group'];
+			if ($site_group == 0) {
+				$m_shakkin++;
+			}
+			else if ($site_group == 1) {
 				$m_souzoku++;
 			}
-			else if ($site_type == 14) {
+			else if ($site_group == 2) {
 				$m_koutsujiko++;
 			}
-			else if ($site_type == 16) {
+			else if ($site_group == 3) {
 				$m_ninibaikyaku++;
 			}
-			else if ($site_type == 17) {
+			else if ($site_group == 4) {
 				$m_meigihenkou++;
 			}
-			else if ($site_type == 18) {
+			else if ($site_group == 5) {
 				$m_setsuritsu++;
 			}
-			else if ($site_type == 20) {
+			else if ($site_group == 7) {
 				$m_rikon++;
-			}
-			else {
-				$m_shakkin++;
 			}
 		}
 	}

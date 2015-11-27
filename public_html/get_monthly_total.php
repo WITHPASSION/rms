@@ -139,12 +139,6 @@ foreach ($billing_offices as $office) {
 		$mc["sample_mail_count"] = 0;
 		$a["medias"] += array($type => $mc);
 	}
-	$mc = array();
-	$mc["call_count"] = 0;
-	$mc["sample_call_count"] = 0;
-	$mc["mail_count"] = 0;
-	$mc["sample_mail_count"] = 0;
-	$a["medias"] += array("LP" => $mc);
 	$ret[$bill_payer_id]["ad_groups"][$office["ad_group_id"]]["advertisers"] += array($office["advertiser_id"] => $a);
 }
 
