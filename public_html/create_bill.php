@@ -319,6 +319,7 @@ function check_valid_call($bill_payer_id,$year,$month){
 			valid_call_shakkin,
 			valid_call_souzoku,
 			valid_call_koutsujiko,
+			valid_call_ninibaikyaku,
 			valid_call_meigihenkou,
 			valid_call_setsuritsu,
 			valid_call_keijijiken,
@@ -335,6 +336,7 @@ function check_valid_call($bill_payer_id,$year,$month){
 		$all_call_check += $row['valid_call_shakkin'];
 		$all_call_check += $row['valid_call_souzoku'];
 		$all_call_check += $row['valid_call_koutsujiko'];
+		$all_call_check += $row['valid_call_ninibaikyaku'];
 		$all_call_check += $row['valid_call_meigihenkou'];
 		$all_call_check += $row['valid_call_setsuritsu'];
 		$all_call_check += $row['valid_call_keijijiken'];
@@ -352,6 +354,7 @@ function check_valid_mail($bill_payer_id,$year,$month){
 			mail_shakkin,
 			mail_souzoku,
 			mail_koutsujiko,
+			mail_ninibaikyaku,
 			mail_meigihenkou,
 			mail_setsuritsu,
 			mail_rikon
@@ -368,6 +371,7 @@ function check_valid_mail($bill_payer_id,$year,$month){
 		$all_mail_check += $row['mail_shakkin'];
 		$all_mail_check += $row['mail_souzoku'];
 		$all_mail_check += $row['mail_koutsujiko'];
+		$all_mail_check += $row['mail_ninibaikyaku'];
 		$all_mail_check += $row['mail_meigihenkou'];
 		$all_mail_check += $row['mail_setsuritsu'];
 		$all_mail_check += $row['mail_rikon'];
@@ -1001,7 +1005,21 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$sum = ($keijijiken_call) * 10000;
 		$i = $i + 1;
 	}
-	#会社設立
+	#任意売却
+	if ($ninibaikyaku_call > 0 OR $ninibaikyaku_mail > 0) {
+		#月
+		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		#商品名
+		$reviser->addString($sheet_num, $i, 2, "月成果料金(任意売却)");
+		#数量
+		$reviser->addNumber($sheet_num, $i, 4, $ninibaikyaku_call+$ninibaikyaku_mail);
+		#単価
+		$reviser->addNumber($sheet_num, $i, 5, 20000);
+		#合計金額
+		$sum =($setsuritsu_call + $setsuritsu_mail) * 20000;
+		$i = $i + 1;
+	}
+	#離婚
 	if ($rikon_call > 0 OR $rikon_mail > 0) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
