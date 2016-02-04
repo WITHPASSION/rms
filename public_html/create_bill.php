@@ -1100,9 +1100,9 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $bgatakanen_call+$bgatakanen_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, 7000);
+		$reviser->addNumber($sheet_num, $i, 5, 10000);
 		#合計金額
-		$sum =($bgatakanen_call + $bgatakanen_mail) * 7000;
+		$sum =($bgatakanen_call + $bgatakanen_mail) * 10000;
 		$i = $i + 1;
 	}
 	$i = $i + 1;
