@@ -843,7 +843,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	}
 	$inv_rikon = $all_call_rikon + $all_mail_rikon - $res_rikon;
 	if ($inv_rikon > 0) {
-		$inv_tmp_rikon = "離婚問題サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_setsuritsu."件";
+		$inv_tmp_rikon = "離婚問題サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_rikon."件";
 	}
 	$inv_bgatakanen = $all_call_bgatakanen + $all_mail_bgatakanen - $res_bgatakanen;
 	if ($inv_bgatakanen > 0) {
