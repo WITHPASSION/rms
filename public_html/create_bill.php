@@ -335,6 +335,7 @@ function check_valid_call($bill_payer_id,$year,$month){
 			month=$month
 	");
 	$arr_call_check = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	$all_call_check = "";
 	foreach ($arr_call_check as $row) {
 		$all_call_check += $row['valid_call_shakkin'];
 		$all_call_check += $row['valid_call_souzoku'];
@@ -463,50 +464,86 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 
 
 	$sheet_num =0;
+	$calls = array(
+		'0' => 0,
+		'1' => 0,
+		'2' => 0,
+		'3' => 0,
+		'4' => 0,
+		'5' => 0,
+		'6' => 0,
+		'7' => 0,
+		'8' => 0,
+		'sum' => 0
+	);
 	$stmt = $pdo_request->query("
 		SELECT
-			*
+			ad_group_id	
 		FROM
-			monthly_valid_call
+			ad_group_bill_payer
 		WHERE
-			bill_payer_id = $bill_payer_id AND
-			year = $year AND
-			month = $month
+			bill_payer_id = $bill_payer_id
 	");
-	$req_mvc_data = $stmt->fetch(PDO::FETCH_ASSOC);
+	$ad_group_ids = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	foreach ($ad_group_ids as $v) {
+		$ad_group_id = $v['ad_group_id'];
+		$call_data = get_monthly_total_calls($year_month, CALL_TYPE_VALID, $ad_group_id);
+		foreach ($call_data as $c) {
+			if ($c['site_group'] == null) {
+				continue;
+			}
+			$calls[$c['site_group']] += intval($c['tel_count']);
+			$calls['sum'] += intval($c['tel_count']);
+		}
+	}
+
 	#問題毎コール数の取得
-	$shakkin_call = $req_mvc_data['valid_call_shakkin'];
-	$souzoku_call = $req_mvc_data['valid_call_souzoku'];
-	$koutsujiko_call = $req_mvc_data['valid_call_koutsujiko'];
-	$ninibaikyaku_call = $req_mvc_data['valid_call_ninibaikyaku'];
-	$meigihenkou_call = $req_mvc_data['valid_call_meigihenkou'];
-	$setsuritsu_call = $req_mvc_data['valid_call_setsuritsu'];
-	$keijijiken_call = $req_mvc_data['valid_call_keijijiken'];
-	$rikon_call = $req_mvc_data['valid_call_rikon'];
-	$bgatakanen_call = $req_mvc_data['valid_call_bgatakanen'];
-	$call_sum = $req_mvc_data['call_sum'];
+	$shakkin_call = $calls['0'];
+	$souzoku_call = $calls['1'];
+	$koutsujiko_call = $calls['2'];
+	$ninibaikyaku_call = $calls['3'];
+	$meigihenkou_call = $calls['4'];
+	$setsuritsu_call = $calls['5'];
+	$keijijiken_call = $calls['6'];
+	$rikon_call = $calls['7'];
+	$bgatakanen_call = $calls['8'];
+	$call_sum = $calls['sum'];
+
 	####課金メール数請求内容データの取得
-	$stmt2 = $pdo_request->query("
-		SELECT
-			*
-		FROM
-			monthly_mail_num
-		WHERE
-			bill_payer_id = $bill_payer_id AND
-			year = $year AND
-			month = $month"
+	$mails = array(
+		'0' => 0,
+		'1' => 0,
+		'2' => 0,
+		'3' => 0,
+		'4' => 0,
+		'5' => 0,
+		'6' => 0,
+		'7' => 0,
+		'8' => 0,
+		'sum' => 0
 	);
-	$req_mail_data = $stmt2->fetch(PDO::FETCH_ASSOC);
+
+	foreach ($ad_group_ids as $v) {
+		$ad_group_id = $v['ad_group_id'];
+		$mail_data = get_monthly_total_mails($year_month, MAIL_TYPE_VALID, $ad_group_id);
+		foreach ($mail_data as $m) {
+			if ($m['site_group'] == null) {
+				continue;
+			}
+			$mails[$m['site_group']] += intval($m['mail_count']);
+			$mails['sum'] += intval($m['mail_count']);
+		}
+	}
 	#問題ごとメール数の取得
-	$shakkin_mail = $req_mail_data['mail_shakkin'];
-	$souzoku_mail = $req_mail_data['mail_souzoku'];
-	$koutsujiko_mail = $req_mail_data['mail_koutsujiko'];
-	$ninibaikyaku_mail = $req_mail_data['mail_ninibaikyaku'];
-	$meigihenkou_mail = $req_mail_data['mail_meigihenkou'];
-	$setsuritsu_mail = $req_mail_data['mail_setsuritsu'];
-	$rikon_mail = $req_mail_data['mail_rikon'];
-	$bgatakanen_mail = $req_mail_data['mail_bgatakanen'];
-	$mail_sum = $req_mail_data['mail_sum'];
+	$shakkin_mail = $mails['0'];
+	$souzoku_mail = $mails['1'];
+	$koutsujiko_mail = $mails['2'];
+	$ninibaikyaku_mail = $mails['3'];
+	$meigihenkou_mail = $mails['4'];
+	$setsuritsu_mail = $mails['5'];
+	$rikon_mail = $mails['6'];
+	$bgatakanen_mail = $mails['7'];
+	$mail_sum = $mails['sum'];
 	#請求合計数の取得
 	$all_sum = $call_sum+$mail_sum;
 	#######無効も含めた全コール数,メール数の取得
@@ -803,6 +840,48 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	else{
 		$bgatakanen_all_tmp = "";
 	}
+
+	#月末時点の課金時間と価格の取得
+	$payments = array(
+		'0' => array(0, 0),
+		'1' => array(0, 0),
+		'2' => array(0, 0),
+		'3' => array(0, 0),
+		'4' => array(0, 0),
+		'5' => array(0, 0),
+		'6' => array(0, 0),
+		'7' => array(0, 0),
+		'8' => array(0, 0),
+	);
+	$lastdate = date('Y-m-t', strtotime(date($year.'-'.($month + 1).'-01') . '-1 month'));
+	$stmt4 = $pdo_request->query("
+		SELECT
+			a.*
+		FROM
+			(
+				SELECT
+					ogpm.site_group,
+					ogpm.charge_seconds,
+					ogpm.unit_price
+				FROM
+					cdr.office_group_payment_method ogpm,
+					ad_group_bill_payer agbp
+				WHERE
+					ogpm.ad_group_id = agbp.ad_group_id AND
+					agbp.bill_payer_id = $bill_payer_id AND
+					'$lastdate' BETWEEN ogpm.from_date AND ogpm.to_date
+				ORDER BY from_date DESC
+			) as a
+		GROUP BY
+			a.site_group
+	");
+	$payment_data = $stmt4->fetchAll(PDO::FETCH_ASSOC);
+
+	foreach ($payment_data as $p) {
+		$payments[$p['site_group']][0] = intval($p['charge_seconds']);
+		$payments[$p['site_group']][1] = intval($p['unit_price']);
+	}
+
 	#無効件数の計算
 	$res_shakkin = $shakkin_call + $shakkin_mail;
 	$res_souzoku = $souzoku_call + $souzoku_mail;
@@ -815,39 +894,39 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$res_bgatakanen = $bgatakanen_call + $bgatakanen_mail;
 	$inv_shakkin = $all_call_shakkin + $all_mail_shakkin - $res_shakkin;
 	if ($inv_shakkin > 0) {
-		$inv_tmp_shakkin = "借金問題サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_shakkin."件";
+		$inv_tmp_shakkin = "借金問題サイトで同一電話番号の電話・メール及び".$payments['0'][0]."秒以内電話の".$inv_shakkin."件";
 	}
 	$inv_souzoku = $all_call_souzoku + $all_mail_souzoku - $res_souzoku;
 	if ($inv_souzoku > 0) {
-		$inv_tmp_souzoku = "相続問題サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_souzoku."件";
+		$inv_tmp_souzoku = "相続問題サイトで同一電話番号の電話・メール及び".$payments['1'][0]."秒以内電話の".$inv_souzoku."件";
 	}
 	$inv_koutsujiko = $all_call_koutsujiko + $all_mail_koutsujiko - $res_koutsujiko;
 	if ($inv_koutsujiko > 0) {
-		$inv_tmp_koutsujiko = "交通事故サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_koutsujiko."件";
+		$inv_tmp_koutsujiko = "交通事故サイトで同一電話番号の電話・メール及び".$payments['2'][0]."秒以内電話の".$inv_koutsujiko."件";
 	}
 	$inv_ninibaikyaku = $all_call_ninibaikyaku + $all_mail_ninibaikyaku - $res_ninibaikyaku;
 	if ($inv_ninibaikyaku > 0) {
-		$inv_tmp_ninibaikyaku = "任意売却サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_ninibaikyaku."件";
+		$inv_tmp_ninibaikyaku = "任意売却サイトで同一電話番号の電話・メール及び".$payments['3'][0]."秒以内電話の".$inv_ninibaikyaku."件";
 	}
 	$inv_meigihenkou = $all_call_meigihenkou + $all_mail_meigihenkou - $res_meigihenkou;
 	if ($inv_meigihenkou > 0) {
-		$inv_tmp_meigihenkou = "名義変更サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_meigihenkou."件";
+		$inv_tmp_meigihenkou = "名義変更サイトで同一電話番号の電話・メール及び".$payments['4'][0]."秒以内電話の".$inv_meigihenkou."件";
 	}
 	$inv_setsuritsu = $all_call_setsuritsu + $all_mail_setsuritsu - $res_setsuritsu;
 	if ($inv_setsuritsu > 0) {
-		$inv_tmp_setsuritsu = "会社設立サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_setsuritsu."件";
+		$inv_tmp_setsuritsu = "会社設立サイトで同一電話番号の電話・メール及び".$payments['5'][0]."秒以内電話の".$inv_setsuritsu."件";
 	}
 	$inv_keijijiken = $all_call_keijijiken - $res_keijijiken;
 	if ($inv_keijijiken > 0){
-		$inv_tmp_keijijiken = "刑事事件サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_keijijiken."件";
+		$inv_tmp_keijijiken = "刑事事件サイトで同一電話番号の電話・メール及び".$payments['6'][0]."秒以内電話の".$inv_keijijiken."件";
 	}
 	$inv_rikon = $all_call_rikon + $all_mail_rikon - $res_rikon;
 	if ($inv_rikon > 0) {
-		$inv_tmp_rikon = "離婚問題サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_rikon."件";
+		$inv_tmp_rikon = "離婚問題サイトで同一電話番号の電話・メール及び".$payments['7'][0]."秒以内電話の".$inv_rikon."件";
 	}
 	$inv_bgatakanen = $all_call_bgatakanen + $all_mail_bgatakanen - $res_bgatakanen;
 	if ($inv_bgatakanen > 0) {
-		$inv_tmp_bgatakanen = "Ｂ型肝炎サイトで同一電話番号の電話・メール及び60秒以内電話の".$inv_setsuritsu."件";
+		$inv_tmp_bgatakanen = "Ｂ型肝炎サイトで同一電話番号の電話・メール及び".$payments['8'][0]."秒以内電話の".$inv_setsuritsu."件";
 	}
 
 	#有効件数生成
@@ -988,9 +1067,9 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $shakkin_call + $shakkin_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, 10000);
+		$reviser->addNumber($sheet_num, $i, 5, $payments['0'][1]);
 		#合計金額
-		$sum = ($shakkin_call + $shakkin_mail) * 10000;
+		$sum = ($shakkin_call + $shakkin_mail) * $payments['0'][1];
 		$i = $i + 1;
 	}
 	#相続
@@ -1002,9 +1081,9 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $souzoku_call + $souzoku_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, 5000);
+		$reviser->addNumber($sheet_num, $i, 5, $payments['1'][1]);
 		#合計金額
-		$sum = ($souzoku_call + $souzoku_mail) * 5000;
+		$sum = ($souzoku_call + $souzoku_mail) * $payments['1'][1];
 		$i = $i + 1;
 	}
 	#交通事故
@@ -1016,10 +1095,24 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			#数量
 			$reviser->addNumber($sheet_num, $i, 4, $koutsujiko_call + $koutsujiko_mail);
 			#単価
-			$reviser->addNumber($sheet_num, $i, 5, 10000);
+			$reviser->addNumber($sheet_num, $i, 5, $payments['2'][1]);
 			#合計金額
-			$sum = ($koutsujiko_call + $koutsujiko_mail) * 10000;
+			$sum = ($koutsujiko_call + $koutsujiko_mail) * $payments['2'][1];
 			$i = $i + 1;
+	}
+	#任意売却
+	if ($ninibaikyaku_call > 0 || $ninibaikyaku_mail > 0) {
+		#月
+		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		#商品名
+		$reviser->addString($sheet_num, $i, 2, "月成果料金(任意売却)");
+		#数量
+		$reviser->addNumber($sheet_num, $i, 4, $ninibaikyaku_call+$ninibaikyaku_mail);
+		#単価
+		$reviser->addNumber($sheet_num, $i, 5, $payments['3'][1]);
+		#合計金額
+		$sum =($setsuritsu_call + $setsuritsu_mail) * $payments['3'][1];
+		$i = $i + 1;
 	}
 	#名義変更
 	if ($meigihenkou_call > 0 || $meigihenkou_mail > 0) {
@@ -1030,13 +1123,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $meigihenkou_call + $meigihenkou_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, 5000);
+		$reviser->addNumber($sheet_num, $i, 5, $payments['4'][1]);
 		#合計金額
-		$sum = ($meigihenkou_call + $meigihenkou_mail) * 5000;
+		$sum = ($meigihenkou_call + $meigihenkou_mail) * $payments['4'][1];
 		$i = $i + 1;
 	}
 	#会社設立
-	if ($setsuritsu_call > 0 OR $setsuritsu_mail > 0) {
+	if ($setsuritsu_call > 0 || $setsuritsu_mail > 0) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
@@ -1044,9 +1137,9 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $setsuritsu_call+$setsuritsu_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, 5000);
+		$reviser->addNumber($sheet_num, $i, 5, $payments['5'][1]);
 		#合計金額
-		$sum =($setsuritsu_call + $setsuritsu_mail) * 5000;
+		$sum =($setsuritsu_call + $setsuritsu_mail) * $payments['5'][1];
 		$i = $i + 1;
 	}
 	#刑事事件
@@ -1058,27 +1151,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $keijijiken_call);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, 10000);
+		$reviser->addNumber($sheet_num, $i, 5, $payments['6'][1]);
 		#合計金額
-		$sum = ($keijijiken_call) * 10000;
-		$i = $i + 1;
-	}
-	#任意売却
-	if ($ninibaikyaku_call > 0 OR $ninibaikyaku_mail > 0) {
-		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
-		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月成果料金(任意売却)");
-		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $ninibaikyaku_call+$ninibaikyaku_mail);
-		#単価
-		$reviser->addNumber($sheet_num, $i, 5, 20000);
-		#合計金額
-		$sum =($setsuritsu_call + $setsuritsu_mail) * 20000;
+		$sum = ($keijijiken_call) * $payments['6'][1];
 		$i = $i + 1;
 	}
 	#離婚
-	if ($rikon_call > 0 OR $rikon_mail > 0) {
+	if ($rikon_call > 0 || $rikon_mail > 0) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
@@ -1086,9 +1165,9 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $rikon_call+$rikon_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, 7000);
+		$reviser->addNumber($sheet_num, $i, 5, $payments['7'][1]);
 		#合計金額
-		$sum =($rikon_call + $rikon_mail) * 7000;
+		$sum =($rikon_call + $rikon_mail) * $payments['7'][1];
 		$i = $i + 1;
 	}
 	#Ｂ型肝炎
@@ -1100,11 +1179,70 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $bgatakanen_call+$bgatakanen_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, 10000);
+		$reviser->addNumber($sheet_num, $i, 5, $payments['8'][1]);
 		#合計金額
-		$sum =($bgatakanen_call + $bgatakanen_mail) * 10000;
+		$sum =($bgatakanen_call + $bgatakanen_mail) * $payments['8'][1];
 		$i = $i + 1;
 	}
+
+	#CallChargeとフリーダイヤルの数の取得
+	#TODO:月次処理に戻すかも。
+	$call_charge = null;
+	$count_freedial = null;
+	foreach($arr_ad_group_id as $row) {
+		$ad_group_id = $row['ad_group_id'];
+		//call_dataの取得
+		//call_chargeの取得
+		$stmt = $pdo_cdr->query("
+			SELECT
+				tel_to
+			FROM
+				call_data_view
+			WHERE
+				ad_group_id = $ad_group_id AND
+				DATE_FORMAT(date_from,'%Y%m') = $year_month
+			GROUP BY
+				tel_to
+		");
+		$arr_call_num =$stmt->fetchAll(PDO::FETCH_ASSOC);
+		foreach ($arr_call_num as $r) {
+			$call_num = $r['tel_to'];
+			$stmt = $pdo_cdr->query("
+				SELECT
+					call_charge
+				FROM
+					bill
+				WHERE
+					tel_to = $call_num AND
+					year = $year AND
+					month = $month
+			");
+			$arr_call_charge  = $stmt->fetchAll(PDO::FETCH_ASSOC);
+			foreach ($arr_call_charge as $row) {
+				$call_charge += $row['call_charge'];
+			}
+		}
+		//count_freedialの取得
+		$stmt = $pdo_cdr->query("
+			SELECT
+				ac.tel
+			FROM
+				cdr.adsip_conf ac,
+				wordpress.ss_advertiser_ad_group aadg
+			WHERE
+				aadg.advertiser_id = ac.office_id AND
+				aadg.ad_group_id = $ad_group_id
+		");
+		$arr_adsip_conf = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		foreach ($arr_adsip_conf as $row) {
+			$tel_num = $row['tel'];
+			$freedial = substr($tel_num, 0, 4);
+			if($freedial == "0120") {
+				$count_freedial++;
+			}
+		}
+	}
+
 	$i = $i + 1;
 	$reviser->addNumber($sheet_num, $i, 0, "2");
 	#月
@@ -1112,21 +1250,21 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	#フリーダイヤル料金記入
 	$reviser->addString($sheet_num, $i, 2, "月フリーダイヤル通話料金");
 	#単価
-	$reviser->addNumber($sheet_num, $i, 5, $req_mvc_data['call_charge']);
+	$reviser->addNumber($sheet_num, $i, 5, $call_charge);
 	#合計金額
-	$reviser->addNumber($sheet_num, $i, 6, $req_mvc_data['call_charge']);
-	if ($req_mvc_data['count_freedial'] != null) {
+	$reviser->addNumber($sheet_num, $i, 6, $call_charge);
+	if ($count_freedial != null) {
 		$i = $i + 1;
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");
 		#発番費用
 		$reviser->addString($sheet_num, $i, 2, "月フリーダイヤル費用");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $req_mvc_data['count_freedial']);
+		$reviser->addNumber($sheet_num, $i, 4, $count_freedial);
 		#単価
 		$reviser->addNumber($sheet_num, $i, 5, 1000);//変更可能である可能性あり
 		#合計金額
-		$sum = ($req_mvc_data['count_freedial']) * 1000;
+		$sum = ($count_freedial) * 1000;
 		$i = $i + 1;
 	}
 
