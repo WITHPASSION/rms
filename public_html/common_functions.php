@@ -2,9 +2,11 @@
 define('CALL_TYPE_ALL', 0);
 define('CALL_TYPE_SAMPLE', 1);
 define('CALL_TYPE_VALID', 2);
+define('CALL_TYPE_EXCLUSION', 3);
 define('MAIL_TYPE_ALL', 0);
 define('MAIL_TYPE_SAMPLE', 1);
 define('MAIL_TYPE_VALID', 2);
+define('MAIL_TYPE_EXCLUSION', 3);
 
 function get_billing_office_list() {
 	global $pdo_request;
@@ -42,11 +44,11 @@ function get_monthly_total_calls(
 	$where = "";
 	if ($call_type == CALL_TYPE_VALID)
 	{
-		$where = " AND pm.id <> 2 AND v.dpl_tel_cnt_for_billing = 0 AND v.call_minutes >= v.charge_seconds AND v.dpl_mail_cnt = 0";
+		$where = " AND pm.id <> 2 AND v.dpl_tel_cnt_for_billing = 0 AND v.call_minutes >= v.charge_seconds AND v.dpl_mail_cnt = 0 AND v.is_exclusion = 0";
 	}
 	else if ($call_type == CALL_TYPE_SAMPLE)
 	{
-		$where = " AND v.dpl_tel_cnt = 0 AND v.call_minutes >= 60 AND v.dpl_mail_cnt = 0";
+		$where = " AND v.dpl_tel_cnt = 0 AND v.call_minutes >= 60 AND v.dpl_mail_cnt = 0 AND is_exclusion = 0";
 	}
 	if ($ad_group_id != null)
 	{
@@ -77,6 +79,7 @@ function get_monthly_total_calls(
 					dv.dpl_tel_cnt_for_billing,
 					dv.date_from,
 					dv.call_minutes,
+					dv.is_exclusion,
 					pm.payment_method_id,
 					pm.charge_seconds,
 					sg.site_group
@@ -122,11 +125,11 @@ function get_monthly_total_mails(
 	$where = "";
 	if ($mail_type == MAIL_TYPE_VALID)
 	{
-		$where = " AND v.dpl_tel_cnt = 0 AND v.dpl_mail_cnt = 0 AND pm.id <> 2";
+		$where = " AND v.dpl_tel_cnt = 0 AND v.dpl_mail_cnt = 0 AND pm.id <> 2 AND is_exclusion = 0";
 	}
 	else if ($mail_type == MAIL_TYPE_SAMPLE)
 	{
-		$where = " AND v.dpl_tel_cnt = 0 AND v.dpl_mail_cnt = 0";
+		$where = " AND v.dpl_tel_cnt = 0 AND v.dpl_mail_cnt = 0 AND is_exclusion = 0";
 	}
 	if ($ad_group_id != null)
 	{
@@ -141,7 +144,7 @@ function get_monthly_total_mails(
 			group_concat(distinct pm.method) as payment_method,
 			count(v.ID) as mail_count
 		FROM
-			cdr.mail_conv v,
+			cdr.mail_conv_view v,
 			smk_request_data.ad_group_bill_payer m,
 			wordpress.ss_site_type s,
 			wordpress.ss_advertiser_ad_group adg,
