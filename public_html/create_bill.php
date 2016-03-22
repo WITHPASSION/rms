@@ -1811,8 +1811,9 @@ function get_each_ad_details_data(
 	$reviser->addString($sheet_num, $i, 9, "発信元番号");
 	$reviser->addString($sheet_num, $i, 10, "通話状態");
 	$reviser->addString($sheet_num, $i, 11, "有効無効(60秒)");
-	$reviser->addString($sheet_num, $i, 12, "有効無効");
-	$reviser->addString($sheet_num, $i, 13, "有効秒数");
+	$reviser->addString($sheet_num, $i, 12, "有効秒数");
+	$reviser->addString($sheet_num, $i, 13, "有効無効");
+	$reviser->addString($sheet_num, $i, 14, "除外理由");
 
 	$i++;
 
@@ -1871,6 +1872,9 @@ function get_each_ad_details_data(
 			$payment_method_id = $row['payment_method_id'];
 			$charge_seconds = $row['charge_seconds'];
 			$dpl_tel_cnt_for_billing = $row['dpl_tel_cnt_for_billing'];
+			$is_exclusion = $row['is_exclusion'];
+			$exclusion_reason = $row['exclusion_reason'];
+
 			#media_nameの取得
 			$media_name = "";
 			$site_group = 0;
@@ -1935,7 +1939,10 @@ function get_each_ad_details_data(
 
 			#課金対象の確認
 			$check_call_dpl_for_billing = null;
-			if ($payment_method_id < 2) {
+			if ($is_exclusion) {
+				$check_call_dpl_for_billing = "除外依頼";
+			}
+			else if ($payment_method_id < 2) {
 				if ($call_minutes >= $charge_seconds && $dpl_tel_cnt_for_billing > 0 && $dpl_mail_cnt > 0) {
 					$check_call_dpl_for_billing = "同一電話・メール";
 				}
@@ -1969,6 +1976,7 @@ function get_each_ad_details_data(
 			$arr['check_call_dpl'] = $check_call_dpl;
 			$arr['check_call_dpl_for_billing'] = $check_call_dpl_for_billing;
 			$arr['charge_seconds'] = $charge_seconds;
+			$arr['exclusion_reason'] = $exclusion_reason;
 			array_push($output_arr, $arr);
 		}
 	}
@@ -2004,8 +2012,9 @@ function get_each_ad_details_data(
 			$reviser->addString($sheet_num, $i, 9, $out['tel_from']);
 			$reviser->addString($sheet_num, $i, 10, $out['call_status']);
 			$reviser->addString($sheet_num, $i, 11, $out['check_call_dpl']);
-			$reviser->addString($sheet_num, $i, 12, $out['check_call_dpl_for_billing']);
-			$reviser->addString($sheet_num, $i, 13, $out['charge_seconds']);
+			$reviser->addString($sheet_num, $i, 12, $out['charge_seconds']);
+			$reviser->addString($sheet_num, $i, 13, $out['check_call_dpl_for_billing']);
+			$reviser->addString($sheet_num, $i, 14, $out['exclusion_reason']);
 			$i++;
 	}
 
@@ -2018,24 +2027,18 @@ function get_each_ad_details_data(
 		$sum_crm_mail_data = array();
 		$stmt = $pdo_cdr->query("
 			SELECT
-				ad.ID as advertiser_id,
-				ad.office_name,
 				c.*,
-				st.site_group,
+				ad.office_name,
 				sg.site_group_name
 			FROM
-				cdr.mail_conv c,
 				wordpress.ss_advertisers ad,
-				wordpress.ss_advertiser_ad_group aadg,
-				wordpress.ss_site_type st
+				cdr.mail_conv_view c
 			LEFT OUTER JOIN wordpress.ss_site_group sg
-			ON st.site_group = sg.site_group
+			ON c.site_group = sg.site_group
 			WHERE
 				c.advertiser_id = ad.ID AND
-				c.advertiser_id = aadg.advertiser_id AND
-				c.site_type = st.site_type AND
 				DATE_FORMAT(c.register_dt,'%Y%m') = $year_month AND
-				aadg.ad_group_id = $ad_group_id
+				c.ad_group_id = $ad_group_id
 			ORDER BY
 				register_dt
 		");
@@ -2050,11 +2053,22 @@ function get_each_ad_details_data(
 			$date = $r['register_dt'];
 			$dpl_tel_cnt = $r['dpl_tel_cnt'];
 			$dpl_mail_cnt = $r['dpl_mail_cnt'];
-			if ($dpl_tel_cnt == 0 && $dpl_mail_cnt == 0) {
+			$is_exclusion = $r['is_exclusion'];
+			$exclusion_reason = $r['exclusion_reason'];
+			if ($is_exclusion) {
+				$check_mail_dpl = "除外依頼";
+			}
+			else if ($dpl_tel_cnt == 0 && $dpl_mail_cnt == 0) {
 				$check_mail_dpl = "○";
 			}
-			else if ($dpl_tel_cnt > 0 || $dpl_mail_cnt > 0) {
-				$check_mail_dpl = "重複";
+			else if ($dpl_tel_cnt > 0 && $dpt_mail_cnt > 0) {
+				$check_mail_dpl = "同一電話・メール";
+			}
+			else if ($dpl_tel_cnt > 0) {
+				$check_mail_dpl = "同一電話";
+			}
+			else if ($dpl_mail_cnt > 0) {
+				$check_mail_dpl = "同一メール";
 			}
 			#事務所毎かつ、発生メール毎の情報が入る配列
 			$new_crm_mail_array_data = array();
@@ -2071,7 +2085,19 @@ function get_each_ad_details_data(
 			foreach ($arr_st_name as $row) {
 				$site_type_name = $row['site_type_name'];
 			}
-			array_push($new_crm_mail_array_data, $advertiser_id, $office_name, $site_group, $site_group_name, $site_type, $site_type_name, $sender_tel, $date, $check_mail_dpl);
+			array_push(
+				$new_crm_mail_array_data,
+				$advertiser_id,
+				$office_name,
+				$site_group,
+				$site_group_name,
+				$site_type,
+				$site_type_name,
+				$sender_tel,
+				$date,
+				$check_mail_dpl,
+				$exclusion_reason
+			);
 			array_push($sum_crm_mail_data, $new_crm_mail_array_data);
 		}
 		#配列に代入したメールデータを出力
@@ -2085,6 +2111,7 @@ function get_each_ad_details_data(
 			$sender_tel = $row['6'];
 			$mail_date = $row['7'];
 			$check_mail_dpl = $row['8'];
+			$exclusion_reason = $row['9'];
 
 			$arr = array();
 			$arr['advertiser_id'] = $advertiser_id;
@@ -2096,6 +2123,7 @@ function get_each_ad_details_data(
 			$arr['mail_date'] = $mail_date;
 			$arr['sender_tel'] = $sender_tel;
 			$arr['check_mail_dpl'] = $check_mail_dpl;
+			$arr['exclusion_reason'] = $exclusion_reason;
 			array_push($output_arr, $arr);
 		}
 	}
@@ -2127,7 +2155,8 @@ function get_each_ad_details_data(
 			$reviser->addString($sheet_num, $i, 4, $out['site_type_name']);
 			$reviser->addString($sheet_num, $i, 7, $out['mail_date']);
 			$reviser->addString($sheet_num, $i, 9, $out['sender_tel']);
-			$reviser->addString($sheet_num, $i, 11, $out['check_mail_dpl']);
+			$reviser->addString($sheet_num, $i, 13, $out['check_mail_dpl']);
+			$reviser->addString($sheet_num, $i, 14, $out['exclusion_reason']);
 	}
 
 	#シートネームを設定
