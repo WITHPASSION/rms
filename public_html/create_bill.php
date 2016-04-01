@@ -560,8 +560,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$ninibaikyaku_mail = $mails['3'];
 	$meigihenkou_mail = $mails['4'];
 	$setsuritsu_mail = $mails['5'];
-	$rikon_mail = $mails['6'];
-	$bgatakanen_mail = $mails['7'];
+	$rikon_mail = $mails['7'];
+	$bgatakanen_mail = $mails['8'];
 	$mail_sum = $mails['sum'];
 	#請求合計数の取得
 	$all_sum = $call_sum+$mail_sum;
