@@ -1101,91 +1101,91 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($inv_shakkin > 0) {
 		$inv_tmp_shakkin = "借金問題サイトで同一電話番号の電話・メール及び".$payments['0'][0]."秒以内電話の".$inv_shakkin."件";
 	}
-	if ($ex_shakkin > 0) {
-		$inv_tmp_shakkin .= "\n借金問題サイトで弊社で除外と判断した".$ex_shakkin."件";
-	}
 	if ($req_ex_shakkin > 0) {
 		$inv_tmp_shakkin .= "\n借金問題サイトで除外依頼頂いた".$req_ex_shakkin."件";
+	}
+	if ($ex_shakkin > 0) {
+		$inv_tmp_shakkin .= "\n借金問題サイトで弊社で除外と判断した".$ex_shakkin."件";
 	}
 	$inv_souzoku = $all_call_souzoku + $all_mail_souzoku - $res_souzoku - $ex_souzoku - $req_ex_souzoku;
 	if ($inv_souzoku > 0) {
 		$inv_tmp_souzoku = "相続問題サイトで同一電話番号の電話・メール及び".$payments['1'][0]."秒以内電話の".$inv_souzoku."件";
 	}
-	if ($ex_souzoku > 0) {
-		$inv_tmp_souzoku .= "\n借金問題サイトで弊社で除外と判断した".$ex_souzoku."件";
-	}
 	if ($req_ex_souzoku > 0) {
 		$inv_tmp_souzoku .= "\n相続問題サイトで除外依頼頂いた".$req_ex_souzoku."件";
+	}
+	if ($ex_souzoku > 0) {
+		$inv_tmp_souzoku .= "\n借金問題サイトで弊社で除外と判断した".$ex_souzoku."件";
 	}
 	$inv_koutsujiko = $all_call_koutsujiko + $all_mail_koutsujiko - $res_koutsujiko - $ex_koutsujiko - $req_ex_koutsujiko;
 	if ($inv_koutsujiko > 0) {
 		$inv_tmp_koutsujiko = "交通事故サイトで同一電話番号の電話・メール及び".$payments['2'][0]."秒以内電話の".$inv_koutsujiko."件";
 	}
-	if ($ex_koutsujiko > 0) {
-		$inv_tmp_koutsujiko .= "\n交通事故サイトで弊社で除外と判断した".$ex_koutsujiko."件";
-	}
 	if ($req_ex_koutsujiko > 0) {
 		$inv_tmp_koutsujiko .= "\n交通事故サイトで除外依頼頂いた".$req_ex_koutsujiko."件";
+	}
+	if ($ex_koutsujiko > 0) {
+		$inv_tmp_koutsujiko .= "\n交通事故サイトで弊社で除外と判断した".$ex_koutsujiko."件";
 	}
 	$inv_ninibaikyaku = $all_call_ninibaikyaku + $all_mail_ninibaikyaku - $res_ninibaikyaku - $ex_ninibaikyaku - $req_ex_ninibaikyaku;
 	if ($inv_ninibaikyaku > 0) {
 		$inv_tmp_ninibaikyaku = "任意売却サイトで同一電話番号の電話・メール及び".$payments['3'][0]."秒以内電話の".$inv_ninibaikyaku."件";
 	}
-	if ($ex_ninibaikyaku > 0) {
-		$inv_tmp_ninibaikyaku .= "\n任意売却サイトで弊社で除外と判断した".$ex_ninibaikyaku."件";
-	}
 	if ($req_ex_ninibaikyaku > 0) {
 		$inv_tmp_ninibaikyaku .= "\n任意売却サイトで除外依頼頂いた".$req_ex_ninibaikyaku."件";
+	}
+	if ($ex_ninibaikyaku > 0) {
+		$inv_tmp_ninibaikyaku .= "\n任意売却サイトで弊社で除外と判断した".$ex_ninibaikyaku."件";
 	}
 	$inv_meigihenkou = $all_call_meigihenkou + $all_mail_meigihenkou - $res_meigihenkou - $ex_meigihenkou - $req_ex_meigihenkou;
 	if ($inv_meigihenkou > 0) {
 		$inv_tmp_meigihenkou = "名義変更サイトで同一電話番号の電話・メール及び".$payments['4'][0]."秒以内電話の".$inv_meigihenkou."件";
 	}
-	if ($ex_meigihenkou > 0) {
-		$inv_tmp_meigihenkou .= "\n名義変更サイトで弊社で除外と判断した".$ex_meigihenkou."件";
-	}
 	if ($req_ex_meigihenkou > 0) {
 		$inv_tmp_meigihenkou .= "\n名義変更サイトで除外依頼頂いた".$req_ex_meigihenkou."件";
+	}
+	if ($ex_meigihenkou > 0) {
+		$inv_tmp_meigihenkou .= "\n名義変更サイトで弊社で除外と判断した".$ex_meigihenkou."件";
 	}
 	$inv_setsuritsu = $all_call_setsuritsu + $all_mail_setsuritsu - $res_setsuritsu - $ex_setsuritsu - $req_ex_setsuritsu;
 	if ($inv_setsuritsu > 0) {
 		$inv_tmp_setsuritsu = "会社設立サイトで同一電話番号の電話・メール及び".$payments['5'][0]."秒以内電話の".$inv_setsuritsu."件";
 	}
-	if ($ex_setsuritsu > 0) {
-		$inv_tmp_setsuritsu .= "\n会社設立サイトで弊社で除外と判断した".$ex_setsuritsu."件";
-	}
 	if ($req_ex_setsuritsu > 0) {
 		$inv_tmp_setsuritsu .= "\n会社設立サイトで除外依頼頂いた".$req_ex_setsuritsu."件";
+	}
+	if ($ex_setsuritsu > 0) {
+		$inv_tmp_setsuritsu .= "\n会社設立サイトで弊社で除外と判断した".$ex_setsuritsu."件";
 	}
 	$inv_keijijiken = $all_call_keijijiken - $res_keijijiken - $ex_keijijiken - $req_ex_keijijiken;
 	if ($inv_keijijiken > 0){
 		$inv_tmp_keijijiken = "刑事事件サイトで同一電話番号の電話・メール及び".$payments['6'][0]."秒以内電話の".$inv_keijijiken."件";
 	}
-	if ($ex_keijijiken > 0) {
-		$inv_tmp_keijijiken .= "\n刑事事件サイトで弊社で除外と判断した".$ex_keijijiken."件";
-	}
 	if ($req_ex_keijijiken > 0) {
 		$inv_tmp_keijijiken .= "\n刑事事件サイトで除外依頼頂いた".$req_ex_keijijiken."件";
+	}
+	if ($ex_keijijiken > 0) {
+		$inv_tmp_keijijiken .= "\n刑事事件サイトで弊社で除外と判断した".$ex_keijijiken."件";
 	}
 	$inv_rikon = $all_call_rikon + $all_mail_rikon - $res_rikon - $ex_rikon - $req_ex_rikon;
 	if ($inv_rikon > 0) {
 		$inv_tmp_rikon = "離婚問題サイトで同一電話番号の電話・メール及び".$payments['7'][0]."秒以内電話の".$inv_rikon."件";
 	}
-	if ($ex_rikon > 0) {
-		$inv_tmp_rikon .= "\n離婚問題サイトで弊社で除外と判断した".$ex_rikon."件";
-	}
 	if ($req_ex_rikon > 0) {
 		$inv_tmp_rikon .= "\n離婚問題サイトで除外依頼頂いた".$req_ex_rikon."件";
+	}
+	if ($ex_rikon > 0) {
+		$inv_tmp_rikon .= "\n離婚問題サイトで弊社で除外と判断した".$ex_rikon."件";
 	}
 	$inv_bgatakanen = $all_call_bgatakanen + $all_mail_bgatakanen - $res_bgatakanen - $ex_bgatakanen - $req_ex_bgatakanen;
 	if ($inv_bgatakanen > 0) {
 		$inv_tmp_bgatakanen = "Ｂ型肝炎サイトで同一電話番号の電話・メール及び".$payments['8'][0]."秒以内電話の".$inv_setsuritsu."件";
 	}
-	if ($ex_bgatakanen > 0) {
-		$inv_tmp_bgatakanen .= "\nＢ型肝炎サイトで弊社で除外と判断した".$ex_bgatakanen."件";
-	}
 	if ($req_ex_bgatakanen > 0) {
 		$inv_tmp_bgatakanen .= "\nＢ型肝炎サイトで除外依頼頂いた".$req_ex_bgatakanen."件";
+	}
+	if ($ex_bgatakanen > 0) {
+		$inv_tmp_bgatakanen .= "\nＢ型肝炎サイトで弊社で除外と判断した".$ex_bgatakanen."件";
 	}
 
 	#有効件数生成
