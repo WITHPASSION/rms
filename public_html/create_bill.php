@@ -410,6 +410,16 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$ex_call_keijijiken = null;
 	$ex_call_rikon = null;
 	$ex_call_bgatakanen = null;
+	#除外依頼コール数
+	$req_ex_call_shakkin = null;
+	$req_ex_call_souzoku = null;
+	$req_ex_call_koutsujiko = null;
+	$req_ex_call_ninibaikyaku = null;
+	$req_ex_call_meigihenkou = null;
+	$req_ex_call_setsuritsu = null;
+	$req_ex_call_keijijiken = null;
+	$req_ex_call_rikon = null;
+	$req_ex_call_bgatakanen = null;
 	#無効も含めた全てのメール数
 	$all_mail_shakkin = null;
 	$all_mail_souzoku = null;
@@ -428,6 +438,15 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$ex_mail_setsuritsu = null;
 	$ex_mail_rikon = null;
 	$ex_mail_bgatakanen = null;
+	#除外依頼メール数
+	$req_ex_mail_shakkin = null;
+	$req_ex_mail_souzoku = null;
+	$req_ex_mail_koutsujiko = null;
+	$req_ex_mail_ninibaikyaku = null;
+	$req_ex_mail_meigihenkou = null;
+	$req_ex_mail_setsuritsu = null;
+	$req_ex_mail_rikon = null;
+	$req_ex_mail_bgatakanen = null;
 	#メール日
 	$shakkin_mail_dt = null;
 	$souzoku_mail_dt = null;
@@ -584,7 +603,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$stmt = $pdo_cdr->query("
 			SELECT
 				media_id,
-				is_exclusion
+				is_exclusion,
+				exclusion_is_request
 			FROM
 				call_data_view
 			WHERE
@@ -595,58 +615,104 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		foreach($arr_all_call_data as $row) {
 			$mi = $row['media_id'];
 			$ex = $row['is_exclusion'];
+			$is_req = $row['exclusion_is_request'];
 			if(substr($mi, 0, 1) == "B") {
 				$all_call_souzoku++;
 				if ($ex == 1) {
-					$ex_call_souzoku++;
+					if ($is_req == 1) {
+						$req_ex_call_souzoku++;
+					}
+					else {
+						$ex_call_souzoku++;
+					}
 				}
 			}
 			else if(substr($mi, 0, 1) == "C") {
 				$all_call_koutsujiko++;
 				if ($ex == 1) {
-					$ex_call_koutsujiko++;
+					if ($is_req == 1) {
+						$req_ex_call_koutsujiko++;
+					}
+					else {
+						$ex_call_koutsujiko++;
+					}
 				}
 			}
 			else if(substr($mi, 0, 1) == "D") {
 				$all_call_ninibaikyaku++;
 				if ($ex == 1) {
-					$ex_call_ninibaikyaku++;
+					if ($is_req == 1) {
+						$req_ex_call_ninibaikyaku++;
+					}
+					else {
+						$ex_call_ninibaikyaku++;
+					}
 				}
 			}
 			else if(substr($mi, 0, 1) == "E") {
 				$all_call_meigihenkou++;
 				if ($ex == 1) {
-					$ex_call_meigihenkou++;
+					if ($is_req == 1) {
+						$req_ex_call_meigihenkou++;
+					}
+					else {
+						$ex_call_meigihenkou++;
+					}
 				}
 			}
 			else if(substr($mi, 0, 1) == "F") {
 				$all_call_setsuritsu++;
 				if ($ex == 1) {
-					$ex_call_setsuritsu++;
+					if ($is_req == 1) {
+						$req_ex_call_setsuritsu++;
+					}
+					else {
+						$ex_call_setsuritsu++;
+					}
 				}
 			}
 			else if(substr($mi, 0, 1) == "G") {
 				$all_call_keijijiken++;
 				if ($ex == 1) {
-					$ex_call_keijijiken++;
+					if ($is_req == 1) {
+						$req_ex_call_keijijiken++;
+					}
+					else {
+						$ex_call_keijijiken++;
+					}
 				}
 			}	
 			else if(substr($mi, 0, 1) == "H") {
 				$all_call_rikon++;
 				if ($ex == 1) {
-					$ex_call_rikon++;
+					if ($is_req == 1) {
+						$req_ex_call_rikon++;
+					}
+					else {
+						$ex_call_rikon++;
+					}
 				}
 			}	
 			else if(substr($mi, 0, 1) == "I") {
 				$all_call_bgatakanen++;
 				if ($ex == 1) {
-					$ex_call_bgatakanen++;
+					if ($is_req == 1) {
+						$req_ex_call_bgatakanen++;
+					}
+					else {
+						$ex_call_bgatakanen++;
+					}
 				}
 			}	
 			else {
 				$all_call_shakkin++;
 				if ($ex == 1) {
-					$ex_call_shakkin++;
+					if ($is_req == 1) {
+						$req_ex_call_shakkin++;
+					}
+					else {
+						$ex_call_shakkin++;
+					}
 				}
 			}
 		}
@@ -655,7 +721,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			SELECT
 				mc.site_group,
 				DATE_FORMAT(mc.register_dt,'%m%d') as reg_dt,
-				is_exclusion
+				is_exclusion,
+				exclusion_is_request
 			FROM
 				cdr.mail_conv_view mc
 			WHERE
@@ -667,13 +734,19 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			$sg = $row['site_group'];
 			$register_dt = $row["reg_dt"];
 			$ex = $row["is_exclusion"];
+			$is_req = $row["exclusion_is_request"];
 			$mail_month = substr($register_dt, 0, 2);
 			$mail_day = substr($register_dt, 2, 2);
 			$mail_day = sprintf('%01d', $mail_day);
 			if ($sg == 0) {
 				$all_mail_shakkin++;
 				if ($ex == 1) {
-					$ex_mail_shakkin++;
+					if ($is_req == 1) {
+						$req_ex_mail_shakkin++;
+					}
+					else {
+						$ex_mail_shakkin++;
+					}
 				}
 				array_push($arr_shakkin_mail_dt, $mail_day);
 				asort($arr_shakkin_mail_dt);
@@ -681,7 +754,12 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			else if ($sg == 1) {
 				$all_mail_souzoku++;
 				if ($ex == 1) {
-					$ex_mail_souzoku++;
+					if ($is_req == 1) {
+						$req_ex_mail_souzoku++;
+					}
+					else {
+						$ex_mail_souzoku++;
+					}
 				}
 				array_push($arr_souzoku_mail_dt, $mail_day);
 				asort($arr_souzoku_mail_dt);
@@ -689,7 +767,12 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			else if ($sg == 2) {
 				$all_mail_koutsujiko++;
 				if ($ex == 1) {
-					$ex_mail_koutsujiko++;
+					if ($is_req == 1) {
+						$req_ex_mail_koutsujiko++;
+					}
+					else {
+						$ex_mail_koutsujiko++;
+					}
 				}
 				array_push($arr_koutsujiko_mail_dt, $mail_day);
 				asort($arr_koutsujiko_mail_dt);
@@ -697,7 +780,12 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			else if ($sg == 3) {
 				$all_mail_ninibaikyaku++;
 				if ($ex == 1) {
-					$ex_mail_ninibaikyaku++;
+					if ($is_req == 1) {
+						$req_ex_mail_ninibaikyaku++;
+					}
+					else {
+						$ex_mail_ninibaikyaku++;
+					}
 				}
 				array_push($arr_ninibaikyaku_mail_dt, $mail_day);
 				asort($arr_ninibaikyaku_mail_dt);
@@ -705,7 +793,12 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			else if ($sg == 4) {
 				$all_mail_meigihenkou++;
 				if ($ex == 1) {
-					$ex_mail_meigihenkou++;
+					if ($is_req == 1) {
+						$req_ex_mail_meigihenkou++;
+					}
+					else {
+						$ex_mail_meigihenkou++;
+					}
 				}
 				array_push($arr_meigihenkou_mail_dt, $mail_day);
 				asort($arr_meigihenkou_mail_dt);
@@ -713,7 +806,12 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			else if ($sg == 5) { 
 				$all_mail_setsuritsu++;
 				if ($ex == 1) {
-					$ex_mail_setsuritsu++;
+					if ($is_req == 1) {
+						$req_ex_mail_setsuritsu++;
+					}
+					else {
+						$ex_mail_setsuritsu++;
+					}
 				}
 				array_push($arr_setsuritsu_mail_dt, $mail_day);
 				asort($arr_setsuritsu_mail_dt);
@@ -721,7 +819,12 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			else if ($sg == 7) { 
 				$all_mail_rikon++;
 				if ($ex == 1) {
-					$ex_mail_rikon++;
+					if ($is_req == 1) {
+						$req_ex_mail_rikon++;
+					}
+					else {
+						$ex_mail_rikon++;
+					}
 				}
 				array_push($arr_rikon_mail_dt, $mail_day);
 				asort($arr_rikon_mail_dt);
@@ -729,7 +832,12 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			else if ($sg == 8) { 
 				$all_mail_bgatakanen++;
 				if ($ex == 1) {
-					$ex_mail_bgatakanen++;
+					if ($is_req == 1) {
+						$req_ex_mail_bgatakanen++;
+					}
+					else {
+						$ex_mail_bgatakanen++;
+					}
 				}
 				array_push($arr_bgatakanen_mail_dt, $mail_day);
 				asort($arr_bgatakanen_mail_dt);
@@ -967,6 +1075,17 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$res_rikon = $rikon_call + $rikon_mail;
 	$res_bgatakanen = $bgatakanen_call + $bgatakanen_mail;
 
+	#除外依頼件数の計算	
+	$req_ex_shakkin = $req_ex_call_shakkin + $req_ex_mail_shakkin;
+	$req_ex_souzoku = $req_ex_call_souzoku + $req_ex_mail_souzoku;
+	$req_ex_koutsujiko = $req_ex_call_koutsujiko + $req_ex_mail_koutsujiko;
+	$req_ex_ninibaikyaku = $req_ex_call_ninibaikyaku + $req_ex_mail_ninibaikyaku;
+	$req_ex_meigihenkou = $req_ex_call_meigihenkou + $req_ex_mail_meigihenkou;
+	$req_ex_setsuritsu = $req_ex_call_setsuritsu + $req_ex_mail_setsuritsu;
+	$req_ex_keijijiken = $req_ex_call_keijijiken;
+	$req_ex_rikon = $req_ex_call_rikon + $req_ex_mail_rikon;
+	$req_ex_bgatakanen = $req_ex_call_bgatakanen + $req_ex_mail_bgatakanend;
+
 	#除外件数の計算	
 	$ex_shakkin = $ex_call_shakkin + $ex_mail_shakkin;
 	$ex_souzoku = $ex_call_souzoku + $ex_mail_souzoku;
@@ -978,68 +1097,95 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$ex_rikon = $ex_call_rikon + $ex_mail_rikon;
 	$ex_bgatakanen = $ex_call_bgatakanen + $ex_mail_bgatakanen;
 
-	$inv_shakkin = $all_call_shakkin + $all_mail_shakkin - $res_shakkin - $ex_shakkin;
+	$inv_shakkin = $all_call_shakkin + $all_mail_shakkin - $res_shakkin - $ex_shakkin - $req_ex_shakkin;
 	if ($inv_shakkin > 0) {
 		$inv_tmp_shakkin = "借金問題サイトで同一電話番号の電話・メール及び".$payments['0'][0]."秒以内電話の".$inv_shakkin."件";
 	}
 	if ($ex_shakkin > 0) {
-		$inv_tmp_shakkin .= "\n借金問題サイトで除外依頼頂いた".$ex_shakkin."件";
+		$inv_tmp_shakkin .= "\n借金問題サイトで弊社で除外と判断した".$ex_shakkin."件";
 	}
-	$inv_souzoku = $all_call_souzoku + $all_mail_souzoku - $res_souzoku - $ex_souzoku;
+	if ($req_ex_shakkin > 0) {
+		$inv_tmp_shakkin .= "\n借金問題サイトで除外依頼頂いた".$req_ex_shakkin."件";
+	}
+	$inv_souzoku = $all_call_souzoku + $all_mail_souzoku - $res_souzoku - $ex_souzoku - $req_ex_souzoku;
 	if ($inv_souzoku > 0) {
 		$inv_tmp_souzoku = "相続問題サイトで同一電話番号の電話・メール及び".$payments['1'][0]."秒以内電話の".$inv_souzoku."件";
 	}
 	if ($ex_souzoku > 0) {
-		$inv_tmp_souzoku .= "\n相続問題サイトで除外依頼頂いた".$ex_souzoku."件";
+		$inv_tmp_souzoku .= "\n借金問題サイトで弊社で除外と判断した".$ex_souzoku."件";
 	}
-	$inv_koutsujiko = $all_call_koutsujiko + $all_mail_koutsujiko - $res_koutsujiko - $ex_koutsujiko;
+	if ($req_ex_souzoku > 0) {
+		$inv_tmp_souzoku .= "\n相続問題サイトで除外依頼頂いた".$req_ex_souzoku."件";
+	}
+	$inv_koutsujiko = $all_call_koutsujiko + $all_mail_koutsujiko - $res_koutsujiko - $ex_koutsujiko - $req_ex_koutsujiko;
 	if ($inv_koutsujiko > 0) {
 		$inv_tmp_koutsujiko = "交通事故サイトで同一電話番号の電話・メール及び".$payments['2'][0]."秒以内電話の".$inv_koutsujiko."件";
 	}
 	if ($ex_koutsujiko > 0) {
-		$inv_tmp_koutsujiko .= "\n交通事故サイトで除外依頼頂いた".$ex_koutsujiko."件";
+		$inv_tmp_koutsujiko .= "\n交通事故サイトで弊社で除外と判断した".$ex_koutsujiko."件";
 	}
-	$inv_ninibaikyaku = $all_call_ninibaikyaku + $all_mail_ninibaikyaku - $res_ninibaikyaku - $res_ninibaikyaku;
+	if ($req_ex_koutsujiko > 0) {
+		$inv_tmp_koutsujiko .= "\n交通事故サイトで除外依頼頂いた".$req_ex_koutsujiko."件";
+	}
+	$inv_ninibaikyaku = $all_call_ninibaikyaku + $all_mail_ninibaikyaku - $res_ninibaikyaku - $ex_ninibaikyaku - $req_ex_ninibaikyaku;
 	if ($inv_ninibaikyaku > 0) {
 		$inv_tmp_ninibaikyaku = "任意売却サイトで同一電話番号の電話・メール及び".$payments['3'][0]."秒以内電話の".$inv_ninibaikyaku."件";
 	}
 	if ($ex_ninibaikyaku > 0) {
-		$inv_tmp_ninibaikyaku .= "\n任意売却サイトで除外依頼頂いた".$ex_ninibaikyaku."件";
+		$inv_tmp_ninibaikyaku .= "\n任意売却サイトで弊社で除外と判断した".$ex_ninibaikyaku."件";
 	}
-	$inv_meigihenkou = $all_call_meigihenkou + $all_mail_meigihenkou - $res_meigihenkou - $ex_meigihenkou;
+	if ($req_ex_ninibaikyaku > 0) {
+		$inv_tmp_ninibaikyaku .= "\n任意売却サイトで除外依頼頂いた".$req_ex_ninibaikyaku."件";
+	}
+	$inv_meigihenkou = $all_call_meigihenkou + $all_mail_meigihenkou - $res_meigihenkou - $ex_meigihenkou - $req_ex_meigihenkou;
 	if ($inv_meigihenkou > 0) {
 		$inv_tmp_meigihenkou = "名義変更サイトで同一電話番号の電話・メール及び".$payments['4'][0]."秒以内電話の".$inv_meigihenkou."件";
 	}
 	if ($ex_meigihenkou > 0) {
-		$inv_tmp_meigihenkou .= "\n名義変更サイトで除外依頼頂いた".$ex_meigihenkou."件";
+		$inv_tmp_meigihenkou .= "\n名義変更サイトで弊社で除外と判断した".$ex_meigihenkou."件";
 	}
-	$inv_setsuritsu = $all_call_setsuritsu + $all_mail_setsuritsu - $res_setsuritsu - $ex_setsuritsu;
+	if ($req_ex_meigihenkou > 0) {
+		$inv_tmp_meigihenkou .= "\n名義変更サイトで除外依頼頂いた".$req_ex_meigihenkou."件";
+	}
+	$inv_setsuritsu = $all_call_setsuritsu + $all_mail_setsuritsu - $res_setsuritsu - $ex_setsuritsu - $req_ex_setsuritsu;
 	if ($inv_setsuritsu > 0) {
 		$inv_tmp_setsuritsu = "会社設立サイトで同一電話番号の電話・メール及び".$payments['5'][0]."秒以内電話の".$inv_setsuritsu."件";
 	}
 	if ($ex_setsuritsu > 0) {
-		$inv_tmp_setsuritsu .= "\n会社設立サイトで除外依頼頂いた".$ex_setsuritsu."件";
+		$inv_tmp_setsuritsu .= "\n会社設立サイトで弊社で除外と判断した".$ex_setsuritsu."件";
 	}
-	$inv_keijijiken = $all_call_keijijiken - $res_keijijiken - $ex_keijijiken;
+	if ($req_ex_setsuritsu > 0) {
+		$inv_tmp_setsuritsu .= "\n会社設立サイトで除外依頼頂いた".$req_ex_setsuritsu."件";
+	}
+	$inv_keijijiken = $all_call_keijijiken - $res_keijijiken - $ex_keijijiken - $req_ex_keijijiken;
 	if ($inv_keijijiken > 0){
 		$inv_tmp_keijijiken = "刑事事件サイトで同一電話番号の電話・メール及び".$payments['6'][0]."秒以内電話の".$inv_keijijiken."件";
 	}
 	if ($ex_keijijiken > 0) {
-		$inv_tmp_keijijiken .= "\n刑事事件サイトで除外依頼頂いた".$ex_keijijiken."件";
+		$inv_tmp_keijijiken .= "\n刑事事件サイトで弊社で除外と判断した".$ex_keijijiken."件";
 	}
-	$inv_rikon = $all_call_rikon + $all_mail_rikon - $res_rikon - $ex_rikon;
+	if ($req_ex_keijijiken > 0) {
+		$inv_tmp_keijijiken .= "\n刑事事件サイトで除外依頼頂いた".$req_ex_keijijiken."件";
+	}
+	$inv_rikon = $all_call_rikon + $all_mail_rikon - $res_rikon - $ex_rikon - $req_ex_rikon;
 	if ($inv_rikon > 0) {
 		$inv_tmp_rikon = "離婚問題サイトで同一電話番号の電話・メール及び".$payments['7'][0]."秒以内電話の".$inv_rikon."件";
 	}
 	if ($ex_rikon > 0) {
-		$inv_tmp_rikon .= "\n離婚問題サイトで除外依頼頂いた".$ex_rikon."件";
+		$inv_tmp_rikon .= "\n離婚問題サイトで弊社で除外と判断した".$ex_rikon."件";
 	}
-	$inv_bgatakanen = $all_call_bgatakanen + $all_mail_bgatakanen - $res_bgatakanen - $ex_bgatakanen;
+	if ($req_ex_rikon > 0) {
+		$inv_tmp_rikon .= "\n離婚問題サイトで除外依頼頂いた".$req_ex_rikon."件";
+	}
+	$inv_bgatakanen = $all_call_bgatakanen + $all_mail_bgatakanen - $res_bgatakanen - $ex_bgatakanen - $req_ex_bgatakanen;
 	if ($inv_bgatakanen > 0) {
 		$inv_tmp_bgatakanen = "Ｂ型肝炎サイトで同一電話番号の電話・メール及び".$payments['8'][0]."秒以内電話の".$inv_setsuritsu."件";
 	}
 	if ($ex_bgatakanen > 0) {
-		$inv_tmp_bgatakanen .= "\nＢ型肝炎サイトで除外依頼頂いた".$ex_bgatakanen."件";
+		$inv_tmp_bgatakanen .= "\nＢ型肝炎サイトで弊社で除外と判断した".$ex_bgatakanen."件";
+	}
+	if ($req_ex_bgatakanen > 0) {
+		$inv_tmp_bgatakanen .= "\nＢ型肝炎サイトで除外依頼頂いた".$req_ex_bgatakanen."件";
 	}
 
 	#有効件数生成
@@ -1873,6 +2019,7 @@ function get_each_ad_details_data(
 			$charge_seconds = $row['charge_seconds'];
 			$dpl_tel_cnt_for_billing = $row['dpl_tel_cnt_for_billing'];
 			$is_exclusion = $row['is_exclusion'];
+			$exclusion_is_request = $row['exclusion_is_request'];
 			$exclusion_reason = $row['exclusion_reason'];
 
 			#media_nameの取得
@@ -1940,7 +2087,12 @@ function get_each_ad_details_data(
 			#課金対象の確認
 			$check_call_dpl_for_billing = null;
 			if ($is_exclusion) {
-				$check_call_dpl_for_billing = "除外依頼";
+				if ($exclusion_is_request) {
+					$check_call_dpl_for_billing = "除外依頼";
+				}
+				else {
+					$check_call_dpl_for_billing = "弊社除外";
+				}
 			}
 			else if ($payment_method_id < 2) {
 				if ($call_minutes >= $charge_seconds && $dpl_tel_cnt_for_billing > 0 && $dpl_mail_cnt > 0) {
@@ -2054,9 +2206,15 @@ function get_each_ad_details_data(
 			$dpl_tel_cnt = $r['dpl_tel_cnt'];
 			$dpl_mail_cnt = $r['dpl_mail_cnt'];
 			$is_exclusion = $r['is_exclusion'];
+			$exclusion_is_request = $r['exclusion_is_request'];
 			$exclusion_reason = $r['exclusion_reason'];
 			if ($is_exclusion) {
-				$check_mail_dpl = "除外依頼";
+				if ($exclusion_is_request) {
+					$check_mail_dpl = "除外依頼";
+				}
+				else {
+					$check_mail_dpl = "弊社除外";
+				}
 			}
 			else if ($dpl_tel_cnt == 0 && $dpl_mail_cnt == 0) {
 				$check_mail_dpl = "○";
