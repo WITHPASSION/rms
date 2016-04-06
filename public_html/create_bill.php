@@ -1179,7 +1179,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	}
 	$inv_bgatakanen = $all_call_bgatakanen + $all_mail_bgatakanen - $res_bgatakanen - $ex_bgatakanen - $req_ex_bgatakanen;
 	if ($inv_bgatakanen > 0) {
-		$inv_tmp_bgatakanen = "Ｂ型肝炎サイトで同一電話番号の電話・メール及び".$payments['8'][0]."秒以内電話の".$inv_setsuritsu."件";
+		$inv_tmp_bgatakanen = "Ｂ型肝炎サイトで同一電話番号の電話・メール及び".$payments['8'][0]."秒以内電話の".$inv_bgatakanen."件";
 	}
 	if ($req_ex_bgatakanen > 0) {
 		$inv_tmp_bgatakanen .= "\nＢ型肝炎サイトで除外依頼頂いた".$req_ex_bgatakanen."件";
