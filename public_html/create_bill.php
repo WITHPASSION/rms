@@ -1542,7 +1542,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 ".$c_name."様
 
 いつもお世話になっております。
-ウィズパッションの佐藤と申します。
+ウィズパッションの佐藤です。
 
 ".$month."月分の請求書を添付させていただきます。
 
