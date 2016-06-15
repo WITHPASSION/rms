@@ -1483,14 +1483,27 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		}
 		//count_freedialの取得
 		$stmt = $pdo_cdr->query("
-			SELECT
-				ac.tel
+			SELECT DISTINCT
+				b.tel_to as tel
 			FROM
-				cdr.adsip_conf ac,
-				wordpress.ss_advertiser_ad_group aadg
+				cdr.bill b,
+				(
+					SELECT
+						tel_to,
+						office_id,
+						ad_group_id
+					FROM
+						cdr.call_data_view
+					WHERE
+						DATE_FORMAT(date_from, '%Y%m') = $year_month
+					ORDER BY
+						date_from DESC
+				) c
 			WHERE
-				aadg.advertiser_id = ac.office_id AND
-				aadg.ad_group_id = $ad_group_id
+				b.year = $year AND
+				b.month = $month AND
+				b.tel_to = c.tel_to AND
+				c.ad_group_id = $ad_group_id
 		");
 		$arr_adsip_conf = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_adsip_conf as $row) {
