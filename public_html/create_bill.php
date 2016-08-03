@@ -1149,7 +1149,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	}
 	$inv_setsuritsu = $all_call_setsuritsu + $all_mail_setsuritsu - $res_setsuritsu - $ex_setsuritsu - $req_ex_setsuritsu;
 	if ($inv_setsuritsu > 0) {
-		$inv_tmp_setsuritsu = "会社設立サイトで同一電話番号の電話・メール及び".$payments['5'][0]."秒未満電話の".$inv_setsuritsu."件"
+		$inv_tmp_setsuritsu = "会社設立サイトで同一電話番号の電話・メール及び".$payments['5'][0]."秒未満電話の".$inv_setsuritsu."件";
 	}
 	if ($req_ex_setsuritsu > 0) {
 		$inv_tmp_setsuritsu .= "\n会社設立サイトで除外依頼頂いた".$req_ex_setsuritsu."件";
