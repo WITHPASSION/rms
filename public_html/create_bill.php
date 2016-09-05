@@ -2194,14 +2194,17 @@ function get_each_ad_details_data(
 			SELECT
 				c.*,
 				ad.office_name,
-				sg.site_group_name
+				sg.site_group_name,
+				st.site_type_name
 			FROM
 				wordpress.ss_advertisers ad,
+				wordpress.ss_site_type st,
 				cdr.mail_conv_view c
 			LEFT OUTER JOIN wordpress.ss_site_group sg
 			ON c.site_group = sg.site_group
 			WHERE
 				c.advertiser_id = ad.ID AND
+				c.site_type = st.site_type AND
 				DATE_FORMAT(c.register_dt,'%Y%m') = $year_month AND
 				c.ad_group_id = $ad_group_id
 			ORDER BY
@@ -2212,6 +2215,7 @@ function get_each_ad_details_data(
 			$advertiser_id = $r['advertiser_id'];
 			$office_name = $r['office_name'];
 			$site_type = $r['site_type'];
+			$site_type_name = $r['site_type_name'];
 			$site_group = $r['site_group'];
 			$site_group_name = $r['site_group_name'];
 			$sender_tel = $r['sender_tel'];
@@ -2243,19 +2247,6 @@ function get_each_ad_details_data(
 			}
 			#事務所毎かつ、発生メール毎の情報が入る配列
 			$new_crm_mail_array_data = array();
-			#サイト名の入手
-			$stmt = $pdo_wordpress->query("
-				SELECT
-					site_type_name
-				FROM
-					ss_site_type
-				WHERE
-					site_type = $site_type
-			");
-			$arr_st_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
-			foreach ($arr_st_name as $row) {
-				$site_type_name = $row['site_type_name'];
-			}
 			array_push(
 				$new_crm_mail_array_data,
 				$advertiser_id,

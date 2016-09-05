@@ -96,7 +96,7 @@ function create_monthly_details($year, $month, $year_month) {
 	global $pdo_cdr,$pdo_request,$pdo_wordpress,$reviser;
 	$count_mail = null;
 	#出力時の行を定義
-	$i = 3;
+	$i = 4;
 	$stmt = $pdo_request->query("
 		SELECT
 			bill_payer_id,
@@ -117,6 +117,21 @@ function create_monthly_details($year, $month, $year_month) {
 		$bill_payer_id = $row['bill_payer_id'];
 		$bill_payer_name = $row['bill_payer_name'];
 		$reviser->addString(0, $i, 0, $bill_payer_id.$bill_payer_name);
+		$i++;
+		$reviser->addString(0, $i, 0, "事務所ID");
+		$reviser->addString(0, $i, 1, "事務所名");
+		$reviser->addString(0, $i, 3, "サイト種別");
+		$reviser->addString(0, $i, 4, "電話番号");
+		$reviser->addString(0, $i, 5, "転送先番号");
+		$reviser->addString(0, $i, 6, "通話開始日");
+		$reviser->addString(0, $i, 7, "通話終了日");
+		$reviser->addString(0, $i, 8, "通話秒数");
+		$reviser->addString(0, $i, 9, "発信元番号");
+		$reviser->addString(0, $i, 10, "通話状態");
+		$reviser->addString(0, $i, 11, "有効無効(60秒)");
+		$reviser->addString(0, $i, 12, "有効秒数");
+		$reviser->addString(0, $i, 13, "有効無効");
+		$reviser->addString(0, $i, 14, "除外理由");
 		$i++;
 		$stmt = $pdo_request->query("
 			SELECT
@@ -147,14 +162,20 @@ function create_monthly_details($year, $month, $year_month) {
 				$ad_name = $row['office_name'];
 				$stmt = $pdo_cdr->query("
 					SELECT
-						*
+						dv.*,
+						pm.payment_method_id,
+						pm.charge_seconds
 					FROM
-						call_data_view
+						cdr.call_data_view dv,
+						cdr.office_group_payment_method pm
 					WHERE
-						DATE_FORMAT(date_from,'%Y%m') = $year_month AND
-						advertiser_id = $ad_id
+						dv.ad_group_id = pm.ad_group_id AND
+						dv.site_group = pm.site_group AND
+						CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date AND
+						DATE_FORMAT(dv.date_from,'%Y%m') = $year_month AND
+						dv.advertiser_id = $ad_id
 					ORDER BY
-						date_from
+						dv.date_from
 				");
 				$arr_detail_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 				foreach ($arr_detail_call_data as $row) {
@@ -171,6 +192,12 @@ function create_monthly_details($year, $month, $year_month) {
 					$dpl_tel_cnt = $row['dpl_tel_cnt'];
 					$dpl_mail_cnt =$row['dpl_mail_cnt'];
 					$redirect_status = $row['redirect_status'];
+					$payment_method_id = $row['payment_method_id'];
+					$dpl_tel_cnt_for_billing = $row['dpl_tel_cnt_for_billing'];
+					$is_exclusion = $row['is_exclusion'];
+					$exclusion_reason = $row['exclusion_reason'];
+					$exclusion_is_request = $row['exclusion_is_request'];
+					$charge_seconds = $row['charge_seconds'];
 					#media_nameの取得
 					foreach ($arr_site_group_data as $r) {
 						if($r['media_type'] == $media_type) {
@@ -224,13 +251,66 @@ function create_monthly_details($year, $month, $year_month) {
 						if ($tel_from == "anonymous" OR ($dpl_tel_cnt == 0 && $dpl_mail_cnt == 0)) {
 							if ($redirect_status == 21 || $redirect_status == 22) {
 								$check_call_dpl = "○";
-								$count_valid_call++;
+								if ($is_exclusion) {
+									$count_invalid_call++;
+								}
+								else {
+									$count_valid_call++;
+								}
 							}
+							else {
+								$count_invalid_call++;
+							}
+						}
+						else {
+							$count_invalid_call++;
 						}
 					}
 					else {
 						$check_call_dpl = null;
 						$count_invalid_call++;
+					}
+
+					#課金対象の確認
+					$check_call_dpl_for_billing = null;
+					if ($is_exclusion) {
+						if ($exclusion_is_request) {
+							$check_call_dpl_for_billing = "除外依頼";
+						}
+						else {
+							$check_call_dpl_for_billing = "弊社除外";
+						}
+						$count_invalid_call_for_billing++;
+					}
+					else if ($payment_method_id < 2) {
+						if ($call_minutes >= $charge_seconds && $dpl_tel_cnt_for_billing > 0 && $dpl_mail_cnt > 0) {
+							$check_call_dpl_for_billing = "同一電話・メール";
+							$count_invalid_call_for_billing++;
+						}
+						else if ($call_minutes >= $charge_seconds && $dpl_tel_cnt_for_billing > 0) {
+							$check_call_dpl_for_billing = "同一電話";
+							$count_invalid_call_for_billing++;
+						}
+						else if ($call_minutes >= $charge_seconds && $dpl_mail_cnt > 0) {
+							$check_call_dpl_for_billing = "同一メール";
+							$count_invalid_call_for_billing++;
+						}
+						else if ($call_minutes >= $charge_seconds) {
+							if ($tel_from == "anonymous" OR ($dpl_tel_cnt_for_billing == 0 && $dpl_mail_cnt == 0)) {
+								if ($redirect_status == 21 || $redirect_status == 22) {
+									$check_call_dpl_for_billing = "○";
+									$count_valid_call_for_billing++;
+								}
+							}
+						}
+						else {
+							$check_call_dpl_for_billing = null;
+							$count_invalid_call_for_billing++;
+						}
+					}
+					else {
+						$check_call_dpl_for_billing = null;
+						$count_invalid_call_for_billing++;
 					}
 
 					$reviser->addString(0, $i, 0, $ad_id);
@@ -244,6 +324,9 @@ function create_monthly_details($year, $month, $year_month) {
 					$reviser->addString(0, $i, 9, $tel_from);
 					$reviser->addString(0, $i, 10, $call_status);
 					$reviser->addString(0, $i, 11, $check_call_dpl);
+					$reviser->addString(0, $i, 12, $charge_seconds);
+					$reviser->addString(0, $i, 13, $check_call_dpl_for_billing);
+					$reviser->addString(0, $i, 14, $exclusion_reason);
 					$i++;
 				}
 				#end_of_arr_detail_call_data
@@ -257,24 +340,45 @@ function create_monthly_details($year, $month, $year_month) {
 	$reviser->addString(0, 0, 0, "全体コール数");
 	$reviser->addString(0, 0, 1, $count_all_call);
 	#有効コール数
-	$reviser->addString(0, 1, 0, "有効コール数");
+	$reviser->addString(0, 1, 0, "有効コール数(60秒)");
 	$reviser->addString(0, 1, 1, $count_valid_call);
+	$reviser->addString(0, 1, 2, "有効コール数");
+	$reviser->addString(0, 1, 3, $count_valid_call_for_billing);
 	#無効コール数
-	$reviser->addString(0, 2, 0, "無効コール数");
+	$reviser->addString(0, 2, 0, "無効コール数(60秒)");
 	$reviser->addString(0, 2, 1, $count_invalid_call);
+	$reviser->addString(0, 2, 2, "無効コール数");
+	$reviser->addString(0, 2, 3, $count_invalid_call_for_billing);
 
-	#メール詳細情報の取得
+
+	##メール詳細情報の取得
+
 	#出力時の行を定義
-	$i = 3;
+	$i = 4;
+	$reviser->addString(1, $i, 0, "事務所ID");
+	$reviser->addString(1, $i, 1, "事務所名");
+	$reviser->addString(1, $i, 2, "サイト名");
+	$reviser->addString(1, $i, 3, "配信日時");
+	$reviser->addString(1, $i, 4, "電話番号");
+	$reviser->addString(1, $i, 5, "有効無効");
+	$reviser->addString(1, $i, 6, "除外理由");
+	$i++;
+
 	$stmt = $pdo_cdr->query("
 		SELECT
-			*
+			c.*,
+			ad.office_name,
+			st.site_type_name
 		FROM
-			mail_conv
+			wordpress.ss_advertisers ad,
+			wordpress.ss_site_type st,
+			cdr.mail_conv_view c
 		WHERE
-			DATE_FORMAT(register_dt,'%Y%m') = $year_month
+			c.advertiser_id = ad.ID AND
+			c.site_type = st.site_type AND
+			DATE_FORMAT(c.register_dt,'%Y%m') = $year_month
 		ORDER BY
-			register_dt
+			c.register_dt
 	");
 	$arr_detail_mail_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	#全てのメール情報の入る配列
@@ -282,66 +386,73 @@ function create_monthly_details($year, $month, $year_month) {
 	foreach ($arr_detail_mail_data as $row) {
 		#全てのメール数をカウント
 		$count_all_mail++;
+		$advertiser_id = $row['advertiser_id'];
+		$office_name = $row['office_name'];
 		$st = $row['site_type'];
+		$st_name = $row['site_type_name'];
 		$sender_tel = $row['sender_tel'];
 		$date = $row['register_dt'];
 		$dpl_tel_cnt = $row['dpl_tel_cnt'];
 		$dpl_mail_cnt = $row['dpl_mail_cnt'];
-		#事務所名の取得
-		$advertiser_id = $row['advertiser_id'];
-		$stmt = $pdo_wordpress->query("
-			SELECT
-				*
-			FROM
-				ss_advertisers
-			WHERE
-				ID = $advertiser_id
-		");
-		$arr_detail_ad_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		foreach ($arr_detail_ad_name as $row) {
-			$detail_ad_name = $row['office_name'];
+		$is_exclusion = $row['is_exclusion'];
+		$exclusion_is_request = $row['exclusion_is_request'];
+		$exclusion_reason = $row['exclusion_reason'];
+		if ($is_exclusion) {
+			if ($exclusion_is_request) {
+				$check_mail_dpl = "除外依頼";
+			}
+			else {
+				$check_mail_dpl = "弊社除外";
+			}
+			$count_invalid_mail++;
 		}
-		if ($dpl_tel_cnt == 0 && $dpl_mail_cnt == 0) {
+		else if ($dpl_tel_cnt == 0 && $dpl_mail_cnt == 0) {
 			$check_mail_dpl = "○";
 			$count_valid_mail++;
 		}
-		else if ($dpl_tel_cnt > 0 || $dpl_mail_cnt > 0) {
-			$check_mail_dpl = "重複";
+		else if ($dpl_tel_cnt > 0 && $dpt_mail_cnt > 0) {
+			$check_mail_dpl = "同一電話・メール";
+			$count_invalid_mail++;
+		}
+		else if ($dpl_tel_cnt > 0) {
+			$check_mail_dpl = "同一電話";
+			$count_invalid_mail++;
+		}
+		else if ($dpl_mail_cnt > 0) {
+			$check_mail_dpl = "同一メール";
 			$count_invalid_mail++;
 		}
 		#事務所毎かつ、発生メール毎の情報が入る配列
 		$new_detail_mail_array_data = array();
-		#サイト名の入手
-		$stmt = $pdo_wordpress->query("
-			SELECT
-				site_type_name
-			FROM
-				ss_site_type
-			WHERE
-				site_type = $st"
+		array_push(
+			$new_detail_mail_array_data,
+			$advertiser_id,
+			$office_name,
+			$st_name,
+			$sender_tel,
+			$date,
+			$check_mail_dpl,
+			$exclusion_reason
 		);
-		$arr_st_name = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		foreach ($arr_st_name as $row) {
-			$st_name = $row['site_type_name'];
-		}
-		array_push($new_detail_mail_array_data, $advertiser_id, $detail_ad_name, $st_name, $sender_tel, $date, $check_mail_dpl);
 		array_push($sum_detail_mail_data, $new_detail_mail_array_data);
 	}
 
 	#配列に代入したメールデータを出力
 	foreach ($sum_detail_mail_data as $row) {
 		$ad_id = $row['0'];
-		$detail_ad_name = $row['1'];
+		$office_name = $row['1'];
 		$st_name = $row['2'];
 		$sender_tel = $row['3'];
 		$mail_date = $row['4'];
 		$check_mail_dpl = $row['5'];
+		$exclusion_reason = $row['6'];
 		$reviser->addString(1, $i, 0, $ad_id);
-		$reviser->addString(1, $i, 1, $detail_ad_name);
+		$reviser->addString(1, $i, 1, $office_name);
 		$reviser->addString(1, $i, 2, $st_name);
 		$reviser->addString(1, $i, 3, $mail_date);
 		$reviser->addString(1, $i, 4, $sender_tel);
 		$reviser->addString(1, $i, 5, $check_mail_dpl);
+		$reviser->addString(1, $i, 6, $exclusion_reason);
 		$i++;
 	}
 	#全体メール数
