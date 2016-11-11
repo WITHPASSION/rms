@@ -1705,8 +1705,14 @@ function get_each_ad_details_data(
 				$adg_call[$ad_group_id][$ad_id]['total']['call_charge'] = $call_charge;
 			}
 			else {
-				$adg_call[$ad_group_id][$ad_id][$site_group]['tel_to'] = $tel_to;
-				$adg_call[$ad_group_id][$ad_id][$site_group]['call_charge'] = $call_charge;
+				if (!isset($adg_call[$ad_group_id][$ad_id][$site_group]['tel_to'])) {
+					$adg_call[$ad_group_id][$ad_id][$site_group]['tel_to'] = $tel_to;
+					$adg_call[$ad_group_id][$ad_id][$site_group]['call_charge'] = $call_charge;
+				}
+				else {
+					$adg_call[$ad_group_id][$ad_id][$site_group]['tel_to'] .= ", ".$tel_to;
+					$adg_call[$ad_group_id][$ad_id][$site_group]['call_charge'] .= ", ".$call_charge;
+				}
 
 				if (!isset($sgp_call[$ad_group_id][$site_group]['call_charge'])) {
 					$sgp_call[$ad_group_id][$site_group]['call_charge'] = 0;
