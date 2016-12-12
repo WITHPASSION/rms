@@ -1322,7 +1322,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月成果料金(借金問題)");
+		$reviser->addString($sheet_num, $i, 2, "月掲載料金(借金問題)");
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $shakkin_call + $shakkin_mail);
 		#単価
@@ -1336,7 +1336,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月成果料金(相続)");
+		$reviser->addString($sheet_num, $i, 2, "月掲載料金(相続)");
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $souzoku_call + $souzoku_mail);
 		#単価
@@ -1350,7 +1350,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			#月
 			$reviser->addNumber($sheet_num, $i, 1, "$month");	
 			#商品名
-			$reviser->addString($sheet_num, $i, 2, "月成果料金(交通事故)");
+			$reviser->addString($sheet_num, $i, 2, "月掲載料金(交通事故)");
 			#数量
 			$reviser->addNumber($sheet_num, $i, 4, $koutsujiko_call + $koutsujiko_mail);
 			#単価
@@ -1364,7 +1364,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月成果料金(任意売却)");
+		$reviser->addString($sheet_num, $i, 2, "月掲載料金(任意売却)");
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $ninibaikyaku_call+$ninibaikyaku_mail);
 		#単価
@@ -1378,7 +1378,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月成果料金(名義変更)");
+		$reviser->addString($sheet_num, $i, 2, "月掲載料金(名義変更)");
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $meigihenkou_call + $meigihenkou_mail);
 		#単価
@@ -1392,7 +1392,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月成果料金(会社設立)");
+		$reviser->addString($sheet_num, $i, 2, "月掲載料金(会社設立)");
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $setsuritsu_call+$setsuritsu_mail);
 		#単価
@@ -1406,7 +1406,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月成果料金(刑事事件)");
+		$reviser->addString($sheet_num, $i, 2, "月掲載料金(刑事事件)");
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $keijijiken_call);
 		#単価
@@ -1420,7 +1420,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月成果料金(離婚問題)");
+		$reviser->addString($sheet_num, $i, 2, "月掲載料金(離婚問題)");
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $rikon_call+$rikon_mail);
 		#単価
@@ -1434,7 +1434,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月成果料金(Ｂ型肝炎)");
+		$reviser->addString($sheet_num, $i, 2, "月掲載料金(Ｂ型肝炎)");
 		#数量
 		$reviser->addNumber($sheet_num, $i, 4, $bgatakanen_call+$bgatakanen_mail);
 		#単価
