@@ -490,6 +490,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$va_bgatakanen = null;
 	#template文
 	$all_tmp = null;
+	$inv_tmp = null;
 	#空の配列作成
 	$arr_shakkin_mail_dt = array();
 	$arr_souzoku_mail_dt = array();
@@ -1035,7 +1036,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		'7' => array(0, 0),
 		'8' => array(0, 0),
 	);
-	$lastdate = date('Y-m-t', strtotime(date($year.'-'.($month + 1).'-01') . '-1 month'));
+	$lastdate = date('Y-m-t', strtotime(date(($year + floor($month / 12)).'-'.(($month % 12) + 1).'-01') . '-1 month'));
 	$stmt4 = $pdo_request->query("
 		SELECT
 			a.*
@@ -1084,7 +1085,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$req_ex_setsuritsu = $req_ex_call_setsuritsu + $req_ex_mail_setsuritsu;
 	$req_ex_keijijiken = $req_ex_call_keijijiken;
 	$req_ex_rikon = $req_ex_call_rikon + $req_ex_mail_rikon;
-	$req_ex_bgatakanen = $req_ex_call_bgatakanen + $req_ex_mail_bgatakanend;
+	$req_ex_bgatakanen = $req_ex_call_bgatakanen + $req_ex_mail_bgatakanen;
 
 	#除外件数の計算	
 	$ex_shakkin = $ex_call_shakkin + $ex_mail_shakkin;
@@ -2242,7 +2243,7 @@ function get_each_ad_details_data(
 			else if ($dpl_tel_cnt == 0 && $dpl_mail_cnt == 0) {
 				$check_mail_dpl = "○";
 			}
-			else if ($dpl_tel_cnt > 0 && $dpt_mail_cnt > 0) {
+			else if ($dpl_tel_cnt > 0 && $dpl_mail_cnt > 0) {
 				$check_mail_dpl = "同一電話・メール";
 			}
 			else if ($dpl_tel_cnt > 0) {
