@@ -233,7 +233,8 @@ function changeYM() {
 					html += "<td class=''><small>(" + bill_payer.sample_mail_count + ")</small></td>";
 				}
 				else {
-					html += "<td colspan='3' class='right_txt gray_down'>請求計</td>";
+					html += "<td colspan='3' class='right_txt gray_down'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + bill_payer_id + ")' style='font-size: 1.2em; font-weight: bold;'>";
+					html += "　請求計</td>";
 					html += "<td class='right_txt gray_down'>" + bill_payer.call_count + "</td>";
 					html += "<td class='gray_down'><small>(" + bill_payer.sample_call_count + ")</small></td>";
 					html += "<td class='right_txt gray_down'>" + bill_payer.mail_count + "</td>";

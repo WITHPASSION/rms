@@ -112,28 +112,12 @@ if (isset($_POST['pack'])) {
 
 if (!empty($bill_payer_id)) {
 	#チェック関数を呼び出し、nullで無ければExcelに書き出す
+	#20170323 有効電話・メール０件でも請求書ダウンロード出来るようにした
 	$call_check = check_valid_call($bill_payer_id,$year,$month);
 	$mail_check = check_valid_mail($bill_payer_id,$year,$month);
-	if (!empty($call_check)|| !empty($mail_check)) {
-		$reviser = NEW Excel_Reviser;
-		$reviser->setInternalCharset('utf-8');	
-		get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month);
-	}
-	else if (empty($call_check) && empty($mail_check)) {
-		print('<!DOCTYPE html>');
-		print('<html lang="ja">');
-		print('<head>');
-		print('<meta charset="UTF-8">');
-		print('<title>作成できません</title>');
-		print('</head>');
-		print('<body>');
-		print('<a href="senmonka-RMS.php">戻る</a>');
-		print("<br>");
-		print("この年月では、この事務所は有効電話数とメール数が０件です");
-		print('</body>');
-		print('</html>');
-		die();
-	}
+	$reviser = NEW Excel_Reviser;
+	$reviser->setInternalCharset('utf-8');	
+	get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month);
 }
 else if (!empty($pack) && $pack == "true") {
 	$ids = get_billing_ids($year, $month);
