@@ -1672,13 +1672,13 @@ function get_each_ad_details_data(
 			WITH ROLLUP
 		");
 		$arr_each_tel_to = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		foreach ($arr_each_tel_to as $row) {
-			$ad_id = $row['advertiser_id'];
-			$tel_to = $row['tel_to'];
-			$media_id = $row['media_id'];
-			$media_type = $row['media_type'];
-			$site_group = $row['site_group'];
-			$call_charge = $row['call_charge'];
+		foreach ($arr_each_tel_to as $row2) {
+			$ad_id = $row2['advertiser_id'];
+			$tel_to = $row2['tel_to'];
+			$media_id = $row2['media_id'];
+			$media_type = $row2['media_type'];
+			$site_group = $row2['site_group'];
+			$call_charge = $row2['call_charge'];
 			if ($ad_id == null) {
 				if (!isset($bp_call['total']['call_charge'])) {
 					$bp_call['total']['call_charge'] = 0;
@@ -1944,6 +1944,48 @@ function get_each_ad_details_data(
 	//var_dump($bp_mail);
 	//var_dump($adg_mail);
 	//var_dump($sgp_mail);
+
+	//案件別の単価表示
+	if ($sheet_num >= 3) {
+		$n = 1;
+		$reviser->addString($sheet_num, $n, 7, "グループID");
+		$reviser->addString($sheet_num, $n, 8, "サイト種別ID");
+		$reviser->addString($sheet_num, $n, 9, "サイト種別");
+		$reviser->addString($sheet_num, $n, 10, "支払い種別");
+		$reviser->addString($sheet_num, $n, 11, "有効秒数");
+		$reviser->addString($sheet_num, $n, 12, "料金");
+		$n++;
+
+		$ad_group_id = $arr_ad_group_id[0]['ad_group_id'];
+		$stmt = $pdo_cdr->query("
+			SELECT
+				gpm.ad_group_id,
+		    gpm.site_group,
+				sg.site_group_name,
+				pm.method,
+				gpm.charge_seconds,
+				gpm.unit_price
+			FROM
+				cdr.office_group_payment_method gpm,
+				cdr.payment_method pm,
+				wordpress.ss_site_group sg
+			WHERE
+				gpm.payment_method_id = pm.id AND
+				gpm.site_group = sg.site_group AND
+				gpm.ad_group_id = $ad_group_id AND
+				LAST_DAY('". $year_month . "01') BETWEEN gpm.from_date AND gpm.to_date
+		");
+		$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		foreach ($arr_call_data as $row) {
+			$reviser->addString($sheet_num, $n, 7, $row['ad_group_id']);
+			$reviser->addString($sheet_num, $n, 8, $row['site_group']);
+			$reviser->addString($sheet_num, $n, 9, $row['site_group_name']);
+			$reviser->addString($sheet_num, $n, 10, $row['method']);
+			$reviser->addString($sheet_num, $n, 11, $row['charge_seconds']);
+			$reviser->addString($sheet_num, $n, 12, $row['unit_price']);
+			$n++;
+		}
+	}
 
 	$i++;//一行開ける
 	$reviser->addString($sheet_num, $i, 0, "通話データ");
