@@ -2005,7 +2005,8 @@ function get_each_ad_details_data(
 	$reviser->addString($sheet_num, $i, 11, "有効無効(60秒)");
 	$reviser->addString($sheet_num, $i, 12, "有効秒数");
 	$reviser->addString($sheet_num, $i, 13, "有効無効");
-	$reviser->addString($sheet_num, $i, 14, "除外理由");
+	$reviser->addString($sheet_num, $i, 14, "換算値");
+	$reviser->addString($sheet_num, $i, 15, "除外理由");
 
 	$i++;
 
@@ -2030,7 +2031,8 @@ function get_each_ad_details_data(
 				ad.office_name,
 				dv.*,
 				pm.payment_method_id,
-				pm.charge_seconds
+				pm.charge_seconds,
+				(pm.unit_price / 10000) as unit
 			FROM
 				wordpress.ss_advertisers ad,
 				cdr.call_data_view dv,
@@ -2063,6 +2065,7 @@ function get_each_ad_details_data(
 			$redirect_status = $row['redirect_status'];
 			$payment_method_id = $row['payment_method_id'];
 			$charge_seconds = $row['charge_seconds'];
+			$unit = $row['unit'];
 			$dpl_tel_cnt_for_billing = $row['dpl_tel_cnt_for_billing'];
 			$is_exclusion = $row['is_exclusion'];
 			$exclusion_is_request = $row['exclusion_is_request'];
@@ -2132,6 +2135,7 @@ function get_each_ad_details_data(
 
 			#課金対象の確認
 			$check_call_dpl_for_billing = null;
+			$unit_value = '';
 			if ($is_exclusion) {
 				if ($exclusion_is_request) {
 					$check_call_dpl_for_billing = "除外依頼";
@@ -2154,6 +2158,7 @@ function get_each_ad_details_data(
 					if ($tel_from == "anonymous" OR ($dpl_tel_cnt_for_billing == 0 && $dpl_mail_cnt == 0)) {
 						if ($redirect_status == 21 || $redirect_status == 22) {
 							$check_call_dpl_for_billing = "○";
+							$unit_value = strval(doubleval($unit));
 						}
 					}
 				}
@@ -2174,6 +2179,7 @@ function get_each_ad_details_data(
 			$arr['check_call_dpl'] = $check_call_dpl;
 			$arr['check_call_dpl_for_billing'] = $check_call_dpl_for_billing;
 			$arr['charge_seconds'] = $charge_seconds;
+			$arr['unit_value'] = $unit_value;
 			$arr['exclusion_reason'] = $exclusion_reason;
 			array_push($output_arr, $arr);
 		}
@@ -2212,7 +2218,8 @@ function get_each_ad_details_data(
 			$reviser->addString($sheet_num, $i, 11, $out['check_call_dpl']);
 			$reviser->addString($sheet_num, $i, 12, $out['charge_seconds']);
 			$reviser->addString($sheet_num, $i, 13, $out['check_call_dpl_for_billing']);
-			$reviser->addString($sheet_num, $i, 14, $out['exclusion_reason']);
+			$reviser->addString($sheet_num, $i, 14, $out['unit_value']);
+			$reviser->addString($sheet_num, $i, 15, $out['exclusion_reason']);
 			$i++;
 	}
 
@@ -2228,20 +2235,26 @@ function get_each_ad_details_data(
 				c.*,
 				ad.office_name,
 				sg.site_group_name,
-				st.site_type_name
+				st.site_type_name,
+				(pm.unit_price / 10000) as unit
 			FROM
 				wordpress.ss_advertisers ad,
 				wordpress.ss_site_type st,
+				cdr.office_group_payment_method pm,
 				cdr.mail_conv_view c
 			LEFT OUTER JOIN wordpress.ss_site_group sg
 			ON c.site_group = sg.site_group
 			WHERE
 				c.advertiser_id = ad.ID AND
 				c.site_type = st.site_type AND
+				c.ad_group_id = pm.ad_group_id AND
+				c.site_group = pm.site_group AND
+				CAST(c.register_dt AS DATE) BETWEEN pm.from_date AND pm.to_date AND
 				DATE_FORMAT(c.register_dt,'%Y%m') = $year_month AND
 				c.ad_group_id = $ad_group_id
 			ORDER BY
 				register_dt
+
 		");
 		$arr_crm_mail_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_crm_mail_data as $r) {
@@ -2258,6 +2271,8 @@ function get_each_ad_details_data(
 			$is_exclusion = $r['is_exclusion'];
 			$exclusion_is_request = $r['exclusion_is_request'];
 			$exclusion_reason = $r['exclusion_reason'];
+			$unit = $r['unit'];
+			$unit_value = '';
 			if ($is_exclusion) {
 				if ($exclusion_is_request) {
 					$check_mail_dpl = "除外依頼";
@@ -2268,6 +2283,7 @@ function get_each_ad_details_data(
 			}
 			else if ($dpl_tel_cnt == 0 && $dpl_mail_cnt == 0) {
 				$check_mail_dpl = "○";
+				$unit_value = strval(doubleval($unit));
 			}
 			else if ($dpl_tel_cnt > 0 && $dpl_mail_cnt > 0) {
 				$check_mail_dpl = "同一電話・メール";
@@ -2291,7 +2307,8 @@ function get_each_ad_details_data(
 				$sender_tel,
 				$date,
 				$check_mail_dpl,
-				$exclusion_reason
+				$exclusion_reason,
+				$unit_value
 			);
 			array_push($sum_crm_mail_data, $new_crm_mail_array_data);
 		}
@@ -2307,6 +2324,7 @@ function get_each_ad_details_data(
 			$mail_date = $row['7'];
 			$check_mail_dpl = $row['8'];
 			$exclusion_reason = $row['9'];
+			$unit_value = $row['10'];
 
 			$arr = array();
 			$arr['advertiser_id'] = $advertiser_id;
@@ -2319,6 +2337,7 @@ function get_each_ad_details_data(
 			$arr['sender_tel'] = $sender_tel;
 			$arr['check_mail_dpl'] = $check_mail_dpl;
 			$arr['exclusion_reason'] = $exclusion_reason;
+			$arr['unit_value'] = $unit_value;
 			array_push($output_arr, $arr);
 		}
 	}
@@ -2351,7 +2370,8 @@ function get_each_ad_details_data(
 			$reviser->addString($sheet_num, $i, 7, $out['mail_date']);
 			$reviser->addString($sheet_num, $i, 9, $out['sender_tel']);
 			$reviser->addString($sheet_num, $i, 13, $out['check_mail_dpl']);
-			$reviser->addString($sheet_num, $i, 14, $out['exclusion_reason']);
+			$reviser->addString($sheet_num, $i, 14, $out['unit_value']);
+			$reviser->addString($sheet_num, $i, 15, $out['exclusion_reason']);
 	}
 
 	#シートネームを設定
