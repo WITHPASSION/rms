@@ -69,7 +69,6 @@ function get_monthly_total_calls(
 					dv.ad_group_id,
 					CAST(dv.advertiser_id AS UNSIGNED) as advertiser_id,
 					(case
-						when (dv.media_id like 'A-Portal%') then 'A'
 						when (dv.media_id like '') then 'A'
 						else dv.media_id
 					end) AS media_id,
@@ -80,7 +79,6 @@ function get_monthly_total_calls(
 					dv.date_from,
 					dv.call_minutes,
 					dv.is_exclusion,
-					pm.payment_method_id,
 					pm.charge_seconds,
 					sg.site_group
 				FROM
@@ -253,4 +251,115 @@ function append_mail_counts($ad_group_id, $mail_data_arr, &$bp_arr, &$adg_arr, &
 			$bp_arr[$site_group][$count_type] += intval($mail_count);
 		}
 	}
+}
+
+function get_monthly_group_calls_and_price($year_month, $ad_group_id) {
+	global $pdo_request;
+	$stmt = $pdo_request->query("
+		SELECT DISTINCT
+			m.bill_payer_id as bill_payer_id,
+			v.ad_group_id,
+			v.site_group as site_group,
+			v.site_group_name as site_group_name,
+			group_concat(distinct gpm.payment_method_id) as payment_method_id,
+			group_concat(distinct gpm.unit_price) as unit_price,
+			count(v.id) as tel_count
+		FROM
+			(
+				SELECT
+					dv.id,
+					dv.ad_group_id,
+					CAST(dv.advertiser_id AS UNSIGNED) as advertiser_id,
+					(case
+						when (dv.media_id like '') then 'A'
+						else dv.media_id
+					end) AS media_id,
+					dv.media_type,
+					dv.dpl_tel_cnt,
+					dv.dpl_mail_cnt,
+					dv.dpl_tel_cnt_for_billing,
+					dv.date_from,
+					dv.call_minutes,
+					dv.is_exclusion,
+					pm.unit_price,
+					pm.charge_seconds,
+					sg.site_group,
+					sg.site_group_name
+				FROM
+					cdr.call_data_view dv,
+					cdr.office_group_payment_method pm,
+					wordpress.ss_site_group sg
+				WHERE
+					dv.ad_group_id = pm.ad_group_id AND
+					sg.media_type = dv.media_type AND
+					sg.site_group = pm.site_group AND
+					CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date
+				ORDER BY dv.ad_group_id, dv.advertiser_id, dv.id
+			) v,
+			smk_request_data.ad_group_bill_payer m,
+			cdr.office_group_payment_method gpm
+		WHERE
+			m.ad_group_id = v.ad_group_id AND
+			v.ad_group_id = gpm.ad_group_id AND
+			CAST(v.date_from AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
+			DATE_FORMAT(v.date_from, '%Y%m') = $year_month AND
+			gpm.site_group = v.site_group AND
+			gpm.payment_method_id = 0 AND
+			v.dpl_tel_cnt_for_billing = 0 AND
+			v.call_minutes >= v.charge_seconds AND
+			v.dpl_mail_cnt = 0 AND
+			v.is_exclusion = 0 AND
+			v.ad_group_id = $ad_group_id
+		GROUP BY
+			m.bill_payer_id,
+			v.ad_group_id,
+			v.site_group,
+			v.unit_price
+		WITH ROLLUP
+	");
+	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	return $res_arr;
+}
+
+function get_monthly_group_mails_and_price($year_month, $ad_group_id) {
+	global $pdo_request;
+	$stmt = $pdo_request->query("
+		SELECT DISTINCT
+			m.bill_payer_id as bill_payer_id,
+			adg.ad_group_id as ad_group_id,
+			s.site_group as site_group,
+			sg.site_group_name as site_group_name,
+			group_concat(distinct gpm.payment_method_id) as payment_method_id,
+			group_concat(distinct gpm.unit_price) as unit_price,
+			count(v.ID) as mail_count
+		FROM
+			cdr.mail_conv_view v,
+			smk_request_data.ad_group_bill_payer m,
+			wordpress.ss_site_type s,
+			wordpress.ss_site_group sg,
+			wordpress.ss_advertiser_ad_group adg,
+			cdr.office_group_payment_method gpm
+		WHERE
+			s.site_type = v.site_type AND
+			m.ad_group_id = adg.ad_group_id AND
+			adg.advertiser_id = v.advertiser_id AND
+			adg.ad_group_id = gpm.ad_group_id AND
+			gpm.site_group = s.site_group AND
+			sg.site_group = s.site_group AND
+			CAST(v.register_dt AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
+			DATE_FORMAT(v.register_dt, '%Y%m') = '201703' AND
+			gpm.payment_method_id = 0 AND
+			v.dpl_tel_cnt = 0 AND
+			v.dpl_mail_cnt = 0 AND
+			v.is_exclusion = 0 AND
+			adg.ad_group_id = $ad_group_id
+		GROUP BY
+			m.bill_payer_id,
+			adg.ad_group_id,
+			s.site_group,
+			gpm.unit_price
+		WITH ROLLUP
+	");
+	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	return $res_arr;
 }

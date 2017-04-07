@@ -1554,16 +1554,24 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 
 	// 事務所グループ毎にシートを作る
 	// 請求先全体シート
-	get_each_ad_details_data(
+	get_all_billing_contents(
 		$reviser,
 		2,
+		$arr_ad_group_id,
+		$year,
+		$month,
+		$year_month
+	);
+	get_each_ad_details_data(
+		$reviser,
+		3,
 		$arr_ad_group_id,
 		$year,
 		$month,
 		$year_month,
 		$bill_payer_name
 	);
-	$sn = 3;
+	$sn = 4;
 	foreach ($arr_ad_group_id as $row) {
 		$ad_group_id = $row['ad_group_id'];
 		$arr = array();
@@ -1593,6 +1601,203 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	}
 }
 #end_of_function/get_each_ad_data
+
+function get_all_billing_contents(
+	$reviser,
+	$sheet_num,
+	$arr_ad_group_id,
+	$year,
+	$month,
+	$year_month
+) {
+	global $pdo_request,$pdo_cdr,$pdo_wordpress;
+	########################
+	###CRMシートに載せる内容###
+	########################
+	$reviser->addString($sheet_num, 0, 0, $month."月");
+	#電話件数の出力
+	$reviser->addString($sheet_num, 0, 2, "電話件数");
+	#メール件数の出力
+	$reviser->addString($sheet_num, 0, 3, "メール件数");
+	#数量の出力
+	$reviser->addString($sheet_num, 0, 4, "数量");
+	#単価の出力
+	$reviser->addString($sheet_num, 0, 5, "単価(税抜き)");
+	#合計金額の出力
+	$reviser->addString($sheet_num, 0, 6, "合計金額");
+	#行数を変数に指定
+	$i = 1;
+
+	//通話料の取得
+	foreach ($arr_ad_group_id as $row) {
+		$ad_group_id = $row['ad_group_id'];
+		$stmt = $pdo_cdr->query("
+			SELECT
+				SUM(a.call_charge) as call_charge
+			FROM (
+				SELECT
+					b.call_charge
+				FROM
+					cdr.call_data_view v
+				LEFT OUTER JOIN	(
+					SELECT
+						*
+					FROM
+						cdr.bill
+					WHERE
+						year = $year AND
+						month = $month
+				) as b
+				ON b.tel_to = v.tel_to
+				WHERE
+					DATE_FORMAT(v.date_from,'%Y%m') = $year_month AND
+					v.ad_group_id = $ad_group_id
+				GROUP BY
+					v.tel_to
+			) a
+		");
+		$ret = $stmt->fetch(PDO::FETCH_ASSOC);
+		$call_charge = $ret['call_charge'];
+
+		//0120番号発行数の取得
+		$stmt = $pdo_cdr->query("
+			SELECT
+				count(a.tel_to) free_dial_count
+			FROM
+			(
+				SELECT DISTINCT
+					b.tel_to
+				FROM
+					cdr.bill b,
+					(
+						SELECT
+							tel_to,
+							office_id,
+							ad_group_id
+						FROM
+							cdr.call_data_view
+						WHERE
+							DATE_FORMAT(date_from, '%Y%m') = $year_month AND
+							tel_to like '0120%'
+						ORDER BY
+							date_from DESC
+					) c
+				WHERE
+					b.tel_to = c.tel_to AND
+					b.year = $year AND
+					b.month = $month AND
+					c.ad_group_id = $ad_group_id
+			) a
+		");
+		$ret = $stmt->fetch(PDO::FETCH_ASSOC);
+		$free_dial_count = $ret['free_dial_count'];
+
+		//単価情報の収集
+		$first_day = $year_month."01";
+		$stmt = $pdo_cdr->query("
+			SELECT DISTINCT
+				gpm.ad_group_id,
+				gpm.site_group,
+				gpm.payment_method_id,
+				pm.method,
+				gpm.charge_seconds,
+				gpm.unit_price,
+				sg.site_group_name
+			FROM
+				cdr.payment_method pm,
+				cdr.office_group_payment_method gpm,
+				wordpress.ss_site_group sg
+			WHERE
+				pm.id = gpm.payment_method_id AND
+				gpm.site_group = sg.site_group AND
+				(gpm.from_date BETWEEN $first_day AND LAST_DAY($first_day) OR
+				 gpm.to_date BETWEEN $first_day AND LAST_DAY($first_day) OR
+				 gpm.to_date > $first_day) AND
+				ad_group_id = $ad_group_id
+			ORDER BY
+				gpm.site_group,
+				gpm.from_date
+		");
+		$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
+		$adg_counts = array();
+		foreach ($res_arr as $gpm) {
+			$sgp = $gpm['site_group']."-".$gpm['unit_price'];
+			$adg_counts[$sgp] = array();
+			$adg_counts[$sgp]['site_group_name'] = $gpm['site_group_name'];
+			$adg_counts[$sgp]['unit_price'] = $gpm['unit_price'];
+			$adg_counts[$sgp]['payment_method_id'] = $gpm['payment_method_id'];
+			$adg_counts[$sgp]['payment_method'] = $gpm['method'];
+			$adg_counts[$sgp]['tel_count'] = 0;
+			$adg_counts[$sgp]['mail_count'] = 0;
+		}
+		
+
+		//有効電話数の取得
+		$valid_call_data = get_monthly_group_calls_and_price($year_month, $ad_group_id);
+		foreach ($valid_call_data as $vd) {
+			if ($vd['site_group'] != null && strpos($vd['unit_price'], ',') === false) {
+				$sgp = $vd['site_group']."-".$vd['unit_price'];
+				$adg_counts[$sgp]['tel_count'] += intval($vd['tel_count']);
+			}
+		}
+		//有効メールの取得
+		$valid_mail_data = get_monthly_group_mails_and_price($year_month, $ad_group_id);
+		foreach ($valid_mail_data as $vd) {
+			if ($vd['site_group'] != null && strpos($vd['unit_price'], ',') === false) {
+				$sgp = $vd['site_group']."-".$vd['unit_price'];
+				$adg_counts[$sgp]['mail_count'] += intval($vd['mail_count']);
+			}
+		}
+
+		//シートに記述
+		$reviser->addString($sheet_num, $i, 0, $row['group_name']);
+		foreach ($adg_counts as $cnt) {
+			if ($cnt['payment_method_id'] == 0) {
+				$tel_count = intval($cnt['tel_count']);
+				$mail_count = intval($cnt['mail_count']);
+				$total_count = $tel_count + $mail_count;
+				$unit_price = intval($cnt['unit_price']);
+				$reviser->addString($sheet_num, $i, 1, $cnt['site_group_name']);
+				$reviser->addNumber($sheet_num, $i, 2, $tel_count);
+				$reviser->addNumber($sheet_num, $i, 3, $mail_count);
+				$reviser->addNumber($sheet_num, $i, 4, $total_count);
+				$reviser->addNumber($sheet_num, $i, 5, $unit_price);
+				$reviser->addNumber($sheet_num, $i, 6, $total_count * $unit_price);
+			}
+			else {
+				$reviser->addString($sheet_num, $i, 1, $cnt['site_group_name']);
+				$reviser->addString($sheet_num, $i, 2, "");
+				$reviser->addString($sheet_num, $i, 3, "");
+				$reviser->addString($sheet_num, $i, 4, "");
+				$reviser->addString($sheet_num, $i, 5, "");
+				$reviser->addNumber($sheet_num, $i, 6, 0);
+			}
+			$i++;
+		}
+		if (intval($free_dial_count) > 0) {
+			$reviser->addString($sheet_num, $i, 1, "フリーダイヤル発番料");
+			$reviser->addNumber($sheet_num, $i, 4, intval($free_dial_count));
+			$reviser->addNumber($sheet_num, $i, 5, 1000);
+			$reviser->addNumber($sheet_num, $i, 6, intval($free_dial_count) * 1000);
+			$i++;
+		}
+		$reviser->addString($sheet_num, $i, 1, "フリーダイヤル通話料");
+		$reviser->addNumber($sheet_num, $i, 6, intval($call_charge));
+		$i+=2;
+	}
+	$reviser->addString($sheet_num, $i, 5, "税抜き計");
+	$reviser->addString($sheet_num, $i, 6, "=SUM(G2:G".($i-1).")");
+	$i++;
+	$reviser->addString($sheet_num, $i, 5, "消費税");
+	$reviser->addString($sheet_num, $i, 6, "=ROUNDDOWN(G".$i."*0.08;0)");
+	$i++;
+	$reviser->addString($sheet_num, $i, 5, "合計額 ");
+	$reviser->addString($sheet_num, $i, 6, "=G".($i-1)."+G".$i);
+	$i++;
+
+	$reviser->setSheetname($sheet_num, "請求金額内訳");
+
+}
 
 function get_each_ad_details_data(
 	$reviser,
