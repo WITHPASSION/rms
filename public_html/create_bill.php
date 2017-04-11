@@ -601,7 +601,18 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			$mi = $row['media_id'];
 			$ex = $row['is_exclusion'];
 			$is_req = $row['exclusion_is_request'];
-			if(substr($mi, 0, 1) == "B") {
+			if(substr($mi, 0, 1) == "A") {
+				$all_call_shakkin++;
+				if ($ex == 1) {
+					if ($is_req == 1) {
+						$req_ex_call_shakkin++;
+					}
+					else {
+						$ex_call_shakkin++;
+					}
+				}
+			}
+			else if(substr($mi, 0, 1) == "B") {
 				$all_call_souzoku++;
 				if ($ex == 1) {
 					if ($is_req == 1) {
@@ -689,17 +700,6 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 					}
 				}
 			}	
-			else {
-				$all_call_shakkin++;
-				if ($ex == 1) {
-					if ($is_req == 1) {
-						$req_ex_call_shakkin++;
-					}
-					else {
-						$ex_call_shakkin++;
-					}
-				}
-			}
 		}
 		#無効アリメール数,メール日取得
 		$stmt2 = $pdo_cdr->query("
@@ -2286,8 +2286,8 @@ function get_each_ad_details_data(
 					break;
 				}
 				else {
-					$media_name = "借金問題";
-					$site_group = "0";
+					$media_name = "不明";
+					$site_group = "-1";
 				}
 			}
 

@@ -68,10 +68,6 @@ function get_monthly_total_calls(
 					dv.id,
 					dv.ad_group_id,
 					CAST(dv.advertiser_id AS UNSIGNED) as advertiser_id,
-					(case
-						when (dv.media_id like '') then 'A'
-						else dv.media_id
-					end) AS media_id,
 					dv.media_type,
 					dv.dpl_tel_cnt,
 					dv.dpl_mail_cnt,
@@ -270,10 +266,6 @@ function get_monthly_group_calls_and_price($year_month, $ad_group_id) {
 					dv.id,
 					dv.ad_group_id,
 					CAST(dv.advertiser_id AS UNSIGNED) as advertiser_id,
-					(case
-						when (dv.media_id like '') then 'A'
-						else dv.media_id
-					end) AS media_id,
 					dv.media_type,
 					dv.dpl_tel_cnt,
 					dv.dpl_mail_cnt,
