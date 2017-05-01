@@ -339,7 +339,7 @@ function get_monthly_group_mails_and_price($year_month, $ad_group_id) {
 			gpm.site_group = s.site_group AND
 			sg.site_group = s.site_group AND
 			CAST(v.register_dt AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
-			DATE_FORMAT(v.register_dt, '%Y%m') = '201703' AND
+			DATE_FORMAT(v.register_dt, '%Y%m') = $year_month AND
 			gpm.payment_method_id = 0 AND
 			v.dpl_tel_cnt = 0 AND
 			v.dpl_mail_cnt = 0 AND
