@@ -1789,7 +1789,7 @@ function get_all_billing_contents(
 	$reviser->addString($sheet_num, $i, 6, "=SUM(G2:G".($i-1).")");
 	$i++;
 	$reviser->addString($sheet_num, $i, 5, "消費税");
-	$reviser->addString($sheet_num, $i, 6, "=ROUNDDOWN(G".$i."*0.08;0)");
+	$reviser->addString($sheet_num, $i, 6, "=ROUNDDOWN(G".$i."*0.08,0)");
 	$i++;
 	$reviser->addString($sheet_num, $i, 5, "合計額 ");
 	$reviser->addString($sheet_num, $i, 6, "=G".($i-1)."+G".$i);
