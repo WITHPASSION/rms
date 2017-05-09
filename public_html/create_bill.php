@@ -1614,7 +1614,7 @@ function get_all_billing_contents(
 	########################
 	###CRMシートに載せる内容###
 	########################
-	$reviser->addString($sheet_num, 0, 0, $month."月");
+	$reviser->addString($sheet_num, 0, 0, $year."年".$month."月");
 	#電話件数の出力
 	$reviser->addString($sheet_num, 0, 2, "電話件数");
 	#メール件数の出力
