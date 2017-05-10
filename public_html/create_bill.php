@@ -1020,7 +1020,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		'7' => array(0, 0),
 		'8' => array(0, 0),
 	);
-	$lastdate = date('Y-m-t', strtotime(date(($year + floor($month / 12)).'-'.(($month % 12) + 1).'-01') . '-1 month'));
+	$lastdate = date('Y-m-t H:i:s', strtotime(date(($year + floor($month / 12)).'-'.(($month % 12) + 1).'-01 23:59:59') . '-1 month'));
 	$stmt4 = $pdo_request->query("
 		SELECT
 			a.*
@@ -1693,7 +1693,7 @@ function get_all_billing_contents(
 		$free_dial_count = $ret['free_dial_count'];
 
 		//単価情報の収集
-		$first_day = $year_month."01";
+		$first_day = $year_month."01000000";
 		$stmt = $pdo_cdr->query("
 			SELECT DISTINCT
 				gpm.ad_group_id,
@@ -1710,9 +1710,9 @@ function get_all_billing_contents(
 			WHERE
 				pm.id = gpm.payment_method_id AND
 				gpm.site_group = sg.site_group AND
-				(gpm.from_date BETWEEN $first_day AND LAST_DAY($first_day) OR
-				 gpm.to_date BETWEEN $first_day AND LAST_DAY($first_day) OR
-				 gpm.to_date > $first_day) AND
+				(gpm.from_date BETWEEN CAST($first_day AS DATETIME) AND CAST(CONCAT(LAST_DAY($first_day), ' 23:59:59') AS DATETIME) OR
+				 gpm.to_date BETWEEN CAST($first_day AS DATETIME) AND CAST(CONCAT(LAST_DAY($first_day), ' 23:59:59') AS DATETIME) OR
+				 gpm.to_date > CAST($first_day AS DATETIME)) AND
 				ad_group_id = $ad_group_id
 			ORDER BY
 				gpm.site_group,
@@ -2178,7 +2178,7 @@ function get_each_ad_details_data(
 				gpm.payment_method_id = pm.id AND
 				gpm.site_group = sg.site_group AND
 				gpm.ad_group_id = $ad_group_id AND
-				LAST_DAY('". $year_month . "01') BETWEEN gpm.from_date AND gpm.to_date
+				CAST(CONCAT(LAST_DAY('". $year_month . "01'), ' 23:59:59') AS DATETIME) BETWEEN gpm.from_date AND gpm.to_date
 		");
 		$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_call_data as $row) {
@@ -2246,7 +2246,7 @@ function get_each_ad_details_data(
 				dv.advertiser_id = ad.ID AND
 				dv.ad_group_id = pm.ad_group_id AND
 				dv.site_group = pm.site_group AND
-				CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date AND
+				dv.date_from BETWEEN pm.from_date AND pm.to_date AND
 				DATE_FORMAT(dv.date_from,'%Y%m') = $year_month AND
 				dv.ad_group_id = $ad_group_id
 			ORDER BY
@@ -2454,7 +2454,7 @@ function get_each_ad_details_data(
 				c.site_type = st.site_type AND
 				c.ad_group_id = pm.ad_group_id AND
 				c.site_group = pm.site_group AND
-				CAST(c.register_dt AS DATE) BETWEEN pm.from_date AND pm.to_date AND
+				c.register_dt BETWEEN pm.from_date AND pm.to_date AND
 				DATE_FORMAT(c.register_dt,'%Y%m') = $year_month AND
 				c.ad_group_id = $ad_group_id
 			ORDER BY

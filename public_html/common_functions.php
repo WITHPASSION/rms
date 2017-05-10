@@ -85,7 +85,7 @@ function get_monthly_total_calls(
 					dv.ad_group_id = pm.ad_group_id AND
 					sg.media_type = dv.media_type AND
 					sg.site_group = pm.site_group AND
-					CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date
+					dv.date_from BETWEEN pm.from_date AND pm.to_date
 				ORDER BY dv.ad_group_id, dv.advertiser_id, dv.id
 			) v,
 			smk_request_data.ad_group_bill_payer m,
@@ -95,7 +95,7 @@ function get_monthly_total_calls(
 			m.ad_group_id = v.ad_group_id AND
 			v.ad_group_id = gpm.ad_group_id AND
 			gpm.payment_method_id = pm.id AND
-			CAST(v.date_from AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
+			v.date_from BETWEEN gpm.from_date AND gpm.to_date AND
 			DATE_FORMAT(v.date_from, '%Y%m') = '$year_month' AND
 			gpm.site_group = v.site_group
 			$where
@@ -151,7 +151,7 @@ function get_monthly_total_mails(
 			adg.ad_group_id = gpm.ad_group_id AND
 			gpm.site_group = s.site_group AND
 			gpm.payment_method_id = pm.id AND
-			CAST(v.register_dt AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
+			v.register_dt BETWEEN gpm.from_date AND gpm.to_date AND
 			DATE_FORMAT(v.register_dt, '%Y%m') = '$year_month'
 			$where
 		GROUP BY
@@ -285,7 +285,7 @@ function get_monthly_group_calls_and_price($year_month, $ad_group_id) {
 					dv.ad_group_id = pm.ad_group_id AND
 					sg.media_type = dv.media_type AND
 					sg.site_group = pm.site_group AND
-					CAST(dv.date_from AS DATE) BETWEEN pm.from_date AND pm.to_date
+					dv.date_from BETWEEN pm.from_date AND pm.to_date
 				ORDER BY dv.ad_group_id, dv.advertiser_id, dv.id
 			) v,
 			smk_request_data.ad_group_bill_payer m,
@@ -293,7 +293,7 @@ function get_monthly_group_calls_and_price($year_month, $ad_group_id) {
 		WHERE
 			m.ad_group_id = v.ad_group_id AND
 			v.ad_group_id = gpm.ad_group_id AND
-			CAST(v.date_from AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
+			v.date_from BETWEEN gpm.from_date AND gpm.to_date AND
 			DATE_FORMAT(v.date_from, '%Y%m') = $year_month AND
 			gpm.site_group = v.site_group AND
 			gpm.payment_method_id = 0 AND
@@ -338,7 +338,7 @@ function get_monthly_group_mails_and_price($year_month, $ad_group_id) {
 			adg.ad_group_id = gpm.ad_group_id AND
 			gpm.site_group = s.site_group AND
 			sg.site_group = s.site_group AND
-			CAST(v.register_dt AS DATE) BETWEEN gpm.from_date AND gpm.to_date AND
+			v.register_dt BETWEEN gpm.from_date AND gpm.to_date AND
 			DATE_FORMAT(v.register_dt, '%Y%m') = $year_month AND
 			gpm.payment_method_id = 0 AND
 			v.dpl_tel_cnt = 0 AND
