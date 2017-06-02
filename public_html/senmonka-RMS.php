@@ -170,6 +170,9 @@ function changeYM() {
 							else if (med_keys[z] == "bgatakanen") {
 								med_name = "Ｂ型肝炎";
 							}
+							else if (med_keys[z] == "hibouchuushou") {
+								med_name = "誹謗中傷";
+							}
 							if (med.payment_method.lastIndexOf('月額固定', 0) === 0) {
 								//月額固定費の案件が有ればダウンロードボタン表示
 								has_bill = true;

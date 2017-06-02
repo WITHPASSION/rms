@@ -256,7 +256,8 @@ function get_billing_ids($year, $month) {
 				valid_call_setsuritsu is not null OR
 				valid_call_keijijiken is not null OR
 				valid_call_rikon is not null OR
-				valid_call_bgatakanen is not null
+				valid_call_bgatakanen is not null OR
+				valid_call_hibouchuushou is not null
 			)
 	");
 	$ids = array();
@@ -281,7 +282,8 @@ function get_billing_ids($year, $month) {
 				mail_meigihenkou is not null OR
 				mail_setsuritsu is not null OR
 				mail_rikon is not null OR
-				mail_bgatakanen is not null
+				mail_bgatakanen is not null OR
+				mail_hibouchuushou is not null
 			)
 	");
 
@@ -310,7 +312,8 @@ function check_valid_call($bill_payer_id,$year,$month){
 			valid_call_setsuritsu,
 			valid_call_keijijiken,
 			valid_call_rikon,
-			valid_call_bgatakanen
+			valid_call_bgatakanen,
+			valid_call_hibouchuushou
 		FROM
 			monthly_valid_call
 		WHERE
@@ -330,6 +333,7 @@ function check_valid_call($bill_payer_id,$year,$month){
 		$all_call_check += $row['valid_call_keijijiken'];
 		$all_call_check += $row['valid_call_rikon'];
 		$all_call_check += $row['valid_call_bgatakanen'];
+		$all_call_check += $row['valid_call_hibouchuushou'];
 	}
 	return $all_call_check;
 }
@@ -347,7 +351,8 @@ function check_valid_mail($bill_payer_id,$year,$month){
 			mail_meigihenkou,
 			mail_setsuritsu,
 			mail_rikon,
-			mail_bgatakanen
+			mail_bgatakanen,
+			mail_hibouchuushou
 		FROM
 			monthly_mail_num
 		WHERE
@@ -366,6 +371,7 @@ function check_valid_mail($bill_payer_id,$year,$month){
 		$all_mail_check += $row['mail_setsuritsu'];
 		$all_mail_check += $row['mail_rikon'];
 		$all_mail_check += $row['mail_bgatakanen'];
+		$all_mail_check += $row['mail_hibouchuushou'];
 	}
 	return $all_mail_check;
 }
@@ -384,6 +390,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$all_call_keijijiken = null;
 	$all_call_rikon = null;
 	$all_call_bgatakanen = null;
+	$all_call_hibouchuushou = null;
 	#除外コール数
 	$ex_call_shakkin = null;
 	$ex_call_souzoku = null;
@@ -394,6 +401,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$ex_call_keijijiken = null;
 	$ex_call_rikon = null;
 	$ex_call_bgatakanen = null;
+	$ex_call_hibouchuushou = null;
 	#除外依頼コール数
 	$req_ex_call_shakkin = null;
 	$req_ex_call_souzoku = null;
@@ -404,6 +412,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$req_ex_call_keijijiken = null;
 	$req_ex_call_rikon = null;
 	$req_ex_call_bgatakanen = null;
+	$req_ex_call_hibouchuushou = null;
 	#無効も含めた全てのメール数
 	$all_mail_shakkin = null;
 	$all_mail_souzoku = null;
@@ -413,6 +422,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$all_mail_setsuritsu = null;
 	$all_mail_rikon = null;
 	$all_mail_bgatakanen = null;
+	$all_mail_hibouchuushou = null;
 	#除外メール数
 	$ex_mail_shakkin = null;
 	$ex_mail_souzoku = null;
@@ -422,6 +432,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$ex_mail_setsuritsu = null;
 	$ex_mail_rikon = null;
 	$ex_mail_bgatakanen = null;
+	$ex_mail_hibouchuushou = null;
 	#除外依頼メール数
 	$req_ex_mail_shakkin = null;
 	$req_ex_mail_souzoku = null;
@@ -431,6 +442,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$req_ex_mail_setsuritsu = null;
 	$req_ex_mail_rikon = null;
 	$req_ex_mail_bgatakanen = null;
+	$req_ex_mail_hibouchuushou = null;
 	#メール日
 	$shakkin_mail_dt = null;
 	$souzoku_mail_dt = null;
@@ -440,6 +452,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$setsuritsu_mail_dt = null;
 	$rikon_mail_dt = null;
 	$bgatakanen_mail_dt = null;
+	$hibouchuushou_mail_dt = null;
 	$mail_dt = null;
 	#無効詳細内容の取得
 	$inv_shakkin = null;
@@ -451,6 +464,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$inv_keijijiken = null;
 	$inv_rikon = null;
 	$inv_bgatakanen = null;
+	$inv_hibouchuushou = null;
 	#メディア毎有効請求
 	$res_shakkin = null;
 	$res_souzoku = null;
@@ -461,6 +475,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$res_keijijiken = null;
 	$res_rikon = null;
 	$res_bgatakanen = null;
+	$res_hibouchuushou = null;
 
 	#合計詳細
 	$va_shakkin= null;
@@ -472,6 +487,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$va_keijijiken = null;
 	$va_rikon = null;
 	$va_bgatakanen = null;
+	$va_hibouchuushou = null;
 	#template文
 	$all_tmp = null;
 	$inv_tmp = null;
@@ -484,6 +500,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$arr_setsuritsu_mail_dt = array();
 	$arr_rikon_mail_dt = array();
 	$arr_bgatakanen_mail_dt = array();
+	$arr_hibouchuushou_mail_dt = array();
 
 
 	$sheet_num =0;
@@ -497,6 +514,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		'6' => 0,
 		'7' => 0,
 		'8' => 0,
+		'9' => 0,
 		'sum' => 0
 	);
 	$stmt = $pdo_request->query("
@@ -530,6 +548,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$keijijiken_call = $calls['6'];
 	$rikon_call = $calls['7'];
 	$bgatakanen_call = $calls['8'];
+	$hibouchuushou_call = $calls['9'];
 	$call_sum = $calls['sum'];
 
 	####課金メール数請求内容データの取得
@@ -543,6 +562,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		'6' => 0,
 		'7' => 0,
 		'8' => 0,
+		'9' => 0,
 		'sum' => 0
 	);
 
@@ -566,6 +586,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$setsuritsu_mail = $mails['5'];
 	$rikon_mail = $mails['7'];
 	$bgatakanen_mail = $mails['8'];
+	$hibouchuushou_mail = $mails['9'];
 	$mail_sum = $mails['sum'];
 	#請求合計数の取得
 	$all_sum = $call_sum+$mail_sum;
@@ -700,6 +721,17 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 					}
 				}
 			}	
+			else if(substr($mi, 0, 1) == "J") {
+				$all_call_hibouchuushou++;
+				if ($ex == 1) {
+					if ($is_req == 1) {
+						$req_ex_call_hibouchuushou++;
+					}
+					else {
+						$ex_call_hibouchuushou++;
+					}
+				}
+			}	
 		}
 		#無効アリメール数,メール日取得
 		$stmt2 = $pdo_cdr->query("
@@ -827,6 +859,19 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 				array_push($arr_bgatakanen_mail_dt, $mail_day);
 				asort($arr_bgatakanen_mail_dt);
 			}
+			else if ($sg == 9) { 
+				$all_mail_hibouchuushou++;
+				if ($ex == 1) {
+					if ($is_req == 1) {
+						$req_ex_mail_hibouchuushou++;
+					}
+					else {
+						$ex_mail_hibouchuushou++;
+					}
+				}
+				array_push($arr_hibouchuushou_mail_dt, $mail_day);
+				asort($arr_hibouchuushou_mail_dt);
+			}
 		}
 	}
 	#配列のメール日数を変数に入れる処理
@@ -878,6 +923,12 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	}
 	$bgatakanen_mail_dt = rtrim($bgatakanen_mail_dt,'・');
 	$bgatakanen_mail_dt = "(".$bgatakanen_mail_dt.")";
+	//誹謗中傷	
+	foreach ($arr_hibouchuushou_mail_dt as $row) {
+		$hibouchuushou_mail_dt .= $row."日・";
+	}
+	$hibouchuushou_mail_dt = rtrim($hibouchuushou_mail_dt,'・');
+	$hibouchuushou_mail_dt = "(".$hibouchuushou_mail_dt.")";
 
 	#####請求対象のの取得
 	$stmt3 = $pdo_request->query("
@@ -1007,6 +1058,19 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	else{
 		$bgatakanen_all_tmp = "";
 	}
+	#誹謗中傷	all_tmp
+	if ($all_call_hibouchuushou != null && $all_call_hibouchuushou != null) {
+		$hibouchuushou_all_tmp = "Ｂ型肝炎サイトで".$all_call_hibouchuushou."件の電話と".$all_mail_hibouchuushou."件のメール".$hibouchuushou_mail_dt;
+	}
+	else if($all_call_hibouchuushou != null && $all_mail_hibouchuushou == null) {
+		$hibouchuushou_all_tmp = "Ｂ型肝炎サイトで".$all_call_hibouchuushou."件の電話";
+	}
+	else if($all_call_hibouchuushou == null && $all_mail_hibouchuushou != null){
+		$hibouchuushou_all_tmp = "Ｂ型肝炎サイトで".$all_mail_hibouchuushou."件のメール".$hibouchuushou_mail_dt;
+	}
+	else{
+		$hibouchuushou_all_tmp = "";
+	}
 
 	#月末時点の課金時間と価格の取得
 	$payments = array(
@@ -1019,6 +1083,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		'6' => array(0, 0),
 		'7' => array(0, 0),
 		'8' => array(0, 0),
+		'9' => array(0, 0),
 	);
 	$lastdate = date('Y-m-t H:i:s', strtotime(date(($year + floor($month / 12)).'-'.(($month % 12) + 1).'-01 23:59:59') . '-1 month'));
 	$stmt4 = $pdo_request->query("
@@ -1059,6 +1124,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$res_keijijiken = $keijijiken_call;
 	$res_rikon = $rikon_call + $rikon_mail;
 	$res_bgatakanen = $bgatakanen_call + $bgatakanen_mail;
+	$res_hibouchuushou = $hibouchuushou_call + $hibouchuushou_mail;
 
 	#除外依頼件数の計算	
 	$req_ex_shakkin = $req_ex_call_shakkin + $req_ex_mail_shakkin;
@@ -1070,6 +1136,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$req_ex_keijijiken = $req_ex_call_keijijiken;
 	$req_ex_rikon = $req_ex_call_rikon + $req_ex_mail_rikon;
 	$req_ex_bgatakanen = $req_ex_call_bgatakanen + $req_ex_mail_bgatakanen;
+	$req_ex_hibouchuushou = $req_ex_call_hibouchuushou + $req_ex_mail_hibouchuushou;
 
 	#除外件数の計算	
 	$ex_shakkin = $ex_call_shakkin + $ex_mail_shakkin;
@@ -1081,6 +1148,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$ex_keijijiken = $ex_call_keijijiken;
 	$ex_rikon = $ex_call_rikon + $ex_mail_rikon;
 	$ex_bgatakanen = $ex_call_bgatakanen + $ex_mail_bgatakanen;
+	$ex_hibouchuushou = $ex_call_hibouchuushou + $ex_mail_hibouchuushou;
 
 	$inv_shakkin = $all_call_shakkin + $all_mail_shakkin - $res_shakkin - $ex_shakkin - $req_ex_shakkin;
 	if ($inv_shakkin > 0) {
@@ -1172,6 +1240,16 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($ex_bgatakanen > 0) {
 		$inv_tmp_bgatakanen .= "\nＢ型肝炎サイトで弊社で除外と判断した".$ex_bgatakanen."件";
 	}
+	$inv_hibouchuushou = $all_call_hibouchuushou + $all_mail_hibouchuushou - $res_hibouchuushou - $ex_hibouchuushou - $req_ex_hibouchuushou;
+	if ($inv_hibouchuushou > 0) {
+		$inv_tmp_hibouchuushou = "誹謗中傷サイトで同一電話番号の電話・メール及び".$payments['8'][0]."秒未満電話の".$inv_hibouchuushou."件";
+	}
+	if ($req_ex_hibouchuushou > 0) {
+		$inv_tmp_hibouchuushou .= "\n誹謗中傷サイトで除外依頼頂いた".$req_ex_hibouchuushou."件";
+	}
+	if ($ex_hibouchuushou > 0) {
+		$inv_tmp_hibouchuushou .= "\n誹謗中傷サイトで弊社で除外と判断した".$ex_hibouchuushou."件";
+	}
 
 	#有効件数生成
 	if(!empty($res_shakkin)) {
@@ -1200,6 +1278,9 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	}
 	if(!empty($res_bgatakanen)) {
 		$va_bgatakanen = "Ｂ型肝炎".$res_bgatakanen."件・";
+	}
+	if(!empty($res_hibouchuushou)) {
+		$va_hibouchuushou = "誹謗中傷".$res_hibouchuushou."件・";
 	}
 	//////////////////
 	/////template文生成
@@ -1240,6 +1321,10 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$all_tmp = $all_tmp."
 ".$bgatakanen_all_tmp;
 	}
+	if (!empty($hibouchuushou_all_tmp)) {
+		$all_tmp = $all_tmp."
+".$hibouchuushou_all_tmp;
+	}
 	#inv_tmp
 	if (!empty($inv_tmp_shakkin)) {
 		$inv_tmp = $inv_tmp."
@@ -1277,13 +1362,17 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$inv_tmp = $inv_tmp."
 ".$inv_tmp_bgatakanen;
 	}
+	if (!empty($inv_tmp_hibouchuushou)) {
+		$inv_tmp = $inv_tmp."
+".$inv_tmp_hibouchuushou;
+	}
 	if (!empty($inv_tmp)) {
 		$inv_tmp = $inv_tmp."
 "."を差し引いて";
 	}
 
 	#valid_tmp
-	$va_tmp = $va_shakkin.$va_souzoku.$va_koutsujiko.$va_ninibaikyaku.$va_meigihenkou.$va_setsuritsu.$va_keijijiken.$va_rikon.$va_bgatakanen;
+	$va_tmp = $va_shakkin.$va_souzoku.$va_koutsujiko.$va_ninibaikyaku.$va_meigihenkou.$va_setsuritsu.$va_keijijiken.$va_rikon.$va_bgatakanen+$va_hibouchuushou;
 	$va_tmp = rtrim($va_tmp,'・');
 
 	###################################
@@ -1426,6 +1515,20 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$reviser->addNumber($sheet_num, $i, 5, $payments['8'][1]);
 		#合計金額
 		$sum =($bgatakanen_call + $bgatakanen_mail) * $payments['8'][1];
+		$i = $i + 1;
+	}
+	#誹謗中傷
+	if ($hibouchuushou_call > 0 OR $hibouchuushou_mail > 0) {
+		#月
+		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		#商品名
+		$reviser->addString($sheet_num, $i, 2, "月掲載料金(誹謗中傷)");
+		#数量
+		$reviser->addNumber($sheet_num, $i, 4, $hibouchuushou_call+$hibouchuushou_mail);
+		#単価
+		$reviser->addNumber($sheet_num, $i, 5, $payments['8'][1]);
+		#合計金額
+		$sum =($hibouchuushou_call + $hibouchuushou_mail) * $payments['8'][1];
 		$i = $i + 1;
 	}
 

@@ -47,7 +47,8 @@ $types = array(
 	"setsuritsu",
 	"keijijiken",
 	"rikon",
-	"bgatakanen"
+	"bgatakanen",
+	"hibouchuushou"
 );
 
 #cdrへの接続
@@ -195,6 +196,10 @@ foreach ($call_data as $call) {
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["bgatakanen"]["call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["bgatakanen"]["payment_method"] = $payment_method;
 		}
+		else if ($site_group == 9){
+			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["hibouchuushou"]["call_count"] += $count;
+			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["hibouchuushou"]["payment_method"] = $payment_method;
+		}
 		else {
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
@@ -253,6 +258,10 @@ foreach ($sample_call_data as $call) {
 		else if ($site_group == 8){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["bgatakanen"]["sample_call_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["bgatakanen"]["payment_method"] = $payment_method;
+		}
+		else if ($site_group == 9){
+			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["hibouchuushou"]["sample_call_count"] += $count;
+			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["hibouchuushou"]["payment_method"] = $payment_method;
 		}
 		else {
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["sample_call_count"] += $count;
@@ -317,6 +326,10 @@ foreach ($mail_data as $mail) {
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["bgatakanen"]["mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["bgatakanen"]["payment_method"] = $payment_method;
 		}
+		else if ($group == 9){
+			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["hibouchuushou"]["mail_count"] += $count;
+			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["hibouchuushou"]["payment_method"] = $payment_method;
+		}
 	}
 }
 
@@ -375,6 +388,10 @@ foreach ($sample_mail_data as $mail) {
 		else if ($group == 8){
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["bgatakanen"]["sample_mail_count"] += $count;
 			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["bgatakanen"]["payment_method"] = $payment_method;
+		}
+		else if ($group == 9){
+			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["hibouchuushou"]["sample_mail_count"] += $count;
+			$ret[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["hibouchuushou"]["payment_method"] = $payment_method;
 		}
 	}
 }
