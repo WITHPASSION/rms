@@ -100,6 +100,7 @@ function fetch_req_call_data($year_month, $year, $month, $bill_payer_id) {
 	$bgatakanen = null;
 	$hibouchuushou = null;
 	$jikouenyou = null;
+	$roudou = null;
 	$result_call_charge = null;
 	$count_freedial = null;
 	$stmt = $pdo2->query("
@@ -161,6 +162,9 @@ function fetch_req_call_data($year_month, $year, $month, $bill_payer_id) {
 			else if (substr($mi, 0, 1) == "K"){
 				$jikouenyou++;
 			}
+			else if (substr($mi, 0, 1) == "L"){
+				$roudou++;
+			}
 			else {
 				$shakkin++;
 			}
@@ -209,6 +213,9 @@ function fetch_req_call_data($year_month, $year, $month, $bill_payer_id) {
 			}
 			else if (substr($mi, 0, 1) == "K") {
 				$jikouenyou++;
+			}
+			else if (substr($mi, 0, 1) == "L") {
+				$roudou++;
 			}
 			else {
 				$shakkin++;
@@ -276,15 +283,16 @@ function fetch_req_call_data($year_month, $year, $month, $bill_payer_id) {
 			!empty($bgatakanen) ||
 			!empty($hibouchuushou) ||
 			!empty($jikouenyou) ||
+			!empty($roudou) ||
 			!empty($result_call_charge) ||
 			!empty($count_freedial)
 	) {
-		$call_sum = $shakkin+$souzoku+$koutsujiko+$ninibaikyaku+$meigihenkou+$setsuritsu+$keijijiken+$rikon+$bgatakanen+$hibouchuushou+$jikouenyou;
+		$call_sum = $shakkin+$souzoku+$koutsujiko+$ninibaikyaku+$meigihenkou+$setsuritsu+$keijijiken+$rikon+$bgatakanen+$hibouchuushou+$jikouenyou+$roudou;
 		$stmt = $pdo2->prepare("
 			REPLACE INTO
 				monthly_valid_call
 			VALUES(
-				?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
+				?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
 			)
 		");
 		$result = $stmt->execute(
@@ -303,6 +311,7 @@ function fetch_req_call_data($year_month, $year, $month, $bill_payer_id) {
 				$bgatakanen,
 				$hibouchuushou,
 				$jikouenyou,
+				$roudou,
 				$result_call_charge,
 				$count_freedial,
 				$call_sum
@@ -325,6 +334,7 @@ function fetch_req_mail_data($year_month, $year, $month, $bill_payer_id) {
 	$m_bgatakanen = null;
 	$m_hibouchuushou = null;
 	$m_jikouenyou = null;
+	$m_roudou = null;
 	$stmt = $pdo2->query("
 		SELECT
 			ad_group_id
@@ -380,6 +390,9 @@ function fetch_req_mail_data($year_month, $year, $month, $bill_payer_id) {
 			else if ($site_group == 10) {
 				$m_jikouenyou++;
 			}
+			else if ($site_group == 11) {
+				$m_roudou++;
+			}
 		}
 	}
 	if (!empty($m_shakkin) ||
@@ -391,14 +404,15 @@ function fetch_req_mail_data($year_month, $year, $month, $bill_payer_id) {
 			!empty($m_rikon) ||
 			!empty($m_bgatakanen) ||
 			!empty($m_hibouchuushou) ||
-			!empty($m_jikouenyou)
+			!empty($m_jikouenyou) ||
+			!empty($m_roudou)
 	) {
-		$mail_sum =	$m_shakkin+$m_souzoku+$m_koutsujiko+$m_ninibaikyaku+$m_meigihenkou+$m_setsuritsu+$m_rikon+$m_bgatakanen+$m_hibouchuushou+$m_jikouenyou;
+		$mail_sum =	$m_shakkin+$m_souzoku+$m_koutsujiko+$m_ninibaikyaku+$m_meigihenkou+$m_setsuritsu+$m_rikon+$m_bgatakanen+$m_hibouchuushou+$m_jikouenyou+$m_roudou;
 		$stmt = $pdo2->prepare("
 			REPLACE INTO
 				monthly_mail_num
 			VALUES(
-				?,?,?,?,?,?,?,?,?,?,?,?,?,?
+				?,?,?,?,?,?,?,?,?,?,?,?,?,?,?
 			)
 		");
 		$result = $stmt->execute(
@@ -416,6 +430,7 @@ function fetch_req_mail_data($year_month, $year, $month, $bill_payer_id) {
 				$m_bgatakanen,
 				$m_hibouchuushou,
 				$m_jikouenyou,
+				$m_roudou,
 				$mail_sum
 			)
 		);

@@ -176,6 +176,9 @@ function changeYM() {
 							else if (med_keys[z] == "jikouenyou") {
 								med_name = "時効援用";
 							}
+							else if (med_keys[z] == "roudou") {
+								med_name = "労働問題";
+							}
 							if (med.payment_method.lastIndexOf('月額固定', 0) === 0) {
 								//月額固定費の案件が有ればダウンロードボタン表示
 								has_bill = true;
