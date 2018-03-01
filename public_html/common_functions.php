@@ -44,11 +44,11 @@ function get_monthly_total_calls(
 	$where = "";
 	if ($call_type == CALL_TYPE_VALID)
 	{
-		$where = " AND pm.id <> 2 AND v.dpl_tel_cnt_for_billing = 0 AND v.call_minutes >= v.charge_seconds AND v.dpl_mail_cnt = 0 AND v.is_exclusion = 0";
+		$where = " AND pm.id <> 2 AND v.redirect_status IN (21,22) AND v.dpl_tel_cnt_for_billing = 0 AND v.call_minutes >= v.charge_seconds AND v.dpl_mail_cnt = 0 AND v.is_exclusion = 0";
 	}
 	else if ($call_type == CALL_TYPE_SAMPLE)
 	{
-		$where = " AND v.dpl_tel_cnt = 0 AND v.call_minutes >= 60 AND v.dpl_mail_cnt = 0 AND is_exclusion = 0";
+		$where = " AND v.dpl_tel_cnt = 0 AND v.redirect_status IN (21,22) AND v.call_minutes >= 60 AND v.dpl_mail_cnt = 0 AND is_exclusion = 0";
 	}
 	if ($ad_group_id != null)
 	{
@@ -74,6 +74,7 @@ function get_monthly_total_calls(
 					dv.dpl_tel_cnt_for_billing,
 					dv.date_from,
 					dv.call_minutes,
+					dv.redirect_status,
 					dv.is_exclusion,
 					pm.charge_seconds,
 					sg.site_group
@@ -272,6 +273,7 @@ function get_monthly_group_calls_and_price($year_month, $ad_group_id) {
 					dv.dpl_tel_cnt_for_billing,
 					dv.date_from,
 					dv.call_minutes,
+					dv.redirect_status,
 					dv.is_exclusion,
 					pm.unit_price,
 					pm.charge_seconds,
@@ -297,6 +299,7 @@ function get_monthly_group_calls_and_price($year_month, $ad_group_id) {
 			DATE_FORMAT(v.date_from, '%Y%m') = $year_month AND
 			gpm.site_group = v.site_group AND
 			gpm.payment_method_id = 0 AND
+			v.redirect_status IN (21,22) AND
 			v.dpl_tel_cnt_for_billing = 0 AND
 			v.call_minutes >= v.charge_seconds AND
 			v.dpl_mail_cnt = 0 AND
