@@ -178,6 +178,7 @@ function fetch_req_call_data($year_month, $year, $month, $bill_payer_id) {
 			WHERE
 				ad_group_id = $ad_group_id AND
 				tel_from = 'anonymous' AND
+				redirect_status in(21,22) AND
 				DATE_FORMAT(date_from,'%Y%m') = $year_month AND
 				call_minutes >= 60
 		");
