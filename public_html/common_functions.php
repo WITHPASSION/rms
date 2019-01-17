@@ -166,6 +166,43 @@ function get_monthly_total_mails(
 	return $res_arr;
 }
 
+function get_monthly_total_earnings(
+	$year_month,
+	$ad_group_id = null
+) {
+	global $pdo_request;
+	$where = "";
+	if ($ad_group_id != null)
+	{
+		$where .= " AND v.ad_group_id = $ad_group_id";
+	}
+	$stmt = $pdo_request->query("
+		SELECT
+			m.bill_payer_id,
+			v.ad_group_id,
+			v.advertiser_id,
+			v.site_group,
+			group_concat(distinct v.payment_method_id) as payment_method_ids,
+			SUM(v.unit_price) price
+		FROM
+			smk_request_data.ad_group_bill_payer m,
+			cdr.charged_actions_view v
+		WHERE
+			m.ad_group_id = v.ad_group_id AND
+			DATE_FORMAT(v.action_date, '%Y%m') = '$year_month' AND
+			v.payment_method_id <> 2
+			$where
+		GROUP BY
+			m.bill_payer_id,
+			v.ad_group_id,
+			v.advertiser_id,
+			v.site_group
+		WITH ROLLUP
+	");
+	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	return $res_arr;
+}
+
 function append_call_counts($ad_group_id, $call_data_arr, &$bp_arr, &$adg_arr, &$sgp_arr, $count_type)
 {
 	foreach ($call_data_arr as $call_data) {

@@ -74,6 +74,7 @@ function changeYM() {
 			var total_sample_call_count = 0;
 			var total_mail_count = 0;
 			var total_sample_mail_count = 0;
+			var total_earnings = 0;
 			for (i = 0; i < keys.length; i++) {
 				var bill_payer_id = keys[i];
 				var bill_payer = json[bill_payer_id];
@@ -201,6 +202,7 @@ function changeYM() {
 							html += "<td class=''><small>(" + med.sample_call_count + ")</small></td>";
 							html += "<td class='right_txt'>" + med.mail_count + "</td>";
 							html += "<td class=''><small>(" + med.sample_mail_count + ")</small></td>";
+							html += "<td class='right_txt'>" + getCommaSepNum(med.earnings) + "</td>";
 							html += "</tr>";
 						}
 						html += "<tr>";
@@ -221,6 +223,7 @@ function changeYM() {
 						html += "<td class=''><small>(" + adv.sample_call_count + ")</small></td>";
 						html += "<td class='right_txt bold'>" + adv.mail_count + "</td>";
 						html += "<td class=''><small>(" + adv.sample_mail_count + ")</small></td>";
+						html += "<td class='right_txt'>" + getCommaSepNum(adv.earnings) + "</td>";
 						html += "</tr>";
 					}
 					html += "<tr>";
@@ -229,6 +232,7 @@ function changeYM() {
 					html += "<td class=''><small>(" + ad_group.sample_call_count + ")</small></td>";
 					html += "<td class='right_txt bold_steel_blue'>" + ad_group.mail_count + "</td>";
 					html += "<td class=''><small>(" + ad_group.sample_mail_count + ")</small></td>";
+					html += "<td class='right_txt'>" + getCommaSepNum(ad_group.earnings) + "</td>";
 					html += "</tr>";
 				}
 
@@ -240,6 +244,7 @@ function changeYM() {
 					html += "<td class=''><small>(" + bill_payer.sample_call_count + ")</small></td>";
 					html += "<td class='right_txt bold_blue'>" + bill_payer.mail_count + "</td>";
 					html += "<td class=''><small>(" + bill_payer.sample_mail_count + ")</small></td>";
+					html += "<td class='right_txt'>" + getCommaSepNum(bill_payer.earnings) + "</td>";
 				}
 				else {
 					html += "<td colspan='3' class='right_txt gray_down'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + bill_payer_id + ")' style='font-size: 1.2em; font-weight: bold;'>";
@@ -248,11 +253,13 @@ function changeYM() {
 					html += "<td class='gray_down'><small>(" + bill_payer.sample_call_count + ")</small></td>";
 					html += "<td class='right_txt gray_down'>" + bill_payer.mail_count + "</td>";
 					html += "<td class='gray_down'><small>(" + bill_payer.sample_mail_count + ")</small></td>";
+					html += "<td class='right_txt'>" + getCommaSepNum(bill_payer.earnings) + "</td>";
 				}
 				total_call_count += parseInt(bill_payer.call_count);
 				total_sample_call_count += parseInt(bill_payer.sample_call_count);
 				total_mail_count += parseInt(bill_payer.mail_count);
 				total_sample_mail_count += parseInt(bill_payer.sample_mail_count);
+				total_earnings += parseInt(bill_payer.earnings);
 				html += "</tr>";
 			}
 			html += "<tr>";
@@ -261,6 +268,7 @@ function changeYM() {
 			html += "<td class=''>(" + total_sample_call_count + ")</td>";
 			html += "<td class='right_txt bold_red'><big>" + total_mail_count + "</big></td>";
 			html += "<td class=''>(" + total_sample_mail_count + ")</td>";
+			html += "<td class='right_txt bold_red'><big>" + getCommaSepNum(total_earnings) + "</big></td>";
 			html += "</tr>";
 			html += "</body>";
 			$("#office_table").html(html);
@@ -272,6 +280,10 @@ function download_bill(bill_payer_id) {
 	document.form
 	form2.bill_payer_id.value = bill_payer_id;
 	return form2.submit();
+}
+
+function getCommaSepNum(num) {
+	return String(num).replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1,');
 }
 
 $(function(){
@@ -334,6 +346,7 @@ while (true) {
 		<th>メディア</th>
 		<th colspan="2">請求コール数 <small>(参考値)</small></th>
 		<th colspan="2">請求メール数 <small>(参考値)</small></th>
+		<th>請求予定額</th>
 	</thead>
 	<tbody id="office_table">
 	</tbody>
