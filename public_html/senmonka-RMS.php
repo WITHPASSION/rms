@@ -346,7 +346,7 @@ while (true) {
 		<th>メディア</th>
 		<th colspan="2">請求コール数 <small>(参考値)</small></th>
 		<th colspan="2">請求メール数 <small>(参考値)</small></th>
-		<th>請求予定額</th>
+		<th>売上</th>
 	</thead>
 	<tbody id="office_table">
 	</tbody>
