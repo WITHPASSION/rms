@@ -42,6 +42,9 @@
 	font-weight: bold;
 	color: blue;
 }
+.red {
+	color: red;
+}
 .bold_red {
 	font-weight: bold;
 	color: red;
@@ -69,7 +72,8 @@ function changeYM() {
 		{'year' : year, 'month' : month},
 		function(json) {
 			var html = "<body>";
-			var keys = Object.keys(json);
+			var counts = json.counts
+			var keys = Object.keys(counts);
 			var total_call_count = 0;
 			var total_sample_call_count = 0;
 			var total_mail_count = 0;
@@ -77,14 +81,14 @@ function changeYM() {
 			var total_earnings = 0;
 			for (i = 0; i < keys.length; i++) {
 				var bill_payer_id = keys[i];
-				var bill_payer = json[bill_payer_id];
+				var bill_payer = counts[bill_payer_id];
 				var adg_keys = Object.keys(bill_payer.ad_groups);
 				var bill_payer_row_count = 1;
 
 				//請求先分の行数カウント
 				for (n = 0; n < adg_keys.length; n++) {
 					var ad_group_id = adg_keys[n];
-					var ad_group = json[bill_payer_id]['ad_groups'][ad_group_id];
+					var ad_group = counts[bill_payer_id]['ad_groups'][ad_group_id];
 					var ad_keys = Object.keys(ad_group.advertisers);
 					//事務所数分の行数カウント
 					for (t = 0; t < ad_keys.length; t++) {
@@ -104,7 +108,7 @@ function changeYM() {
 				var bill_payer_named = false;
 				for (n = 0; n < adg_keys.length; n++) {
 					var ad_group_id = adg_keys[n];
-					var ad_group = json[bill_payer_id]['ad_groups'][ad_group_id];
+					var ad_group = counts[bill_payer_id]['ad_groups'][ad_group_id];
 					var ad_keys = Object.keys(ad_group.advertisers);
 					var group_row_count = 1;
 					//事務所数分の行数カウント
@@ -262,6 +266,36 @@ function changeYM() {
 				total_earnings += parseInt(bill_payer.earnings);
 				html += "</tr>";
 			}
+
+			var total = json.total;
+			var keys = Object.keys(json.total);
+			for (i = 0; i < keys.length; i++) {
+				var k = keys[i];
+				var name = "";
+				switch (k) {
+					case 'shakkin': name = "借金問題"; break;
+					case 'souzoku': name = "相続問題"; break;
+					case 'koutsujiko': name = "交通事故"; break;
+					case 'ninibaikyaku': name = "任意売却"; break;
+					case 'meigihenkou': name = "名義変更"; break;
+					case 'setsuritsu': name = "会社設立"; break;
+					case 'keijijiken': name = "刑事事件"; break;
+					case 'rikon': name = "離婚問題"; break;
+					case 'bgatakanen': name = "Ｂ型肝炎"; break;
+					case 'hibouchuushou': name = "誹謗中傷"; break;
+					case 'jikouenyou': name = "時効援用"; break;
+					case 'roudou': name = "労働問題"; break;
+				}
+				html += "<tr>";
+				html += "<td colspan='4' class='right_txt red'><big>" + name + " 計</big></td>";
+				html += "<td class='right_txt red'><big>" + total[k]['call_count'] + "</big></td>";
+				html += "<td class=''>(" + total[k]['sample_call_count'] + ")</td>";
+				html += "<td class='right_txt red'><big>" + total[k]['mail_count'] + "</big></td>";
+				html += "<td class=''>(" + total[k]['sample_mail_count'] + ")</td>";
+				html += "<td class='right_txt red'><big>" + getCommaSepNum(total[k]['earnings']) + "</big></td>";
+				html += "</tr>";
+			}
+
 			html += "<tr>";
 			html += "<td colspan='4' class='right_txt bold_red'><big>全請求計</big></td>";
 			html += "<td class='right_txt bold_red'><big>" + total_call_count + "</big></td>";
