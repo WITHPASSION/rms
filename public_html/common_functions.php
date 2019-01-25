@@ -8,6 +8,21 @@ define('MAIL_TYPE_SAMPLE', 1);
 define('MAIL_TYPE_VALID', 2);
 define('MAIL_TYPE_EXCLUSION', 3);
 
+const SITE_GROUP_NAMES = array(
+	"借金",
+	"相続",
+	"交通",
+	"任売",
+	"名変",
+	"設立",
+	"刑事",
+	"離婚",
+	"Ｂ型",
+	"誹謗",
+	"時効",
+	"労働"
+);
+
 function get_billing_office_list() {
 	global $pdo_request;
 	$stmt = $pdo_request->query("
@@ -391,6 +406,73 @@ function get_monthly_group_mails_and_price($year_month, $ad_group_id) {
 			s.site_group,
 			gpm.unit_price
 		WITH ROLLUP
+	");
+	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	return $res_arr;
+}
+
+function get_monthly_fixedcost_charged_actions($ad_group_id, $datetime) {
+	global $pdo_request;
+	$stmt = $pdo_request->query("
+		SELECT
+			DATE_FORMAT(action_date, '%Y%m') ym,
+			site_group,
+			unit_price,
+			COUNT(action_date) count,
+			SUM(unit_price) total
+		FROM
+			cdr.charged_actions_view
+		WHERE
+			ad_group_id = $ad_group_id AND
+			payment_method_id IN (3,4) AND
+			action_date <= '$datetime'
+		GROUP BY
+			DATE_FORMAT(action_date, '%Y%m'),
+			site_group,
+			unit_price
+		ORDER BY
+			DATE_FORMAT(action_date, '%Y%m'),
+			site_group
+	");
+	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	return $res_arr;
+}
+
+function get_monthly_flatrate_costs($ad_group_id, $date) {
+	global $pdo_request;
+	$stmt = $pdo_request->query("
+		SELECT
+			ft.*,
+			IF (ft.site_groups <> '',
+				(
+				SELECT
+					GROUP_CONCAT(site_group_short_name SEPARATOR ',')
+				FROM
+					wordpress.ss_site_group
+				WHERE
+					FIND_IN_SET(site_group, ft.site_groups)
+				),
+				(
+				SELECT
+					GROUP_CONCAT(DISTINCT sg.site_group_short_name order by sg.site_group SEPARATOR ',')
+				FROM
+					cdr.office_group_payment_method opm,
+					wordpress.ss_site_group sg
+				WHERE
+					opm.ad_group_id = ft.ad_group_id AND
+					opm.site_group = sg.site_group AND
+					ft.dt BETWEEN opm.from_date AND opm.to_date
+				GROUP BY
+					opm.ad_group_id
+				)
+			) as site_group_names
+		FROM
+			cdr.flatrate_cost ft
+		WHERE
+			ft.ad_group_id = $ad_group_id AND
+			ft.dt <= '$date'
+		ORDER BY
+			dt, CAST(site_groups as signed)
 	");
 	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	return $res_arr;

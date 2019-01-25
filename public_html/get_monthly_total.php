@@ -6,7 +6,7 @@ include 'common_functions.php';
 //ini_set("display_errors", "off");
 #データベース接続処理
 #db接続データの参照
-$path = parse_ini_file("../rms.cnf");		
+$path = parse_ini_file("../rms.cnf");
 foreach($path as $key => $db_path) {
 	$configs = parse_ini_file($db_path);
 }
