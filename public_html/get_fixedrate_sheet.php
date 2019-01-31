@@ -82,9 +82,11 @@ if(!$stmt) {
 }
 
 //事務所グループID
-$ad_group_id = $_GET['ad_group_id'];
+$ad_group_id = $_POST['ad_group_id'];
 //対象年月
-$year_month = $_GET['year_month'];
+$year = $_POST['year'];
+$month = $_POST['month'];
+$year_month = $year.$month;
 $ymd = "";
 if (empty($year_month) || !is_numeric($year_month)) {
 	$year_month = new DateTime();
@@ -93,9 +95,13 @@ else {
 	$year_month = new DateTime($year_month."01");
 }
 $ymd = new DateTime("last day of ". $year_month->format("Y-m"));
+$ym_text = $ymd->format("Y年m月");
 //error_log(var_export($ymd, true), 0);
 
-if (empty($ad_group_id) || !is_numeric($ad_group_id)) {
+//事務所グループ情報取得
+$ad_group = get_ad_group($ad_group_id);
+
+if (empty($ad_group_id) || !is_numeric($ad_group_id) || $ad_group == null) {
 	print('<!DOCTYPE html>');
 	print('<html lang="ja">');
 	print('<head>');
@@ -110,6 +116,7 @@ if (empty($ad_group_id) || !is_numeric($ad_group_id)) {
 	print('</html>');
 	die();
 }
+
 
 //月次のアクションデータ取得
 $action_data = get_monthly_fixedcost_charged_actions($ad_group_id, $ymd->format("Y-m-d 23:59:59"));
@@ -170,7 +177,7 @@ foreach ($ym_arr as $ym) {
 	}
 	$tmp_ym = $ym;
 }
-error_log(var_export($cost_arr, true), 0);
+//error_log(var_export($cost_arr, true), 0);
 
 //スプレッドシート生成
 $spreadsheet = new Spreadsheet();
@@ -195,7 +202,12 @@ foreach ($ym_arr as $ym) {
 	$dt = new DateTime($ym."01 00:00:00");
 	$sheet->setCellValueByColumnAndRow($start_cell[0] - 1, $row, $dt->format('Y年m月'));
 	$col = $start_cell[0];
+	$is_first = true;
 	foreach ($sg_arr as $sg) {
+		if ($is_first) {
+			$sheet->setCellValueByColumnAndRow($col, $start_cell[1] - 2, "有効");
+			$is_first = false;
+		}
 		$sheet->setCellValueByColumnAndRow($col, $start_cell[1] - 1, SITE_GROUP_NAMES[$sg]);
 		$sheet->setCellValueByColumnAndRow($col + 1, $start_cell[1] - 1, "件数合計");
 		$sheet_arr[$ym."|".$sg] = array($col, $row, 0);
@@ -232,7 +244,12 @@ $price_init_col = $col + 2;
 foreach ($ym_arr as $ym) {
 	$price_col = $price_init_col;
 	$count_col = $start_cell[0];
+	$is_first = true;
 	foreach ($sg_arr as $sg) {
+		if ($is_first) {
+			$sheet->setCellValueByColumnAndRow($price_col, $start_cell[1] - 2, "換算");
+			$is_first = false;
+		}
 		$sheet->setCellValueByColumnAndRow($price_col, $start_cell[1] - 1, SITE_GROUP_NAMES[$sg]);
 		$sheet->setCellValueByColumnAndRow($price_col + 1, $start_cell[1] - 1, "小計");
 		$key = $ym."|".$sg;
@@ -288,32 +305,37 @@ $cost_calc_init_col = $cost_init_col + $max_cost_count + 2;
 foreach ($ym_arr as $ym) {
 	$cost_col = $cost_init_col;
 	$cost_calc_col = $cost_calc_init_col;
+	$is_first = true;
 	foreach ($cost_arr as $k => $val) {
 		$k_a = explode("|", $k);
 		$c_ym = $k_a[0];
 		if ($ym != $c_ym) {
 			continue;
 		}
+		if ($is_first) {
+			$sheet->setCellValueByColumnAndRow($cost_col, $start_cell[1] - 2, "請求");
+			$sheet->setCellValueByColumnAndRow($cost_calc_col, $start_cell[1] - 2, "合計");
+			$is_first = false;
+		}
 		$sheet->setCellValueByColumnAndRow($cost_col, $start_cell[1] - 1, $val['site_group_names']);
 		$sheet->setCellValueByColumnAndRow($cost_col + 1, $start_cell[1] - 1, "小計");
 
 		$cost = intval($val['flatrate_price']) / 10000;
 		$adjust = intval($val['adjusted_price']) / 10000;
-		if ($adjust == 0) {
-			$sheet->setCellValueByColumnAndRow($cost_col, $cost_row, $cost);
-		}
-		else {
-			if ($adjust > 0) {
-				$adjust = "+".$adjust;
-			}
-			$sheet->setCellValueByColumnAndRow($cost_col, $cost_row, '='.$cost.$adjust);
-		}
+		$sheet->setCellValueByColumnAndRow($cost_col, $cost_row, $cost);
 
 		$sheet->setCellValueByColumnAndRow($cost_calc_col, $start_cell[1] - 1, $val['site_group_names']);
 		$sheet->setCellValueByColumnAndRow($cost_calc_col + 1, $start_cell[1] - 1, "小計");
 
 		$c_base = implode("-", $val['count_cell']);
 		$c = "=".Coordinate::stringFromColumnIndex($cost_col).$cost_row."-".$c_base;
+		if ($adjust != 0) {
+			//調整分を合計に足す（引く）
+			if ($adjust > 0) {
+				$adjust = "+".$adjust;
+			}
+			$c .= $adjust;
+		}
 		$sheet->setCellValueByColumnAndRow($cost_calc_col, $cost_row, $c);
 
 		$cost_col++;
@@ -341,7 +363,7 @@ for ($i = 0; $i <= $max_cost_count; $i++) {
 //ダウンロード用
 //MIMEタイプ：https://technet.microsoft.com/ja-jp/ee309278.aspx
 header("Content-Description: File Transfer");
-header('Content-Disposition: attachment; filename="weather.xlsx"');
+header('Content-Disposition: attachment; filename="管理シート（'.$ad_group['group_name'].$ym_text.'時点）.xlsx"');
 header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 header('Content-Transfer-Encoding: binary');
 header('Cache-Control: must-revalidate, post-check=0, pre-check=0');

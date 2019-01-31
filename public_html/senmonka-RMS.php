@@ -66,6 +66,8 @@ function changeYM() {
 	form2.month.value = month;
 	form3.year.value = year;
 	form3.month.value = month;
+	form4.year.value = year;
+	form4.month.value = month;
 
 	$.getJSON(
 		"/get_monthly_total.php",
@@ -125,6 +127,7 @@ function changeYM() {
 					}
 
 					var has_bill = false;
+					var has_sheet = false;
 					if (bill_payer.call_count > 0 || bill_payer.mail_count > 0) {
 						has_bill = true;
 					}
@@ -188,6 +191,10 @@ function changeYM() {
 								//月額固定費の案件が有ればダウンロードボタン表示
 								has_bill = true;
 							}
+							else if (med.payment_method.lastIndexOf('定額制', 0) === 0 || med.payment_method.lastIndexOf('固定費化', 0) === 0) {
+								//定額制、固定費化の案件が有れば管理シートダウンロードボタン表示
+								has_sheet = true;
+							}
 							html += "<tr>";
 							if (!bill_payer_named) {
 								html += "<td rowspan='" + bill_payer_row_count + "'>" + bill_payer_id + "." + bill_payer.bill_payer_name + "</td>";
@@ -231,7 +238,11 @@ function changeYM() {
 						html += "</tr>";
 					}
 					html += "<tr>";
-					html += "<td colspan='2' class='right_txt bold_steel_blue'>事務所グループ計</td>";
+					html += "<td colspan='2' class='right_txt bold_steel_blue'>";
+					if (has_sheet) {
+						html += "<input type='button' value='管理シートダウンロード' onclick='download_management_sheet(" + ad_group_id + ")' style='font-size: 1.2em; font-weight: bold;'>　";
+					}
+					html += "事務所グループ計</td>";
 					html += "<td class='right_txt bold_steel_blue'>" + ad_group.call_count + "</td>";
 					html += "<td class=''><small>(" + ad_group.sample_call_count + ")</small></td>";
 					html += "<td class='right_txt bold_steel_blue'>" + ad_group.mail_count + "</td>";
@@ -242,7 +253,8 @@ function changeYM() {
 
 				html += "<tr>";
 				if (has_bill) {
-					html += "<td colspan='3' class='right_txt bold_blue'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + bill_payer_id + ")' style='font-size: 1.2em; font-weight: bold;'>";
+					html += "<td colspan='3' class='right_txt bold_blue'>";
+					html += "<input type='button' value='請求書ダウンロード' onclick='download_bill(" + bill_payer_id + ")' style='font-size: 1.2em; font-weight: bold;'>";
 					html += "　請求計</td>";
 					html += "<td class='right_txt bold_blue'>" + bill_payer.call_count + "</td>";
 					html += "<td class=''><small>(" + bill_payer.sample_call_count + ")</small></td>";
@@ -251,7 +263,8 @@ function changeYM() {
 					html += "<td class='right_txt'>" + getCommaSepNum(bill_payer.earnings) + "</td>";
 				}
 				else {
-					html += "<td colspan='3' class='right_txt gray_down'><input type='button' value='請求書ダウンロード' onclick='download_bill(" + bill_payer_id + ")' style='font-size: 1.2em; font-weight: bold;'>";
+					html += "<td colspan='3' class='right_txt gray_down'>";
+					html += "<input type='button' value='請求書ダウンロード' onclick='download_bill(" + bill_payer_id + ")' style='font-size: 1.2em; font-weight: bold;'>";
 					html += "　請求計</td>";
 					html += "<td class='right_txt gray_down'>" + bill_payer.call_count + "</td>";
 					html += "<td class='gray_down'><small>(" + bill_payer.sample_call_count + ")</small></td>";
@@ -311,9 +324,13 @@ function changeYM() {
 }
 
 function download_bill(bill_payer_id) {
-	document.form
 	form2.bill_payer_id.value = bill_payer_id;
 	return form2.submit();
+}
+
+function download_management_sheet(ad_group_id, year_month) {
+	form4.ad_group_id.value = ad_group_id;
+	return form4.submit();
 }
 
 function getCommaSepNum(num) {
@@ -370,6 +387,11 @@ while (true) {
 	<input type="hidden" name="year" value="">
 	<input type="hidden" name="month" value="">
 	<input type="hidden" name="bill_payer_id" value="">
+</form>
+<form method="post" name="form4" action="get_fixedrate_sheet.php">
+	<input type="hidden" name="year" value="">
+	<input type="hidden" name="month" value="">
+	<input type="hidden" name="ad_group_id" value="">
 </form>
 <br>
 <table class="offices">

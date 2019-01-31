@@ -23,6 +23,24 @@ const SITE_GROUP_NAMES = array(
 	"労働"
 );
 
+
+function get_ad_group($ad_group_id) {
+	global $pdo_request;
+	$stmt = $pdo_request->query("
+		SELECT
+			*
+		FROM
+			wordpress.ss_ad_groups
+		WHERE
+			ID = '$ad_group_id'
+	");
+	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	if (count($res_arr) > 0) {
+		return $res_arr[0];
+	}
+	return null;
+
+}
 function get_billing_office_list() {
 	global $pdo_request;
 	$stmt = $pdo_request->query("
