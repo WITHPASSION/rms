@@ -7,6 +7,7 @@ define('MAIL_TYPE_ALL', 0);
 define('MAIL_TYPE_SAMPLE', 1);
 define('MAIL_TYPE_VALID', 2);
 define('MAIL_TYPE_EXCLUSION', 3);
+define('FLATRATE_PRICE', 120000);
 
 const SITE_GROUP_NAMES = array(
 	"借金",
@@ -485,12 +486,177 @@ function get_monthly_flatrate_costs($ad_group_id, $date) {
 				)
 			) as site_group_names
 		FROM
-			cdr.flatrate_cost ft
+			cdr.flatrate_cost_view ft
 		WHERE
 			ft.ad_group_id = $ad_group_id AND
 			ft.dt <= '$date'
 		ORDER BY
 			dt, CAST(site_groups as signed)
+	");
+	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	return $res_arr;
+}
+
+function get_last_datetime_of_month($ym) {
+	return date('Y-m-d 23:59:59', strtotime('last day of '. $ym));
+}
+
+function get_payment_methods($ad_group_id, $date) {
+	global $pdo_request;
+	$stmt = $pdo_request->query("
+		SELECT
+			ogpm.ad_group_id,
+			ogpm.site_group,
+			ogpm.from_date,
+			ogpm.to_date,
+			ogpm.payment_method_id,
+			pm.method,
+			ogpm.charge_seconds,
+			ogpm.unit_price
+		FROM
+			cdr.payment_method pm,
+			cdr.office_group_payment_method ogpm
+		WHERE
+			pm.id = ogpm.payment_method_id AND
+			ogpm.ad_group_id = $ad_group_id AND
+			'$date' BETWEEN from_date AND to_date;
+	");
+	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	return $res_arr;
+}
+
+function get_flatrate_costs_for_bill($ad_group_id, $date) {
+	global $pdo_request;
+	$stmt = $pdo_request->query("
+		SELECT DISTINCT
+			adg.ID,
+			adg.group_name,
+			ft.site_groups,
+			IF (ft.site_groups <> '',
+				(
+					SELECT
+						GROUP_CONCAT(site_group_name SEPARATOR ',')
+					FROM
+						wordpress.ss_site_group
+					WHERE
+						FIND_IN_SET(site_group, ft.site_groups)
+				),
+				(
+					SELECT
+						GROUP_CONCAT(DISTINCT sg.site_group_name order by sg.site_group SEPARATOR ',')
+					FROM
+						cdr.office_group_payment_method opm,
+						wordpress.ss_site_group sg
+					WHERE
+						opm.ad_group_id = adg.ID AND
+						opm.site_group = sg.site_group AND
+						'$date' BETWEEN opm.from_date AND opm.to_date
+					GROUP BY
+						opm.ad_group_id
+				)
+			) as site_group_names,
+			ft.dt as flatrate_dt,
+			ft.flatrate_count,
+			ft.flatrate_count * ".FLATRATE_PRICE." as flatrate_price
+		FROM
+			wordpress.ss_ad_groups adg,
+			cdr.office_group_payment_method gpm
+		LEFT OUTER JOIN
+			(
+				SELECT
+					c.*
+				FROM
+					(
+						SELECT
+							*
+						FROM
+							cdr.flatrate_cost
+						WHERE
+							dt <= '$date'
+						ORDER BY
+							dt DESC
+					) c
+				GROUP BY
+					c.ad_group_id, c.site_groups
+			) ft
+		ON
+			gpm.ad_group_id = ft.ad_group_id AND
+			(ft.site_groups IS NULL OR ft.site_groups = '' OR FIND_IN_SET(gpm.site_group, ft.site_groups))
+		WHERE
+			adg.ID = $ad_group_id AND
+			adg.ID = gpm.ad_group_id AND
+			gpm.payment_method_id = 4 AND
+			'$date' BETWEEN gpm.from_date AND gpm.to_date
+		ORDER BY
+			CAST(ft.site_groups as SIGNED);
+	");
+	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	return $res_arr;
+}
+
+function get_tofixed_costs_for_bill($ad_group_id, $date) {
+	global $pdo_request;
+	$stmt = $pdo_request->query("
+		SELECT DISTINCT
+			adg.ID,
+			adg.group_name,
+			ft.site_groups,
+			IF (ft.site_groups <> '',
+				(
+					SELECT
+						GROUP_CONCAT(site_group_name SEPARATOR ',')
+					FROM
+						wordpress.ss_site_group
+					WHERE
+						FIND_IN_SET(site_group, ft.site_groups)
+				),
+				(
+					SELECT
+						GROUP_CONCAT(DISTINCT sg.site_group_name order by sg.site_group SEPARATOR ',')
+					FROM
+						cdr.office_group_payment_method opm,
+						wordpress.ss_site_group sg
+					WHERE
+						opm.ad_group_id = adg.ID AND
+						opm.site_group = sg.site_group AND
+						'$date' BETWEEN opm.from_date AND opm.to_date
+					GROUP BY
+						opm.ad_group_id
+				)
+			) as site_group_names,
+			ft.dt as flatrate_dt,
+			ft.flatrate_price
+		FROM
+			wordpress.ss_ad_groups adg,
+			cdr.office_group_payment_method gpm
+		LEFT OUTER JOIN
+			(
+				SELECT
+					c.*
+				FROM
+					(
+						SELECT
+							*
+						FROM
+							cdr.tofixed_cost
+						WHERE
+							dt <= '$date'
+						ORDER BY
+							dt DESC
+					) c
+				GROUP BY
+					c.ad_group_id, c.site_groups
+			) ft
+		ON
+			gpm.ad_group_id = ft.ad_group_id AND
+			(ft.site_groups IS NULL OR ft.site_groups = '' OR FIND_IN_SET(gpm.site_group, ft.site_groups))
+		WHERE
+			adg.ID = $ad_group_id AND
+			adg.ID = gpm.ad_group_id AND
+			gpm.payment_method_id = 3 AND
+			'$date' BETWEEN gpm.from_date AND gpm.to_date
+		ORDER BY
+			CAST(ft.site_groups as SIGNED)
 	");
 	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	return $res_arr;

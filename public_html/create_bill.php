@@ -1032,7 +1032,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$roudou_mail_dt = rtrim($roudou_mail_dt,'・');
 	$roudou_mail_dt = "(".$roudou_mail_dt.")";
 
-	#####請求対象のの取得
+	#####請求対象の取得
 	$stmt3 = $pdo_request->query("
 		SELECT
 			*
@@ -1553,6 +1553,48 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$va_tmp = $va_shakkin.$va_souzoku.$va_koutsujiko.$va_ninibaikyaku.$va_meigihenkou.$va_setsuritsu.$va_keijijiken.$va_rikon.$va_bgatakanen.$va_hibouchuushou.$va_jikouenyou.$va_roudou;
 	$va_tmp = rtrim($va_tmp,'・');
 
+
+	//案件に対する支払い種別の取得
+	$sg_pm_arr = array(
+		'0' => null,
+		'1' => null,
+		'2' => null,
+		'3' => null,
+		'4' => null,
+		'5' => null,
+		'6' => null,
+		'7' => null,
+		'8' => null,
+		'9' => null,
+		'10' => null,
+		'11' => null,
+	);
+	$tofixed_costs = null;
+	$flatrate_costs = null;
+	$lastdt = get_last_datetime_of_month($year."-".$month);
+	foreach($arr_ad_group_id as $row) {
+		$ad_group_id = $row['ad_group_id'];
+		$pm_arr = get_payment_methods($ad_group_id, $lastdt);
+		foreach ($pm_arr as $pm) {
+			if ($sg_pm_arr[$pm['site_group']] == null) {
+				$sg_pm_arr[$pm['site_group']] = $pm['payment_method_id'];
+				if ($tofixed_costs == null && $pm['payment_method_id'] == 3) {
+					//固定費化型
+					$tofixed_costs = get_tofixed_costs_for_bill($ad_group_id, $lastdt);
+
+				}
+				else if ($flatrate_costs == null && $pm['payment_method_id'] == 4) {
+					//定額制
+					$flatrate_costs = get_flatrate_costs_for_bill($ad_group_id, $lastdt);
+				}
+			}
+		}
+	}
+	error_log(var_export($sg_pm_arr, true), 0);
+	error_log(var_export($tofixed_costs, true), 0);
+	error_log(var_export($flatrate_costs, true), 0);
+	
+
 	###################################
 	##ここからがExcelへの記入に関するコード##
 	###################################
@@ -1569,8 +1611,38 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	#行数の定義
 	$i = 19;
 	$reviser->addNumber($sheet_num, $i, 0, "1");
+	#固定費化
+	if ($tofixed_costs != null) {
+		foreach ($tofixed_costs as $costs) {
+			#月
+			$reviser->addNumber($sheet_num, $i, 1, "$month");	
+			#商品名
+			$reviser->addString($sheet_num, $i, 2, "月サイト掲載料金(".$costs['site_group_names'].")");
+			#数量
+			$reviser->addNumber($sheet_num, $i, 4, 1);
+			#単価
+			$reviser->addNumber($sheet_num, $i, 5, $costs['flatrate_price']);
+			$i = $i + 1;
+		}
+	}
+	#定額制
+	if ($flatrate_costs != null) {
+		$reviser->addString($sheet_num, 18, 4, "掲載数");	
+		foreach ($flatrate_costs as $costs) {
+			#月
+			$reviser->addNumber($sheet_num, $i, 1, "$month");	
+			#商品名
+			$reviser->addString($sheet_num, $i, 2, "月サイト掲載料金(".$costs['site_group_names'].")");
+			#数量
+			$reviser->addNumber($sheet_num, $i, 4, $costs['flatrate_count']);
+			#単価
+			$reviser->addNumber($sheet_num, $i, 5, FLATRATE_PRICE);
+			$i = $i + 1;
+		}
+	}
 	#借金問題
-	if ($shakkin_call > 0 || $shakkin_mail > 0) {
+	if ($sg_pm_arr['0'] != null && $sg_pm_arr['0'] != '3' && $sg_pm_arr['0'] != '4' &&
+			($shakkin_call > 0 || $shakkin_mail > 0)) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
@@ -1584,7 +1656,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$i = $i + 1;
 	}
 	#相続
-	if ($souzoku_call > 0 || $souzoku_mail > 0) {
+	if ($sg_pm_arr['1'] != null && $sg_pm_arr['1'] != '3' && $sg_pm_arr['1'] != '4' &&
+			($souzoku_call > 0 || $souzoku_mail > 0)) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
@@ -1598,21 +1671,23 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$i = $i + 1;
 	}
 	#交通事故
-	if ($koutsujiko_call > 0 || $koutsujiko_mail > 0) {
-			#月
-			$reviser->addNumber($sheet_num, $i, 1, "$month");	
-			#商品名
-			$reviser->addString($sheet_num, $i, 2, "月掲載料金(交通事故)");
-			#数量
-			$reviser->addNumber($sheet_num, $i, 4, $koutsujiko_call + $koutsujiko_mail);
-			#単価
-			$reviser->addNumber($sheet_num, $i, 5, $payments['2'][1]);
-			#合計金額
-			$sum = ($koutsujiko_call + $koutsujiko_mail) * $payments['2'][1];
-			$i = $i + 1;
+	if ($sg_pm_arr['2'] != null && $sg_pm_arr['2'] != '3' && $sg_pm_arr['2'] != '4' &&
+			($koutsujiko_call > 0 || $koutsujiko_mail > 0)) {
+		#月
+		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		#商品名
+		$reviser->addString($sheet_num, $i, 2, "月掲載料金(交通事故)");
+		#数量
+		$reviser->addNumber($sheet_num, $i, 4, $koutsujiko_call + $koutsujiko_mail);
+		#単価
+		$reviser->addNumber($sheet_num, $i, 5, $payments['2'][1]);
+		#合計金額
+		$sum = ($koutsujiko_call + $koutsujiko_mail) * $payments['2'][1];
+		$i = $i + 1;
 	}
 	#任意売却
-	if ($ninibaikyaku_call > 0 || $ninibaikyaku_mail > 0) {
+	if ($sg_pm_arr['3'] != null && $sg_pm_arr['3'] != '3' && $sg_pm_arr['3'] != '4' &&
+			($ninibaikyaku_call > 0 || $ninibaikyaku_mail > 0)) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
@@ -1626,7 +1701,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$i = $i + 1;
 	}
 	#名義変更
-	if ($meigihenkou_call > 0 || $meigihenkou_mail > 0) {
+	if ($sg_pm_arr['4'] != null && $sg_pm_arr['4'] != '3' && $sg_pm_arr['4'] != '4' &&
+			($meigihenkou_call > 0 || $meigihenkou_mail > 0)) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
@@ -1640,7 +1716,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$i = $i + 1;
 	}
 	#会社設立
-	if ($setsuritsu_call > 0 || $setsuritsu_mail > 0) {
+	if ($sg_pm_arr['5'] != null && $sg_pm_arr['5'] != '3' && $sg_pm_arr['5'] != '4' &&
+			($setsuritsu_call > 0 || $setsuritsu_mail > 0)) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
@@ -1654,7 +1731,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$i = $i + 1;
 	}
 	#刑事事件
-	if ($keijijiken_call > 0) {
+	if ($sg_pm_arr['6'] != null && $sg_pm_arr['6'] != '3' && $sg_pm_arr['6'] != '4' &&
+			($keijijiken_call > 0)) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
@@ -1668,7 +1746,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$i = $i + 1;
 	}
 	#離婚
-	if ($rikon_call > 0 || $rikon_mail > 0) {
+	if ($sg_pm_arr['7'] != null && $sg_pm_arr['7'] != '3' && $sg_pm_arr['7'] != '4' &&
+			($rikon_call > 0 || $rikon_mail > 0)) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
@@ -1682,7 +1761,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$i = $i + 1;
 	}
 	#Ｂ型肝炎
-	if ($bgatakanen_call > 0 OR $bgatakanen_mail > 0) {
+	if ($sg_pm_arr['8'] != null && $sg_pm_arr['8'] != '3' && $sg_pm_arr['8'] != '4' &&
+			($bgatakanen_call > 0 OR $bgatakanen_mail > 0)) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
@@ -1696,7 +1776,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$i = $i + 1;
 	}
 	#誹謗中傷
-	if ($hibouchuushou_call > 0 OR $hibouchuushou_mail > 0) {
+	if ($sg_pm_arr['9'] != null && $sg_pm_arr['9'] != '3' && $sg_pm_arr['9'] != '4' &&
+			($hibouchuushou_call > 0 OR $hibouchuushou_mail > 0)) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
@@ -1710,7 +1791,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$i = $i + 1;
 	}
 	#時効援用
-	if ($jikouenyou_call > 0 OR $jikouenyou_mail > 0) {
+	if ($sg_pm_arr['10'] != null && $sg_pm_arr['10'] != '3' && $sg_pm_arr['10'] != '4' &&
+			($jikouenyou_call > 0 OR $jikouenyou_mail > 0)) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
@@ -1724,7 +1806,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$i = $i + 1;
 	}
 	#労働問題
-	if ($roudou_call > 0 OR $roudou_mail > 0) {
+	if ($sg_pm_arr['11'] != null && $sg_pm_arr['11'] != '3' && $sg_pm_arr['11'] != '4' &&
+			($roudou_call > 0 OR $roudou_mail > 0)) {
 		#月
 		$reviser->addNumber($sheet_num, $i, 1, "$month");	
 		#商品名
