@@ -181,16 +181,6 @@ foreach ($ym_arr as $ym) {
 
 //スプレッドシート生成
 $spreadsheet = new Spreadsheet();
-$spreadsheet->getProperties()
-	->setTitle('タイトル')
-	->setSubject('サブタイトル')
-	->setCreator('作成者')
-	->setCompany('会社名')
-	->setManager('管理者')
-	->setCategory('分類')
-	->setDescription('コメント')
-	->setKeywords('キーワード');
-
 $sheet = $spreadsheet->getSheet(0);
 
 $start_cell = array(3,4);

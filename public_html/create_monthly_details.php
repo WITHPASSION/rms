@@ -1,4 +1,13 @@
 <?php
+
+require '../vendor/autoload.php';
+
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxWriter;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
 #エラーを画面に表示させない処理
 ini_set("display_errors", "off");
 #データベース接続処理
@@ -34,7 +43,6 @@ foreach($configs as $key => $value) {
 $pdo_request = null;
 $pdo_cdr = null;
 $pdo_wordpress = null;
-$reviser = null;
 
 #cdrへの接続
 $dsn_cdr ="mysql:dbname=$db_cdr;host=$host";
@@ -75,10 +83,8 @@ if(!$stmt) {
 	exit($info[2]);
 }
 
-#reviser呼び出し
-require_once('reviser_lite.php');
-$reviser = NEW Excel_Reviser;
-$reviser->setInternalCharset('utf-8');	
+#シート準備
+$spreadsheet = IOFactory::load('./monthly_details_template.xlsx');
 
 #フォームからの事務所IDの受け取り
 $id = $_POST['change'];
@@ -93,10 +99,10 @@ create_monthly_details($year,$month,$year_month);
 
 #月次詳細情報の出力
 function create_monthly_details($year, $month, $year_month) {
-	global $pdo_cdr,$pdo_request,$pdo_wordpress,$reviser;
+	global $pdo_cdr,$pdo_request,$pdo_wordpress,$spreadsheet;
 	$count_mail = null;
 	#出力時の行を定義
-	$i = 4;
+	$i = 5;
 	$stmt = $pdo_request->query("
 		SELECT
 			bill_payer_id,
@@ -113,25 +119,26 @@ function create_monthly_details($year, $month, $year_month) {
 			ss_site_group
 	");
 	$arr_site_group_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+	$sheet = $spreadsheet->getSheet(0);
 	foreach ($arr_bill_payers as $row) {
 		$bill_payer_id = $row['bill_payer_id'];
 		$bill_payer_name = $row['bill_payer_name'];
-		$reviser->addString(0, $i, 0, $bill_payer_id.$bill_payer_name);
+		$sheet->setCellValueByColumnAndRow(1, $i, $bill_payer_id.$bill_payer_name);
 		$i++;
-		$reviser->addString(0, $i, 0, "事務所ID");
-		$reviser->addString(0, $i, 1, "事務所名");
-		$reviser->addString(0, $i, 3, "サイト種別");
-		$reviser->addString(0, $i, 4, "電話番号");
-		$reviser->addString(0, $i, 5, "転送先番号");
-		$reviser->addString(0, $i, 6, "通話開始日");
-		$reviser->addString(0, $i, 7, "通話終了日");
-		$reviser->addString(0, $i, 8, "通話秒数");
-		$reviser->addString(0, $i, 9, "発信元番号");
-		$reviser->addString(0, $i, 10, "通話状態");
-		$reviser->addString(0, $i, 11, "有効無効(60秒)");
-		$reviser->addString(0, $i, 12, "有効秒数");
-		$reviser->addString(0, $i, 13, "有効無効");
-		$reviser->addString(0, $i, 14, "除外理由");
+		$sheet->setCellValueByColumnAndRow(1, $i, "事務所ID");
+		$sheet->setCellValueByColumnAndRow(2, $i, "事務所名");
+		$sheet->setCellValueByColumnAndRow(4, $i, "サイト種別");
+		$sheet->setCellValueByColumnAndRow(5, $i, "電話番号");
+		$sheet->setCellValueByColumnAndRow(6, $i, "転送先番号");
+		$sheet->setCellValueByColumnAndRow(7, $i, "通話開始日");
+		$sheet->setCellValueByColumnAndRow(8, $i, "通話終了日");
+		$sheet->setCellValueByColumnAndRow(9, $i, "通話秒数");
+		$sheet->setCellValueByColumnAndRow(10, $i, "発信元番号");
+		$sheet->setCellValueByColumnAndRow(11, $i, "通話状態");
+		$sheet->setCellValueByColumnAndRow(12, $i, "有効無効(60秒)");
+		$sheet->setCellValueByColumnAndRow(13, $i, "有効秒数");
+		$sheet->setCellValueByColumnAndRow(14, $i, "有効無効");
+		$sheet->setCellValueByColumnAndRow(15, $i, "除外理由");
 		$i++;
 		$stmt = $pdo_request->query("
 			SELECT
@@ -313,20 +320,20 @@ function create_monthly_details($year, $month, $year_month) {
 						$count_invalid_call_for_billing++;
 					}
 
-					$reviser->addString(0, $i, 0, $ad_id);
-					$reviser->addString(0, $i, 1, $ad_name);
-					$reviser->addString(0, $i, 3, $media_name);
-					$reviser->addString(0, $i, 4, $tel_to);
-					$reviser->addString(0, $i, 5, $tel_send);
-					$reviser->addString(0, $i, 6, $date_from);
-					$reviser->addString(0, $i, 7, $date_to);
-					$reviser->addNumber(0, $i, 8, $call_minutes);
-					$reviser->addString(0, $i, 9, $tel_from);
-					$reviser->addString(0, $i, 10, $call_status);
-					$reviser->addString(0, $i, 11, $check_call_dpl);
-					$reviser->addString(0, $i, 12, $charge_seconds);
-					$reviser->addString(0, $i, 13, $check_call_dpl_for_billing);
-					$reviser->addString(0, $i, 14, $exclusion_reason);
+					$sheet->setCellValueByColumnAndRow(1, $i, $ad_id);
+					$sheet->setCellValueByColumnAndRow(2, $i, $ad_name);
+					$sheet->setCellValueByColumnAndRow(4, $i, $media_name);
+					$sheet->setCellValueByColumnAndRow(5, $i, $tel_to);
+					$sheet->setCellValueByColumnAndRow(6, $i, $tel_send);
+					$sheet->setCellValueByColumnAndRow(7, $i, $date_from);
+					$sheet->setCellValueByColumnAndRow(8, $i, $date_to);
+					$sheet->setCellValueByColumnAndRow(9, $i, $call_minutes);
+					$sheet->setCellValueByColumnAndRow(10, $i, $tel_from);
+					$sheet->setCellValueByColumnAndRow(11, $i, $call_status);
+					$sheet->setCellValueByColumnAndRow(12, $i, $check_call_dpl);
+					$sheet->setCellValueByColumnAndRow(13, $i, $charge_seconds);
+					$sheet->setCellValueByColumnAndRow(14, $i, $check_call_dpl_for_billing);
+					$sheet->setCellValueByColumnAndRow(15, $i, $exclusion_reason);
 					$i++;
 				}
 				#end_of_arr_detail_call_data
@@ -337,31 +344,32 @@ function create_monthly_details($year, $month, $year_month) {
 		$i++;
 	}
 	#全体コール数
-	$reviser->addString(0, 0, 0, "全体コール数");
-	$reviser->addString(0, 0, 1, $count_all_call);
+	$sheet->setCellValueByColumnAndRow(1, 1, "全体コール数");
+	$sheet->setCellValueByColumnAndRow(2, 1, $count_all_call);
 	#有効コール数
-	$reviser->addString(0, 1, 0, "有効コール数(60秒)");
-	$reviser->addString(0, 1, 1, $count_valid_call);
-	$reviser->addString(0, 1, 2, "有効コール数");
-	$reviser->addString(0, 1, 3, $count_valid_call_for_billing);
+	$sheet->setCellValueByColumnAndRow(1, 2, "有効コール数(60秒)");
+	$sheet->setCellValueByColumnAndRow(2, 2, $count_valid_call);
+	$sheet->setCellValueByColumnAndRow(3, 2, "有効コール数");
+	$sheet->setCellValueByColumnAndRow(4, 2, $count_valid_call_for_billing);
 	#無効コール数
-	$reviser->addString(0, 2, 0, "無効コール数(60秒)");
-	$reviser->addString(0, 2, 1, $count_invalid_call);
-	$reviser->addString(0, 2, 2, "無効コール数");
-	$reviser->addString(0, 2, 3, $count_invalid_call_for_billing);
+	$sheet->setCellValueByColumnAndRow(1, 3, "無効コール数(60秒)");
+	$sheet->setCellValueByColumnAndRow(2, 3, $count_invalid_call);
+	$sheet->setCellValueByColumnAndRow(3, 3, "無効コール数");
+	$sheet->setCellValueByColumnAndRow(4, 3, $count_invalid_call_for_billing);
 
 
 	##メール詳細情報の取得
 
 	#出力時の行を定義
-	$i = 4;
-	$reviser->addString(1, $i, 0, "事務所ID");
-	$reviser->addString(1, $i, 1, "事務所名");
-	$reviser->addString(1, $i, 2, "サイト名");
-	$reviser->addString(1, $i, 3, "配信日時");
-	$reviser->addString(1, $i, 4, "電話番号");
-	$reviser->addString(1, $i, 5, "有効無効");
-	$reviser->addString(1, $i, 6, "除外理由");
+	$sheet = $spreadsheet->getSheet(1);
+	$i = 5;
+	$sheet->setCellValueByColumnAndRow(1, $i, "事務所ID");
+	$sheet->setCellValueByColumnAndRow(2, $i, "事務所名");
+	$sheet->setCellValueByColumnAndRow(3, $i, "サイト名");
+	$sheet->setCellValueByColumnAndRow(4, $i, "配信日時");
+	$sheet->setCellValueByColumnAndRow(5, $i, "電話番号");
+	$sheet->setCellValueByColumnAndRow(6, $i, "有効無効");
+	$sheet->setCellValueByColumnAndRow(7, $i, "除外理由");
 	$i++;
 
 	$stmt = $pdo_cdr->query("
@@ -446,28 +454,37 @@ function create_monthly_details($year, $month, $year_month) {
 		$mail_date = $row['4'];
 		$check_mail_dpl = $row['5'];
 		$exclusion_reason = $row['6'];
-		$reviser->addString(1, $i, 0, $ad_id);
-		$reviser->addString(1, $i, 1, $office_name);
-		$reviser->addString(1, $i, 2, $st_name);
-		$reviser->addString(1, $i, 3, $mail_date);
-		$reviser->addString(1, $i, 4, $sender_tel);
-		$reviser->addString(1, $i, 5, $check_mail_dpl);
-		$reviser->addString(1, $i, 6, $exclusion_reason);
+		$sheet->setCellValueByColumnAndRow(1, $i, $ad_id);
+		$sheet->setCellValueByColumnAndRow(2, $i, $office_name);
+		$sheet->setCellValueByColumnAndRow(3, $i, $st_name);
+		$sheet->setCellValueByColumnAndRow(4, $i, $mail_date);
+		$sheet->setCellValueByColumnAndRow(5, $i, $sender_tel);
+		$sheet->setCellValueByColumnAndRow(6, $i, $check_mail_dpl);
+		$sheet->setCellValueByColumnAndRow(7, $i, $exclusion_reason);
 		$i++;
 	}
 	#全体メール数
-	$reviser->addString(1, 0, 0, "全体メール数");
-	$reviser->addString(1, 0, 1, $count_all_mail);
+	$sheet->setCellValueByColumnAndRow(1, 1, "全体メール数");
+	$sheet->setCellValueByColumnAndRow(2, 1, $count_all_mail);
 	#有効メール数
-	$reviser->addString(1, 1, 0, "有効メール数");
-	$reviser->addString(1, 1, 1, $count_valid_mail);
+	$sheet->setCellValueByColumnAndRow(1, 2, "有効メール数");
+	$sheet->setCellValueByColumnAndRow(2, 2, $count_valid_mail);
 	#無効メール数
-	$reviser->addString(1, 2, 0, "無効メール数");
-	$reviser->addString(1, 2, 1, $count_invalid_mail);
+	$sheet->setCellValueByColumnAndRow(1, 3, "無効メール数");
+	$sheet->setCellValueByColumnAndRow(2, 3, $count_invalid_mail);
 
-	$readfile = "./monthly_details_template.xls";
-	$outfile = $year."年".$month."月詳細情報.xls";
-	$reviser->revisefile($readfile, $outfile);
+	$outfile = $year."年".$month."月詳細情報.xlsx";
+	//ダウンロード用
+	//MIMEタイプ：https://technet.microsoft.com/ja-jp/ee309278.aspx
+	header("Content-Description: File Transfer");
+	header('Content-Disposition: attachment; filename="'. $outfile . '"');
+	header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+	header('Content-Transfer-Encoding: binary');
+	header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+	header('Expires: 0');
+	ob_end_clean(); //バッファ消去
+	
+	$writer = new XlsxWriter($spreadsheet);
+	$writer->save('php://output');
 }
 #end_of_function/create_monthly_details
-?>

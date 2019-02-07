@@ -1,11 +1,18 @@
 <?php
+
+require '../vendor/autoload.php';
+
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxWriter;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+
 #共通関数のインクルード
 include 'common_functions.php';
 
 #エラーを画面に表示させない処理
 ini_set("display_errors", "off");
-#reviser呼び出し
-require_once('reviser_lite.php');
 #データベース接続処理
 #db接続データの参照
 $path = parse_ini_file("../rms.cnf");		
@@ -115,9 +122,11 @@ if (!empty($bill_payer_id)) {
 	#20170323 有効電話・メール０件でも請求書ダウンロード出来るようにした
 	$call_check = check_valid_call($bill_payer_id,$year,$month);
 	$mail_check = check_valid_mail($bill_payer_id,$year,$month);
-	$reviser = NEW Excel_Reviser;
-	$reviser->setInternalCharset('utf-8');	
-	get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month);
+
+	#シート準備
+	$spreadsheet = IOFactory::load('./template.xlsx');
+	get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_month);
+
 }
 else if (!empty($pack) && $pack == "true") {
 	$ids = get_billing_ids($year, $month);
@@ -132,9 +141,8 @@ else if (!empty($pack) && $pack == "true") {
 		die("Failed to create dirs.");
 	};
 	foreach ($ids as $id) {
-		$reviser = NEW Excel_Reviser;
-		$reviser->setInternalCharset('utf-8');	
-		get_each_ad_data($reviser, $id, $year, $month, $year_month, $path);
+		$spreadsheet = IOFactory::load('./template.xlsx');
+		get_each_ad_data($spreadsheet, $id, $year, $month, $year_month, $path);
 	}
 	try {
 		all_zip("../tmp/$year_month", "../tmp/$year_month.zip");
@@ -389,7 +397,7 @@ function check_valid_mail($bill_payer_id,$year,$month){
 }
 //end_of_function
 
-function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, $filepath = null) {
+function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_month, $filepath = null) {
 	#####有効コール請求内容データの取得
 	global $pdo_request,$pdo_cdr,$pdo_wordpress;
 	#無効も含めた全てのコール数
@@ -536,8 +544,6 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	$arr_jikouenyou_mail_dt = array();
 	$arr_roudou_mail_dt = array();
 
-
-	$sheet_num =0;
 	$calls = array(
 		'0' => 0,
 		'1' => 0,
@@ -1590,53 +1596,50 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 			}
 		}
 	}
-	error_log(var_export($sg_pm_arr, true), 0);
-	error_log(var_export($tofixed_costs, true), 0);
-	error_log(var_export($flatrate_costs, true), 0);
-	
 
 	###################################
 	##ここからがExcelへの記入に関するコード##
 	###################################
+	$sheet = $spreadsheet->getSheet(0);
 	#monthを表示用数字に変更
 	$month = sprintf('%01d', $month);
 	#郵便番号
-	$reviser->addString($sheet_num, 1, 2, "〒".$bill_payer_data['postal_code']);
+	$sheet->setCellValueByColumnAndRow(3, 2, "〒".$bill_payer_data['postal_code']);
 	#住所
-	$reviser->addString($sheet_num, 2, 2, $bill_payer_data['address_1']);
-	$reviser->addString($sheet_num, 3, 2, " ".$bill_payer_data['address_2']);
+	$sheet->setCellValueByColumnAndRow(3, 3, $bill_payer_data['address_1']);
+	$sheet->setCellValueByColumnAndRow(3, 4, " ".$bill_payer_data['address_2']);
 	#貴社名/御氏名
-	$reviser->addString($sheet_num, 5, 2, $bill_payer_data['bill_payer_name']);
-	$reviser->addString($sheet_num, 6, 2, $c_name."　様");
+	$sheet->setCellValueByColumnAndRow(3, 6, $bill_payer_data['bill_payer_name']);
+	$sheet->setCellValueByColumnAndRow(3, 7, $c_name."　様");
 	#行数の定義
-	$i = 19;
-	$reviser->addNumber($sheet_num, $i, 0, "1");
+	$i = 20;
+	$sheet->setCellValueByColumnAndRow(1, $i, "1");
 	#固定費化
 	if ($tofixed_costs != null) {
 		foreach ($tofixed_costs as $costs) {
 			#月
-			$reviser->addNumber($sheet_num, $i, 1, "$month");	
+			$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 			#商品名
-			$reviser->addString($sheet_num, $i, 2, "月サイト掲載料金(".$costs['site_group_names'].")");
+			$sheet->setCellValueByColumnAndRow(3, $i, "月サイト掲載料金(".$costs['site_group_names'].")");
 			#数量
-			$reviser->addNumber($sheet_num, $i, 4, 1);
+			$sheet->setCellValueByColumnAndRow(5, $i, 1);
 			#単価
-			$reviser->addNumber($sheet_num, $i, 5, $costs['flatrate_price']);
+			$sheet->setCellValueByColumnAndRow(6, $i, $costs['flatrate_price']);
 			$i = $i + 1;
 		}
 	}
 	#定額制
 	if ($flatrate_costs != null) {
-		$reviser->addString($sheet_num, 18, 4, "掲載数");	
+		$sheet->setCellValueByColumnAndRow(5, 19, "掲載数");	
 		foreach ($flatrate_costs as $costs) {
 			#月
-			$reviser->addNumber($sheet_num, $i, 1, "$month");	
+			$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 			#商品名
-			$reviser->addString($sheet_num, $i, 2, "月サイト掲載料金(".$costs['site_group_names'].")");
+			$sheet->setCellValueByColumnAndRow(3, $i, "月サイト掲載料金(".$costs['site_group_names'].")");
 			#数量
-			$reviser->addNumber($sheet_num, $i, 4, $costs['flatrate_count']);
+			$sheet->setCellValueByColumnAndRow(5, $i, $costs['flatrate_count']);
 			#単価
-			$reviser->addNumber($sheet_num, $i, 5, FLATRATE_PRICE);
+			$sheet->setCellValueByColumnAndRow(6, $i, FLATRATE_PRICE);
 			$i = $i + 1;
 		}
 	}
@@ -1644,13 +1647,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($sg_pm_arr['0'] != null && $sg_pm_arr['0'] != '3' && $sg_pm_arr['0'] != '4' &&
 			($shakkin_call > 0 || $shakkin_mail > 0)) {
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月掲載料金(借金問題)");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(借金問題)");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $shakkin_call + $shakkin_mail);
+		$sheet->setCellValueByColumnAndRow(5, $i, $shakkin_call + $shakkin_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, $payments['0'][1]);
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['0'][1]);
 		#合計金額
 		$sum = ($shakkin_call + $shakkin_mail) * $payments['0'][1];
 		$i = $i + 1;
@@ -1659,13 +1662,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($sg_pm_arr['1'] != null && $sg_pm_arr['1'] != '3' && $sg_pm_arr['1'] != '4' &&
 			($souzoku_call > 0 || $souzoku_mail > 0)) {
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月掲載料金(相続)");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(相続)");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $souzoku_call + $souzoku_mail);
+		$sheet->setCellValueByColumnAndRow(5, $i, $souzoku_call + $souzoku_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, $payments['1'][1]);
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['1'][1]);
 		#合計金額
 		$sum = ($souzoku_call + $souzoku_mail) * $payments['1'][1];
 		$i = $i + 1;
@@ -1674,13 +1677,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($sg_pm_arr['2'] != null && $sg_pm_arr['2'] != '3' && $sg_pm_arr['2'] != '4' &&
 			($koutsujiko_call > 0 || $koutsujiko_mail > 0)) {
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月掲載料金(交通事故)");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(交通事故)");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $koutsujiko_call + $koutsujiko_mail);
+		$sheet->setCellValueByColumnAndRow(5, $i, $koutsujiko_call + $koutsujiko_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, $payments['2'][1]);
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['2'][1]);
 		#合計金額
 		$sum = ($koutsujiko_call + $koutsujiko_mail) * $payments['2'][1];
 		$i = $i + 1;
@@ -1689,13 +1692,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($sg_pm_arr['3'] != null && $sg_pm_arr['3'] != '3' && $sg_pm_arr['3'] != '4' &&
 			($ninibaikyaku_call > 0 || $ninibaikyaku_mail > 0)) {
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月掲載料金(任意売却)");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(任意売却)");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $ninibaikyaku_call+$ninibaikyaku_mail);
+		$sheet->setCellValueByColumnAndRow(5, $i, $ninibaikyaku_call+$ninibaikyaku_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, $payments['3'][1]);
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['3'][1]);
 		#合計金額
 		$sum =($setsuritsu_call + $setsuritsu_mail) * $payments['3'][1];
 		$i = $i + 1;
@@ -1704,13 +1707,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($sg_pm_arr['4'] != null && $sg_pm_arr['4'] != '3' && $sg_pm_arr['4'] != '4' &&
 			($meigihenkou_call > 0 || $meigihenkou_mail > 0)) {
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月掲載料金(名義変更)");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(名義変更)");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $meigihenkou_call + $meigihenkou_mail);
+		$sheet->setCellValueByColumnAndRow(5, $i, $meigihenkou_call + $meigihenkou_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, $payments['4'][1]);
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['4'][1]);
 		#合計金額
 		$sum = ($meigihenkou_call + $meigihenkou_mail) * $payments['4'][1];
 		$i = $i + 1;
@@ -1719,13 +1722,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($sg_pm_arr['5'] != null && $sg_pm_arr['5'] != '3' && $sg_pm_arr['5'] != '4' &&
 			($setsuritsu_call > 0 || $setsuritsu_mail > 0)) {
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月掲載料金(会社設立)");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(会社設立)");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $setsuritsu_call+$setsuritsu_mail);
+		$sheet->setCellValueByColumnAndRow(5, $i, $setsuritsu_call+$setsuritsu_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, $payments['5'][1]);
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['5'][1]);
 		#合計金額
 		$sum =($setsuritsu_call + $setsuritsu_mail) * $payments['5'][1];
 		$i = $i + 1;
@@ -1734,13 +1737,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($sg_pm_arr['6'] != null && $sg_pm_arr['6'] != '3' && $sg_pm_arr['6'] != '4' &&
 			($keijijiken_call > 0)) {
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月掲載料金(刑事事件)");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(刑事事件)");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $keijijiken_call);
+		$sheet->setCellValueByColumnAndRow(5, $i, $keijijiken_call);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, $payments['6'][1]);
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['6'][1]);
 		#合計金額
 		$sum = ($keijijiken_call) * $payments['6'][1];
 		$i = $i + 1;
@@ -1749,13 +1752,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($sg_pm_arr['7'] != null && $sg_pm_arr['7'] != '3' && $sg_pm_arr['7'] != '4' &&
 			($rikon_call > 0 || $rikon_mail > 0)) {
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月掲載料金(離婚問題)");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(離婚問題)");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $rikon_call+$rikon_mail);
+		$sheet->setCellValueByColumnAndRow(5, $i, $rikon_call+$rikon_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, $payments['7'][1]);
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['7'][1]);
 		#合計金額
 		$sum =($rikon_call + $rikon_mail) * $payments['7'][1];
 		$i = $i + 1;
@@ -1764,13 +1767,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($sg_pm_arr['8'] != null && $sg_pm_arr['8'] != '3' && $sg_pm_arr['8'] != '4' &&
 			($bgatakanen_call > 0 OR $bgatakanen_mail > 0)) {
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow($i, 1, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月掲載料金(Ｂ型肝炎)");
+		$sheet->setCellValueByColumnAndRow($i, 2, "月掲載料金(Ｂ型肝炎)");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $bgatakanen_call+$bgatakanen_mail);
+		$sheet->setCellValueByColumnAndRow($i, 4, $bgatakanen_call+$bgatakanen_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, $payments['8'][1]);
+		$sheet->setCellValueByColumnAndRow($i, 5, $payments['8'][1]);
 		#合計金額
 		$sum =($bgatakanen_call + $bgatakanen_mail) * $payments['8'][1];
 		$i = $i + 1;
@@ -1779,13 +1782,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($sg_pm_arr['9'] != null && $sg_pm_arr['9'] != '3' && $sg_pm_arr['9'] != '4' &&
 			($hibouchuushou_call > 0 OR $hibouchuushou_mail > 0)) {
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月掲載料金(誹謗中傷)");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(誹謗中傷)");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $hibouchuushou_call+$hibouchuushou_mail);
+		$sheet->setCellValueByColumnAndRow(5, $i, $hibouchuushou_call+$hibouchuushou_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, $payments['9'][1]);
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['9'][1]);
 		#合計金額
 		$sum =($hibouchuushou_call + $hibouchuushou_mail) * $payments['9'][1];
 		$i = $i + 1;
@@ -1794,13 +1797,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($sg_pm_arr['10'] != null && $sg_pm_arr['10'] != '3' && $sg_pm_arr['10'] != '4' &&
 			($jikouenyou_call > 0 OR $jikouenyou_mail > 0)) {
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月掲載料金(時効援用)");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(時効援用)");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $jikouenyou_call+$jikouenyou_mail);
+		$sheet->setCellValueByColumnAndRow(5, $i, $jikouenyou_call+$jikouenyou_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, $payments['10'][1]);
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['10'][1]);
 		#合計金額
 		$sum =($jikouenyou_call + $jikouenyou_mail) * $payments['10'][1];
 		$i = $i + 1;
@@ -1809,13 +1812,13 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if ($sg_pm_arr['11'] != null && $sg_pm_arr['11'] != '3' && $sg_pm_arr['11'] != '4' &&
 			($roudou_call > 0 OR $roudou_mail > 0)) {
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
-		$reviser->addString($sheet_num, $i, 2, "月掲載料金(労働問題)");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(労働問題)");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $roudou_call+$roudou_mail);
+		$sheet->setCellValueByColumnAndRow(5, $i, $roudou_call+$roudou_mail);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, $payments['11'][1]);
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['11'][1]);
 		#合計金額
 		$sum =($roudou_call + $roudou_mail) * $payments['11'][1];
 		$i = $i + 1;
@@ -1893,25 +1896,25 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	}
 
 	$i = $i + 1;
-	$reviser->addNumber($sheet_num, $i, 0, "2");
+	$sheet->setCellValueByColumnAndRow(1, $i, "2");
 	#月
-	$reviser->addNumber($sheet_num, $i, 1, "$month");	
+	$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 	#フリーダイヤル料金記入
-	$reviser->addString($sheet_num, $i, 2, "月フリーダイヤル通話料金");
+	$sheet->setCellValueByColumnAndRow(3, $i, "月フリーダイヤル通話料金");
 	#単価
-	$reviser->addNumber($sheet_num, $i, 5, $call_charge);
+	$sheet->setCellValueByColumnAndRow(6, $i, $call_charge);
 	#合計金額
-	$reviser->addNumber($sheet_num, $i, 6, $call_charge);
+	$sheet->setCellValueByColumnAndRow(7, $i, $call_charge);
 	if ($count_freedial != null) {
 		$i = $i + 1;
 		#月
-		$reviser->addNumber($sheet_num, $i, 1, "$month");
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");
 		#発番費用
-		$reviser->addString($sheet_num, $i, 2, "月フリーダイヤル費用");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月フリーダイヤル費用");
 		#数量
-		$reviser->addNumber($sheet_num, $i, 4, $count_freedial);
+		$sheet->setCellValueByColumnAndRow(5, $i, $count_freedial);
 		#単価
-		$reviser->addNumber($sheet_num, $i, 5, 1000);//変更可能である可能性あり
+		$sheet->setCellValueByColumnAndRow(6, $i, 1000);//変更可能である可能性あり
 		#合計金額
 		$sum = ($count_freedial) * 1000;
 		$i = $i + 1;
@@ -1925,8 +1928,8 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	if(!empty($recipient_name)){
 		$c_name = $recipient_name;
 	}
-	$sheet_num =1;
-	$reviser->addString($sheet_num, 0, 0, "
+	$sheet = $spreadsheet->getSheet(1);
+	$sheet->setCellValueByColumnAndRow(1, 1, "
 【専門家検索ドットコム】請求書（".$year."年".$month."月分）
 
 ".$c_name."様
@@ -1947,7 +1950,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 	// 事務所グループ毎にシートを作る
 	// 請求先全体シート
 	get_all_billing_contents(
-		$reviser,
+		$spreadsheet,
 		2,
 		$arr_ad_group_id,
 		$year,
@@ -1955,7 +1958,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$year_month
 	);
 	get_each_ad_details_data(
-		$reviser,
+		$spreadsheet,
 		3,
 		$arr_ad_group_id,
 		$year,
@@ -1969,7 +1972,7 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 		$arr = array();
 		array_push($arr, $row);
 		get_each_ad_details_data(
-			$reviser,
+			$spreadsheet,
 			$sn,
 			$arr,
 			$year,
@@ -1982,20 +1985,29 @@ function get_each_ad_data($reviser, $bill_payer_id, $year, $month, $year_month, 
 
 	#事務所毎でのsheetの名前
 	$xls_name = "請求書（".$bill_payer_name.$year."年".$month."月分）";
-	#テンプレを読み込み、出力する
-	$readfile = "./template.xls";	
-	$outfile = $xls_name.".xls";
+	$outfile = $xls_name.".xlsx";
+	$writer = new XlsxWriter($spreadsheet);
 	if ($filepath != null) {
-		$reviser->revisefile($readfile, $outfile, $filepath);
+		$outfile = $filepath."/".$outfile;
+		$writer->save($outfile);
 	}
 	else {
-		$reviser->revisefile($readfile, $outfile);
+		//ダウンロード用
+		//MIMEタイプ：https://technet.microsoft.com/ja-jp/ee309278.aspx
+		header("Content-Description: File Transfer");
+		header('Content-Disposition: attachment; filename="'. $outfile. '"');
+		header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+		header('Content-Transfer-Encoding: binary');
+		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+		header('Expires: 0');
+		ob_end_clean(); //バッファ消去
+		$writer->save('php://output');
 	}
 }
 #end_of_function/get_each_ad_data
 
 function get_all_billing_contents(
-	$reviser,
+	$spreadsheet,
 	$sheet_num,
 	$arr_ad_group_id,
 	$year,
@@ -2006,19 +2018,20 @@ function get_all_billing_contents(
 	########################
 	###CRMシートに載せる内容###
 	########################
-	$reviser->addString($sheet_num, 0, 0, $year."年".$month."月");
+	$sheet = $spreadsheet->getSheet($sheet_num);
+	$sheet->setCellValueByColumnAndRow(1, 1, $year."年".$month."月");
 	#電話件数の出力
-	$reviser->addString($sheet_num, 0, 2, "電話件数");
+	$sheet->setCellValueByColumnAndRow(3, 1, "電話件数");
 	#メール件数の出力
-	$reviser->addString($sheet_num, 0, 3, "メール件数");
+	$sheet->setCellValueByColumnAndRow(4, 1, "メール件数");
 	#数量の出力
-	$reviser->addString($sheet_num, 0, 4, "数量");
+	$sheet->setCellValueByColumnAndRow(5, 1, "数量");
 	#単価の出力
-	$reviser->addString($sheet_num, 0, 5, "単価(税抜き)");
+	$sheet->setCellValueByColumnAndRow(6, 1, "単価(税抜き)");
 	#合計金額の出力
-	$reviser->addString($sheet_num, 0, 6, "合計金額");
+	$sheet->setCellValueByColumnAndRow(7, 1, "合計金額");
 	#行数を変数に指定
-	$i = 1;
+	$i = 2;
 
 	//通話料の取得
 	foreach ($arr_ad_group_id as $row) {
@@ -2142,57 +2155,57 @@ function get_all_billing_contents(
 		}
 
 		//シートに記述
-		$reviser->addString($sheet_num, $i, 0, $row['group_name']);
+		$sheet->setCellValueByColumnAndRow(1, $i, $row['group_name']);
 		foreach ($adg_counts as $cnt) {
 			if ($cnt['payment_method_id'] == 0) {
 				$tel_count = intval($cnt['tel_count']);
 				$mail_count = intval($cnt['mail_count']);
 				$total_count = $tel_count + $mail_count;
 				$unit_price = intval($cnt['unit_price']);
-				$reviser->addString($sheet_num, $i, 1, $cnt['site_group_name']);
-				$reviser->addNumber($sheet_num, $i, 2, $tel_count);
-				$reviser->addNumber($sheet_num, $i, 3, $mail_count);
-				$reviser->addNumber($sheet_num, $i, 4, $total_count);
-				$reviser->addNumber($sheet_num, $i, 5, $unit_price);
-				$reviser->addNumber($sheet_num, $i, 6, $total_count * $unit_price);
+				$sheet->setCellValueByColumnAndRow(2, $i, $cnt['site_group_name']);
+				$sheet->setCellValueByColumnAndRow(3, $i, $tel_count);
+				$sheet->setCellValueByColumnAndRow(4, $i, $mail_count);
+				$sheet->setCellValueByColumnAndRow(5, $i, $total_count);
+				$sheet->setCellValueByColumnAndRow(6, $i, $unit_price);
+				$sheet->setCellValueByColumnAndRow(7, $i, $total_count * $unit_price);
 			}
 			else {
-				$reviser->addString($sheet_num, $i, 1, $cnt['site_group_name']);
-				$reviser->addString($sheet_num, $i, 2, "");
-				$reviser->addString($sheet_num, $i, 3, "");
-				$reviser->addString($sheet_num, $i, 4, "");
-				$reviser->addString($sheet_num, $i, 5, "");
-				$reviser->addNumber($sheet_num, $i, 6, 0);
+				$sheet->setCellValueByColumnAndRow(2, $i, $cnt['site_group_name']);
+				$sheet->setCellValueByColumnAndRow(3, $i, "");
+				$sheet->setCellValueByColumnAndRow(4, $i, "");
+				$sheet->setCellValueByColumnAndRow(5, $i, "");
+				$sheet->setCellValueByColumnAndRow(6, $i, "");
+				$sheet->setCellValueByColumnAndRow(7, $i, 0);
 			}
 			$i++;
 		}
 		if (intval($free_dial_count) > 0) {
-			$reviser->addString($sheet_num, $i, 1, "フリーダイヤル発番料");
-			$reviser->addNumber($sheet_num, $i, 4, intval($free_dial_count));
-			$reviser->addNumber($sheet_num, $i, 5, 1000);
-			$reviser->addNumber($sheet_num, $i, 6, intval($free_dial_count) * 1000);
+			$sheet->setCellValueByColumnAndRow(2, $i, "フリーダイヤル発番料");
+			$sheet->setCellValueByColumnAndRow(5, $i, intval($free_dial_count));
+			$sheet->setCellValueByColumnAndRow(6, $i, 1000);
+			$sheet->setCellValueByColumnAndRow(7, $i, intval($free_dial_count) * 1000);
 			$i++;
 		}
-		$reviser->addString($sheet_num, $i, 1, "フリーダイヤル通話料");
-		$reviser->addNumber($sheet_num, $i, 6, intval($call_charge));
+		$sheet->setCellValueByColumnAndRow(2, $i, "フリーダイヤル通話料");
+		$sheet->setCellValueByColumnAndRow(7, $i, intval($call_charge));
 		$i+=2;
 	}
-	$reviser->addString($sheet_num, $i, 5, "税抜き計");
-	$reviser->addString($sheet_num, $i, 6, "=SUM(G2:G".($i-1).")");
+	$sheet->setCellValueByColumnAndRow(6, $i, "税抜き計");
+	$sheet->setCellValueByColumnAndRow(7, $i, "=SUM(G2:G".($i-2).")");
 	$i++;
-	$reviser->addString($sheet_num, $i, 5, "消費税");
-	$reviser->addString($sheet_num, $i, 6, "=ROUNDDOWN(G".$i."*0.08,0)");
+	$sheet->setCellValueByColumnAndRow(6, $i, "消費税");
+	$sheet->setCellValueByColumnAndRow(7, $i, "=ROUNDDOWN(G".($i-1)."*0.08,0)");
 	$i++;
-	$reviser->addString($sheet_num, $i, 5, "合計額 ");
-	$reviser->addString($sheet_num, $i, 6, "=G".($i-1)."+G".$i);
+	$sheet->setCellValueByColumnAndRow(6, $i, "合計額 ");
+	$sheet->setCellValueByColumnAndRow(7, $i, "=G".($i-2)."+G".($i-1));
 	$i++;
 
-	$reviser->setSheetname($sheet_num, "請求金額内訳");
+	$sheet->setTitle("請求金額内訳");
 
 }
 
 function get_each_ad_details_data(
-	$reviser,
+	$spreadsheet,
 	$sheet_num,
 	$arr_ad_group_id,
 	$year,
@@ -2204,19 +2217,20 @@ function get_each_ad_details_data(
 	########################
 	###CRMシートに載せる内容###
 	########################
-	$reviser->addString($sheet_num, 0, 0, $month."月");
+	$sheet = $spreadsheet->getSheet($sheet_num);
+	$sheet->setCellValueByColumnAndRow(1, 1, $month."月");
 	#全体コール数の出力
-	$reviser->addString($sheet_num, 1, 1, "発生コール");
+	$sheet->setCellValueByColumnAndRow(2, 2, "発生コール");
 	#参考コール数の出力
-	$reviser->addString($sheet_num, 1, 2, "参考コール");
+	$sheet->setCellValueByColumnAndRow(3, 2, "参考コール");
 	#有効コール数の出力
-	$reviser->addString($sheet_num, 1, 3, "有効コール");
+	$sheet->setCellValueByColumnAndRow(4, 2, "有効コール");
 	#発番電話番号の出力
-	$reviser->addString($sheet_num, 1, 4, "発番電話番号");
+	$sheet->setCellValueByColumnAndRow(5, 2, "発番電話番号");
 	#請求通話料金の出力
-	$reviser->addString($sheet_num, 1, 5, "請求通話料金");
+	$sheet->setCellValueByColumnAndRow(6, 2, "請求通話料金");
 	#行数を変数に指定
-	$i = 2;
+	$i = 3;
 	//crmシートコールデータ処理
 	#発番毎の請求料金の取得
 
@@ -2339,15 +2353,15 @@ function get_each_ad_details_data(
 	if (count($bp_call) > 0) {
 		foreach (array_keys($bp_call) as $sg_key) {
 			if ($sg_key === 'total') {
-				$reviser->addString($sheet_num, $i, 0, "全事務所合計");
+				$sheet->setCellValueByColumnAndRow(1, $i, "全事務所合計");
 			}
 			else {
-				$reviser->addString($sheet_num, $i, 0, "案件種別：$sg_key 合計");
+				$sheet->setCellValueByColumnAndRow(1, $i, "案件種別：$sg_key 合計");
 			}
-			$reviser->addString($sheet_num, $i, 1, $bp_call[$sg_key][CALL_TYPE_ALL]);
-			$reviser->addString($sheet_num, $i, 2, $bp_call[$sg_key][CALL_TYPE_SAMPLE]);
-			$reviser->addString($sheet_num, $i, 3, $bp_call[$sg_key][CALL_TYPE_VALID]);
-			$reviser->addString($sheet_num, $i, 5, $bp_call[$sg_key]['call_charge']);
+			$sheet->setCellValueByColumnAndRow(2, $i, $bp_call[$sg_key][CALL_TYPE_ALL]);
+			$sheet->setCellValueByColumnAndRow(3, $i, $bp_call[$sg_key][CALL_TYPE_SAMPLE]);
+			$sheet->setCellValueByColumnAndRow(4, $i, $bp_call[$sg_key][CALL_TYPE_VALID]);
+			$sheet->setCellValueByColumnAndRow(6, $i, $bp_call[$sg_key]['call_charge']);
 			$i++;
 		}
 	}
@@ -2360,11 +2374,11 @@ function get_each_ad_details_data(
 			}
 			foreach (array_keys($adg_call[$ad_group_id]) as $ad_key) {
 				if ($ad_key === 'total') {
-					$reviser->addString($sheet_num, $i, 0, "グループID：$ad_group_id 合計");
-					$reviser->addString($sheet_num, $i, 1, $adg_call[$ad_group_id][$ad_key][CALL_TYPE_ALL]);
-					$reviser->addString($sheet_num, $i, 2, $adg_call[$ad_group_id][$ad_key][CALL_TYPE_SAMPLE]);
-					$reviser->addString($sheet_num, $i, 3, $adg_call[$ad_group_id][$ad_key][CALL_TYPE_VALID]);
-					$reviser->addString($sheet_num, $i, 5, $adg_call[$ad_group_id][$ad_key]['call_charge']);
+					$sheet->setCellValueByColumnAndRow(1, $i, "グループID：$ad_group_id 合計");
+					$sheet->setCellValueByColumnAndRow(2, $i, $adg_call[$ad_group_id][$ad_key][CALL_TYPE_ALL]);
+					$sheet->setCellValueByColumnAndRow(3, $i, $adg_call[$ad_group_id][$ad_key][CALL_TYPE_SAMPLE]);
+					$sheet->setCellValueByColumnAndRow(4, $i, $adg_call[$ad_group_id][$ad_key][CALL_TYPE_VALID]);
+					$sheet->setCellValueByColumnAndRow(6, $i, $adg_call[$ad_group_id][$ad_key]['call_charge']);
 					$i++;
 				}
 			}
@@ -2378,11 +2392,11 @@ function get_each_ad_details_data(
 				continue;
 			}
 			foreach (array_keys($sgp_call[$ad_group_id]) as $sg_key) {
-				$reviser->addString($sheet_num, $i, 0, "グループID：$ad_group_id 案件種別：$sg_key 合計");
-				$reviser->addString($sheet_num, $i, 1, $sgp_call[$ad_group_id][$sg_key][CALL_TYPE_ALL]);
-				$reviser->addString($sheet_num, $i, 2, $sgp_call[$ad_group_id][$sg_key][CALL_TYPE_SAMPLE]);
-				$reviser->addString($sheet_num, $i, 3, $sgp_call[$ad_group_id][$sg_key][CALL_TYPE_VALID]);
-				$reviser->addString($sheet_num, $i, 5, $sgp_call[$ad_group_id][$sg_key]['call_charge']);
+				$sheet->setCellValueByColumnAndRow(1, $i, "グループID：$ad_group_id 案件種別：$sg_key 合計");
+				$sheet->setCellValueByColumnAndRow(2, $i, $sgp_call[$ad_group_id][$sg_key][CALL_TYPE_ALL]);
+				$sheet->setCellValueByColumnAndRow(3, $i, $sgp_call[$ad_group_id][$sg_key][CALL_TYPE_SAMPLE]);
+				$sheet->setCellValueByColumnAndRow(4, $i, $sgp_call[$ad_group_id][$sg_key][CALL_TYPE_VALID]);
+				$sheet->setCellValueByColumnAndRow(6, $i, $sgp_call[$ad_group_id][$sg_key]['call_charge']);
 				$i++;
 			}
 		}
@@ -2398,18 +2412,18 @@ function get_each_ad_details_data(
 				if ($ad_key !== 'total') {
 					foreach (array_keys($adg_call[$ad_group_id][$ad_key]) as $sg_key) {
 						if ($sg_key === 'total') {
-							$reviser->addString($sheet_num, $i, 0, "事務所ID：$ad_key 合計");
+							$sheet->setCellValueByColumnAndRow(1, $i, "事務所ID：$ad_key 合計");
 						}
 						else {
-							$reviser->addString($sheet_num, $i, 0, "事務所ID：$ad_key 案件種別：$sg_key 合計");
+							$sheet->setCellValueByColumnAndRow(1, $i, "事務所ID：$ad_key 案件種別：$sg_key 合計");
 							if (isset($adg_call[$ad_group_id][$ad_key][$sg_key]['tel_to'])) {
-								$reviser->addString($sheet_num, $i, 4, $adg_call[$ad_group_id][$ad_key][$sg_key]['tel_to']);
+								$sheet->setCellValueByColumnAndRow(5, $i, $adg_call[$ad_group_id][$ad_key][$sg_key]['tel_to']);
 							}
 						}
-						$reviser->addString($sheet_num, $i, 1, $adg_call[$ad_group_id][$ad_key][$sg_key][CALL_TYPE_ALL]);
-						$reviser->addString($sheet_num, $i, 2, $adg_call[$ad_group_id][$ad_key][$sg_key][CALL_TYPE_SAMPLE]);
-						$reviser->addString($sheet_num, $i, 3, $adg_call[$ad_group_id][$ad_key][$sg_key][CALL_TYPE_VALID]);
-						$reviser->addString($sheet_num, $i, 5, $adg_call[$ad_group_id][$ad_key][$sg_key]['call_charge']);
+						$sheet->setCellValueByColumnAndRow(2, $i, $adg_call[$ad_group_id][$ad_key][$sg_key][CALL_TYPE_ALL]);
+						$sheet->setCellValueByColumnAndRow(3, $i, $adg_call[$ad_group_id][$ad_key][$sg_key][CALL_TYPE_SAMPLE]);
+						$sheet->setCellValueByColumnAndRow(4, $i, $adg_call[$ad_group_id][$ad_key][$sg_key][CALL_TYPE_VALID]);
+						$sheet->setCellValueByColumnAndRow(6, $i, $adg_call[$ad_group_id][$ad_key][$sg_key]['call_charge']);
 						$i++;
 					}
 				}
@@ -2423,11 +2437,11 @@ function get_each_ad_details_data(
 	$i++;//一行空ける
 
 	#全体メール数の出力
-	$reviser->addString($sheet_num, $i, 1, "発生メール");
+	$sheet->setCellValueByColumnAndRow(2, $i, "発生メール");
 	#参考メール数の出力
-	$reviser->addString($sheet_num, $i, 2, "参考メール");
+	$sheet->setCellValueByColumnAndRow(3, $i, "参考メール");
 	#参考メール数の出力
-	$reviser->addString($sheet_num, $i, 3, "有効メール");
+	$sheet->setCellValueByColumnAndRow(4, $i, "有効メール");
 
 	$i++;
 
@@ -2468,14 +2482,14 @@ function get_each_ad_details_data(
 	if (count($bp_mail) > 0) {
 		foreach (array_keys($bp_mail) as $sg_key) {
 			if ($sg_key === 'total') {
-				$reviser->addString($sheet_num, $i, 0, "全事務所合計");
+				$sheet->setCellValueByColumnAndRow(1, $i, "全事務所合計");
 			}
 			else {
-				$reviser->addString($sheet_num, $i, 0, "案件種別：$sg_key 合計");
+				$sheet->setCellValueByColumnAndRow(1, $i, "案件種別：$sg_key 合計");
 			}
-			$reviser->addString($sheet_num, $i, 1, $bp_mail[$sg_key][MAIL_TYPE_ALL]);
-			$reviser->addString($sheet_num, $i, 2, $bp_mail[$sg_key][MAIL_TYPE_SAMPLE]);
-			$reviser->addString($sheet_num, $i, 3, $bp_mail[$sg_key][MAIL_TYPE_VALID]);
+			$sheet->setCellValueByColumnAndRow(2, $i, $bp_mail[$sg_key][MAIL_TYPE_ALL]);
+			$sheet->setCellValueByColumnAndRow(3, $i, $bp_mail[$sg_key][MAIL_TYPE_SAMPLE]);
+			$sheet->setCellValueByColumnAndRow(4, $i, $bp_mail[$sg_key][MAIL_TYPE_VALID]);
 			$i++;
 		}
 	}
@@ -2488,10 +2502,10 @@ function get_each_ad_details_data(
 			}
 			foreach (array_keys($adg_mail[$ad_group_id]) as $ad_key) {
 				if ($ad_key === 'total') {
-					$reviser->addString($sheet_num, $i, 0, "グループID：$ad_group_id 合計");
-					$reviser->addString($sheet_num, $i, 1, $adg_mail[$ad_group_id][$ad_key][MAIL_TYPE_ALL]);
-					$reviser->addString($sheet_num, $i, 2, $adg_mail[$ad_group_id][$ad_key][MAIL_TYPE_SAMPLE]);
-					$reviser->addString($sheet_num, $i, 3, $adg_mail[$ad_group_id][$ad_key][MAIL_TYPE_VALID]);
+					$sheet->setCellValueByColumnAndRow(1, $i, "グループID：$ad_group_id 合計");
+					$sheet->setCellValueByColumnAndRow(2, $i, $adg_mail[$ad_group_id][$ad_key][MAIL_TYPE_ALL]);
+					$sheet->setCellValueByColumnAndRow(3, $i, $adg_mail[$ad_group_id][$ad_key][MAIL_TYPE_SAMPLE]);
+					$sheet->setCellValueByColumnAndRow(4, $i, $adg_mail[$ad_group_id][$ad_key][MAIL_TYPE_VALID]);
 					$i++;
 				}
 			}
@@ -2505,10 +2519,10 @@ function get_each_ad_details_data(
 				continue;
 			}
 			foreach (array_keys($sgp_mail[$ad_group_id]) as $sg_key) {
-				$reviser->addString($sheet_num, $i, 0, "グループID：$ad_group_id 案件種別：$sg_key 合計");
-				$reviser->addString($sheet_num, $i, 1, $sgp_mail[$ad_group_id][$sg_key][MAIL_TYPE_ALL]);
-				$reviser->addString($sheet_num, $i, 2, $sgp_mail[$ad_group_id][$sg_key][MAIL_TYPE_SAMPLE]);
-				$reviser->addString($sheet_num, $i, 3, $sgp_mail[$ad_group_id][$sg_key][MAIL_TYPE_VALID]);
+				$sheet->setCellValueByColumnAndRow(1, $i, "グループID：$ad_group_id 案件種別：$sg_key 合計");
+				$sheet->setCellValueByColumnAndRow(2, $i, $sgp_mail[$ad_group_id][$sg_key][MAIL_TYPE_ALL]);
+				$sheet->setCellValueByColumnAndRow(3, $i, $sgp_mail[$ad_group_id][$sg_key][MAIL_TYPE_SAMPLE]);
+				$sheet->setCellValueByColumnAndRow(4, $i, $sgp_mail[$ad_group_id][$sg_key][MAIL_TYPE_VALID]);
 				$i++;
 			}
 		}
@@ -2524,14 +2538,14 @@ function get_each_ad_details_data(
 				if ($ad_key !== 'total') {
 					foreach (array_keys($adg_mail[$ad_group_id][$ad_key]) as $sg_key) {
 						if ($sg_key === 'total') {
-							$reviser->addString($sheet_num, $i, 0, "事務所ID：$ad_key 合計");
+							$sheet->setCellValueByColumnAndRow(1, $i, "事務所ID：$ad_key 合計");
 						}
 						else {
-							$reviser->addString($sheet_num, $i, 0, "事務所ID：$ad_key 案件種別：$sg_key 合計");
+							$sheet->setCellValueByColumnAndRow(1, $i, "事務所ID：$ad_key 案件種別：$sg_key 合計");
 						}
-						$reviser->addString($sheet_num, $i, 1, $adg_mail[$ad_group_id][$ad_key][$sg_key][MAIL_TYPE_ALL]);
-						$reviser->addString($sheet_num, $i, 2, $adg_mail[$ad_group_id][$ad_key][$sg_key][MAIL_TYPE_SAMPLE]);
-						$reviser->addString($sheet_num, $i, 3, $adg_mail[$ad_group_id][$ad_key][$sg_key][MAIL_TYPE_VALID]);
+						$sheet->setCellValueByColumnAndRow(2, $i, $adg_mail[$ad_group_id][$ad_key][$sg_key][MAIL_TYPE_ALL]);
+						$sheet->setCellValueByColumnAndRow(3, $i, $adg_mail[$ad_group_id][$ad_key][$sg_key][MAIL_TYPE_SAMPLE]);
+						$sheet->setCellValueByColumnAndRow(4, $i, $adg_mail[$ad_group_id][$ad_key][$sg_key][MAIL_TYPE_VALID]);
 						$i++;
 					}
 				}
@@ -2544,13 +2558,13 @@ function get_each_ad_details_data(
 
 	//案件別の単価表示
 	if ($sheet_num >= 3) {
-		$n = 1;
-		$reviser->addString($sheet_num, $n, 7, "グループID");
-		$reviser->addString($sheet_num, $n, 8, "サイト種別ID");
-		$reviser->addString($sheet_num, $n, 9, "サイト種別");
-		$reviser->addString($sheet_num, $n, 10, "支払い種別");
-		$reviser->addString($sheet_num, $n, 11, "有効秒数");
-		$reviser->addString($sheet_num, $n, 12, "料金");
+		$n = 2;
+		$sheet->setCellValueByColumnAndRow(8, $n, "グループID");
+		$sheet->setCellValueByColumnAndRow(9, $n, "サイト種別ID");
+		$sheet->setCellValueByColumnAndRow(10, $n, "サイト種別");
+		$sheet->setCellValueByColumnAndRow(11, $n, "支払い種別");
+		$sheet->setCellValueByColumnAndRow(12, $n, "有効秒数");
+		$sheet->setCellValueByColumnAndRow(13, $n, "料金");
 		$n++;
 
 		$ad_group_id = $arr_ad_group_id[0]['ad_group_id'];
@@ -2574,36 +2588,36 @@ function get_each_ad_details_data(
 		");
 		$arr_call_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		foreach ($arr_call_data as $row) {
-			$reviser->addString($sheet_num, $n, 7, $row['ad_group_id']);
-			$reviser->addString($sheet_num, $n, 8, $row['site_group']);
-			$reviser->addString($sheet_num, $n, 9, $row['site_group_name']);
-			$reviser->addString($sheet_num, $n, 10, $row['method']);
-			$reviser->addString($sheet_num, $n, 11, $row['charge_seconds']);
-			$reviser->addString($sheet_num, $n, 12, $row['unit_price']);
+			$sheet->setCellValueByColumnAndRow(8, $n, $row['ad_group_id']);
+			$sheet->setCellValueByColumnAndRow(9, $n, $row['site_group']);
+			$sheet->setCellValueByColumnAndRow(10, $n, $row['site_group_name']);
+			$sheet->setCellValueByColumnAndRow(11, $n, $row['method']);
+			$sheet->setCellValueByColumnAndRow(12, $n, $row['charge_seconds']);
+			$sheet->setCellValueByColumnAndRow(13, $n, $row['unit_price']);
 			$n++;
 		}
 	}
 
 	$i++;//一行開ける
-	$reviser->addString($sheet_num, $i, 0, "通話データ");
+	$sheet->setCellValueByColumnAndRow(1, $i, "通話データ");
 	$i++;//一行開ける
 
 	//有効秒数等のヘッダの表示
-	$reviser->addString($sheet_num, $i, 0, "事務所ID");
-	$reviser->addString($sheet_num, $i, 1, "事務所名");
-	$reviser->addString($sheet_num, $i, 3, "サイト種別");
-	$reviser->addString($sheet_num, $i, 4, "電話番号");
-	$reviser->addString($sheet_num, $i, 5, "転送先番号");
-	$reviser->addString($sheet_num, $i, 6, "通話開始日時");
-	$reviser->addString($sheet_num, $i, 7, "通話終了日時");
-	$reviser->addString($sheet_num, $i, 8, "通話秒数");
-	$reviser->addString($sheet_num, $i, 9, "発信元番号");
-	$reviser->addString($sheet_num, $i, 10, "通話状態");
-	$reviser->addString($sheet_num, $i, 11, "有効無効(60秒)");
-	$reviser->addString($sheet_num, $i, 12, "有効秒数");
-	$reviser->addString($sheet_num, $i, 13, "有効無効");
-	$reviser->addString($sheet_num, $i, 14, "換算値");
-	$reviser->addString($sheet_num, $i, 15, "除外理由");
+	$sheet->setCellValueByColumnAndRow(1, $i, "事務所ID");
+	$sheet->setCellValueByColumnAndRow(2, $i, "事務所名");
+	$sheet->setCellValueByColumnAndRow(4, $i, "サイト種別");
+	$sheet->setCellValueByColumnAndRow(5, $i, "電話番号");
+	$sheet->setCellValueByColumnAndRow(6, $i, "転送先番号");
+	$sheet->setCellValueByColumnAndRow(7, $i, "通話開始日時");
+	$sheet->setCellValueByColumnAndRow(8, $i, "通話終了日時");
+	$sheet->setCellValueByColumnAndRow(9, $i, "通話秒数");
+	$sheet->setCellValueByColumnAndRow(10, $i, "発信元番号");
+	$sheet->setCellValueByColumnAndRow(11, $i, "通話状態");
+	$sheet->setCellValueByColumnAndRow(12, $i, "有効無効(60秒)");
+	$sheet->setCellValueByColumnAndRow(13, $i, "有効秒数");
+	$sheet->setCellValueByColumnAndRow(14, $i, "有効無効");
+	$sheet->setCellValueByColumnAndRow(15, $i, "換算値");
+	$sheet->setCellValueByColumnAndRow(16, $i, "除外理由");
 
 	$i++;
 
@@ -2802,26 +2816,26 @@ function get_each_ad_details_data(
 	foreach ($output_arr as $out)
 	{
 			#Excelへの記入
-			$reviser->addString($sheet_num, $i, 0, $out['advertiser_id']);
-			$reviser->addString($sheet_num, $i, 1, $out['office_name']);
-			$reviser->addString($sheet_num, $i, 3, $out['media_name']);
-			$reviser->addString($sheet_num, $i, 4, $out['tel_to']);
-			$reviser->addString($sheet_num, $i, 5, $out['tel_send']);
-			$reviser->addString($sheet_num, $i, 6, $out['date_from']);
-			$reviser->addString($sheet_num, $i, 7, $out['date_to']);
-			$reviser->addNumber($sheet_num, $i, 8, $out['call_minutes']);
-			$reviser->addString($sheet_num, $i, 9, $out['tel_from']);
-			$reviser->addString($sheet_num, $i, 10, $out['call_status']);
-			$reviser->addString($sheet_num, $i, 11, $out['check_call_dpl']);
-			$reviser->addString($sheet_num, $i, 12, $out['charge_seconds']);
-			$reviser->addString($sheet_num, $i, 13, $out['check_call_dpl_for_billing']);
-			$reviser->addString($sheet_num, $i, 14, $out['unit_value']);
-			$reviser->addString($sheet_num, $i, 15, $out['exclusion_reason']);
+			$sheet->setCellValueByColumnAndRow(1, $i, $out['advertiser_id']);
+			$sheet->setCellValueByColumnAndRow(2, $i, $out['office_name']);
+			$sheet->setCellValueByColumnAndRow(4, $i, $out['media_name']);
+			$sheet->setCellValueByColumnAndRow(5, $i, $out['tel_to']);
+			$sheet->setCellValueByColumnAndRow(6, $i, $out['tel_send']);
+			$sheet->setCellValueByColumnAndRow(7, $i, $out['date_from']);
+			$sheet->setCellValueByColumnAndRow(8, $i, $out['date_to']);
+			$sheet->setCellValueByColumnAndRow(9, $i, $out['call_minutes']);
+			$sheet->setCellValueByColumnAndRow(10, $i, $out['tel_from']);
+			$sheet->setCellValueByColumnAndRow(11, $i, $out['call_status']);
+			$sheet->setCellValueByColumnAndRow(12, $i, $out['check_call_dpl']);
+			$sheet->setCellValueByColumnAndRow(13, $i, $out['charge_seconds']);
+			$sheet->setCellValueByColumnAndRow(14, $i, $out['check_call_dpl_for_billing']);
+			$sheet->setCellValueByColumnAndRow(15, $i, $out['unit_value']);
+			$sheet->setCellValueByColumnAndRow(16, $i, $out['exclusion_reason']);
 			$i++;
 	}
 
 	//crmシートメールデータ処理
-	$reviser->addString($sheet_num, $i, 0, "メールデータ");
+	$sheet->setCellValueByColumnAndRow(1, $i, "メールデータ");
 	$output_arr = array();
 	foreach ($arr_ad_group_id as $row) {
 		$ad_group_id = $row['ad_group_id'];
@@ -2960,18 +2974,17 @@ function get_each_ad_details_data(
 	{
 			$i++;
 			#Excelへの記入
-			$reviser->addString($sheet_num, $i, 0, $out['advertiser_id']);
-			$reviser->addString($sheet_num, $i, 1, $out['office_name']);
-			$reviser->addString($sheet_num, $i, 3, $out['site_group_name']);
-			$reviser->addString($sheet_num, $i, 4, $out['site_type_name']);
-			$reviser->addString($sheet_num, $i, 7, $out['mail_date']);
-			$reviser->addString($sheet_num, $i, 9, $out['sender_tel']);
-			$reviser->addString($sheet_num, $i, 13, $out['check_mail_dpl']);
-			$reviser->addString($sheet_num, $i, 14, $out['unit_value']);
-			$reviser->addString($sheet_num, $i, 15, $out['exclusion_reason']);
+			$sheet->setCellValueByColumnAndRow(1, $i, $out['advertiser_id']);
+			$sheet->setCellValueByColumnAndRow(2, $i, $out['office_name']);
+			$sheet->setCellValueByColumnAndRow(4, $i, $out['site_group_name']);
+			$sheet->setCellValueByColumnAndRow(5, $i, $out['site_type_name']);
+			$sheet->setCellValueByColumnAndRow(8, $i, $out['mail_date']);
+			$sheet->setCellValueByColumnAndRow(10, $i, $out['sender_tel']);
+			$sheet->setCellValueByColumnAndRow(14, $i, $out['check_mail_dpl']);
+			$sheet->setCellValueByColumnAndRow(15, $i, $out['unit_value']);
+			$sheet->setCellValueByColumnAndRow(16, $i, $out['exclusion_reason']);
 	}
 
 	#シートネームを設定
-	$reviser->setSheetname($sheet_num, $sheet_name);
+	$sheet->setTitle($sheet_name);
 }
-?>
