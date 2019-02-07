@@ -2755,7 +2755,7 @@ function get_each_ad_details_data(
 					$check_call_dpl_for_billing = "弊社除外";
 				}
 			}
-			else if ($payment_method_id < 2) {
+			else {
 				if ($call_minutes >= $charge_seconds && $dpl_tel_cnt_for_billing > 0 && $dpl_mail_cnt > 0) {
 					$check_call_dpl_for_billing = "同一電話・メール";
 				}
