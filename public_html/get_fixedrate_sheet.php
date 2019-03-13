@@ -317,8 +317,8 @@ foreach ($ym_arr as $ym) {
 		$sheet->setCellValueByColumnAndRow($cost_calc_col, $start_cell[1] - 1, $val['site_group_names']);
 		$sheet->setCellValueByColumnAndRow($cost_calc_col + 1, $start_cell[1] - 1, "小計");
 
-		$c_base = implode("-", $val['count_cell']);
-		$c = "=".Coordinate::stringFromColumnIndex($cost_col).$cost_row."-".$c_base;
+		$c_base = implode("+", $val['count_cell']);
+		$c = "=".$c_base."-".Coordinate::stringFromColumnIndex($cost_col).$cost_row;
 		if ($adjust != 0) {
 			//調整分を合計に足す（引く）
 			if ($adjust > 0) {
