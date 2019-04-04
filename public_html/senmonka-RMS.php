@@ -187,6 +187,9 @@ function changeYM() {
 							else if (med_keys[z] == "roudou") {
 								med_name = "労働問題";
 							}
+							else if (med_keys[z] == "youikuhi") {
+								med_name = "養育費回収";
+							}
 							if (med.payment_method.lastIndexOf('月額固定', 0) === 0) {
 								//月額固定費の案件が有ればダウンロードボタン表示
 								has_bill = true;
@@ -298,6 +301,7 @@ function changeYM() {
 					case 'hibouchuushou': name = "誹謗中傷"; break;
 					case 'jikouenyou': name = "時効援用"; break;
 					case 'roudou': name = "労働問題"; break;
+					case 'youikuhi': name = "養育費回収"; break;
 				}
 				html += "<tr>";
 				html += "<td colspan='4' class='right_txt red'><big>" + name + " 計</big></td>";

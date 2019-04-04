@@ -267,7 +267,8 @@ function get_billing_ids($year, $month) {
 				valid_call_bgatakanen is not null OR
 				valid_call_hibouchuushou is not null OR
 				valid_call_jikouenyou is not null OR
-				valid_call_roudou is not null
+				valid_call_roudou is not null OR
+				valid_call_youikuhi is not null
 			)
 	");
 	$ids = array();
@@ -295,7 +296,8 @@ function get_billing_ids($year, $month) {
 				mail_bgatakanen is not null OR
 				mail_hibouchuushou is not null OR
 				mail_jikouenyou is not null OR
-				mail_roudou is not null
+				mail_roudou is not null OR
+				mail_youikuhi is not null
 			)
 	");
 
@@ -327,7 +329,8 @@ function check_valid_call($bill_payer_id,$year,$month){
 			valid_call_bgatakanen,
 			valid_call_hibouchuushou,
 			valid_call_jikouenyou,
-			valid_call_roudou
+			valid_call_roudou,
+			valid_call_youikuhi
 		FROM
 			monthly_valid_call
 		WHERE
@@ -350,6 +353,7 @@ function check_valid_call($bill_payer_id,$year,$month){
 		$all_call_check += $row['valid_call_hibouchuushou'];
 		$all_call_check += $row['valid_call_jikouenyou'];
 		$all_call_check += $row['valid_call_roudou'];
+		$all_call_check += $row['valid_call_youikuhi'];
 	}
 	return $all_call_check;
 }
@@ -370,7 +374,8 @@ function check_valid_mail($bill_payer_id,$year,$month){
 			mail_bgatakanen,
 			mail_hibouchuushou,
 			mail_jikouenyou,
-			mail_roudou
+			mail_roudou,
+			mail_youikuhi
 		FROM
 			monthly_mail_num
 		WHERE
@@ -392,6 +397,7 @@ function check_valid_mail($bill_payer_id,$year,$month){
 		$all_mail_check += $row['mail_hibouchuushou'];
 		$all_mail_check += $row['mail_jikouenyou'];
 		$all_mail_check += $row['mail_roudou'];
+		$all_mail_check += $row['mail_youikuhi'];
 	}
 	return $all_mail_check;
 }
@@ -413,6 +419,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$all_call_hibouchuushou = null;
 	$all_call_jikouenyou = null;
 	$all_call_roudou = null;
+	$all_call_youikuhi = null;
 	#除外コール数
 	$ex_call_shakkin = null;
 	$ex_call_souzoku = null;
@@ -426,6 +433,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$ex_call_hibouchuushou = null;
 	$ex_call_jikouenyou = null;
 	$ex_call_roudou = null;
+	$ex_call_youikuhi = null;
 	#除外依頼コール数
 	$req_ex_call_shakkin = null;
 	$req_ex_call_souzoku = null;
@@ -439,6 +447,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$req_ex_call_hibouchuushou = null;
 	$req_ex_call_jikouenyou = null;
 	$req_ex_call_roudou = null;
+	$req_ex_call_youikuhi = null;
 	#無効も含めた全てのメール数
 	$all_mail_shakkin = null;
 	$all_mail_souzoku = null;
@@ -451,6 +460,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$all_mail_hibouchuushou = null;
 	$all_mail_jikouenyou = null;
 	$all_mail_roudou = null;
+	$all_mail_youikuhi = null;
 	#除外メール数
 	$ex_mail_shakkin = null;
 	$ex_mail_souzoku = null;
@@ -463,6 +473,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$ex_mail_hibouchuushou = null;
 	$ex_mail_jikouenyou = null;
 	$ex_mail_roudou = null;
+	$ex_mail_youikuhi = null;
 	#除外依頼メール数
 	$req_ex_mail_shakkin = null;
 	$req_ex_mail_souzoku = null;
@@ -475,6 +486,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$req_ex_mail_hibouchuushou = null;
 	$req_ex_mail_jikouenyou = null;
 	$req_ex_mail_roudou = null;
+	$req_ex_mail_youikuhi = null;
 	#メール日
 	$shakkin_mail_dt = null;
 	$souzoku_mail_dt = null;
@@ -487,6 +499,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$hibouchuushou_mail_dt = null;
 	$jikouenyou_mail_dt = null;
 	$roudou_mail_dt = null;
+	$youikuhi_mail_dt = null;
 	$mail_dt = null;
 	#無効詳細内容の取得
 	$inv_shakkin = null;
@@ -501,6 +514,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$inv_hibouchuushou = null;
 	$inv_jikouenyou = null;
 	$inv_roudou = null;
+	$inv_youikuhi = null;
 	#メディア毎有効請求
 	$res_shakkin = null;
 	$res_souzoku = null;
@@ -514,6 +528,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$res_hibouchuushou = null;
 	$res_jikouenyou = null;
 	$res_roudou = null;
+	$res_youikuhi = null;
 
 	#合計詳細
 	$va_shakkin= null;
@@ -528,6 +543,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$va_hibouchuushou = null;
 	$va_jikouenyou = null;
 	$va_roudou = null;
+	$va_youikuhi = null;
 	#template文
 	$all_tmp = null;
 	$inv_tmp = null;
@@ -543,6 +559,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$arr_hibouchuushou_mail_dt = array();
 	$arr_jikouenyou_mail_dt = array();
 	$arr_roudou_mail_dt = array();
+	$arr_youikuhi_mail_dt = array();
 
 	$calls = array(
 		'0' => 0,
@@ -557,6 +574,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 		'9' => 0,
 		'10' => 0,
 		'11' => 0,
+		'12' => 0,
 		'sum' => 0
 	);
 	$stmt = $pdo_request->query("
@@ -593,6 +611,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$hibouchuushou_call = $calls['9'];
 	$jikouenyou_call = $calls['10'];
 	$roudou_call = $calls['11'];
+	$youikuhi_call = $calls['12'];
 	$call_sum = $calls['sum'];
 
 	####課金メール数請求内容データの取得
@@ -609,6 +628,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 		'9' => 0,
 		'10' => 0,
 		'11' => 0,
+		'12' => 0,
 		'sum' => 0
 	);
 
@@ -635,6 +655,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$hibouchuushou_mail = $mails['9'];
 	$jikouenyou_mail = $mails['10'];
 	$roudou_mail = $mails['11'];
+	$youikuhi_mail = $mails['12'];
 	$mail_sum = $mails['sum'];
 	#請求合計数の取得
 	$all_sum = $call_sum+$mail_sum;
@@ -799,6 +820,17 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 					}
 					else {
 						$ex_call_roudou++;
+					}
+				}
+			}	
+			else if(substr($mi, 0, 1) == "M") {
+				$all_call_youikuhi++;
+				if ($ex == 1) {
+					if ($is_req == 1) {
+						$req_ex_call_youikuhi++;
+					}
+					else {
+						$ex_call_youikuhi++;
 					}
 				}
 			}	
@@ -968,6 +1000,19 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 				array_push($arr_roudou_mail_dt, $mail_day);
 				asort($arr_roudou_mail_dt);
 			}
+			else if ($sg == 12) { 
+				$all_mail_youikuhi++;
+				if ($ex == 1) {
+					if ($is_req == 1) {
+						$req_ex_mail_youikuhi++;
+					}
+					else {
+						$ex_mail_youikuhi++;
+					}
+				}
+				array_push($arr_youikuhi_mail_dt, $mail_day);
+				asort($arr_youikuhi_mail_dt);
+			}
 		}
 	}
 	#配列のメール日数を変数に入れる処理
@@ -1037,6 +1082,12 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	}
 	$roudou_mail_dt = rtrim($roudou_mail_dt,'・');
 	$roudou_mail_dt = "(".$roudou_mail_dt.")";
+	//養育費回収
+	foreach ($arr_youikuhi_mail_dt as $row) {
+		$youikuhi_mail_dt .= $row."日・";
+	}
+	$youikuhi_mail_dt = rtrim($youikuhi_mail_dt,'・');
+	$youikuhi_mail_dt = "(".$youikuhi_mail_dt.")";
 
 	#####請求対象の取得
 	$stmt3 = $pdo_request->query("
@@ -1205,6 +1256,19 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	else{
 		$roudou_all_tmp = "";
 	}
+	#養育費回収	all_tmp
+	if ($all_call_youikuhi != null && $all_mail_youikuhi != null) {
+		$youikuhi_all_tmp = "養育費回収サイトで".$all_call_youikuhi."件の電話と".$all_mail_youikuhi."件のメール".$youikuhi_mail_dt;
+	}
+	else if($all_call_youikuhi != null && $all_mail_youikuhi == null) {
+		$youikuhi_all_tmp = "養育費回収サイトで".$all_call_youikuhi."件の電話";
+	}
+	else if($all_call_youikuhi == null && $all_mail_youikuhi != null){
+		$youikuhi_all_tmp = "養育費回収サイトで".$all_mail_youikuhi."件のメール".$youikuhi_mail_dt;
+	}
+	else{
+		$youikuhi_all_tmp = "";
+	}
 
 	#月末時点の課金時間と価格の取得
 	$payments = array(
@@ -1220,6 +1284,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 		'9' => array(0, 0),
 		'10' => array(0, 0),
 		'11' => array(0, 0),
+		'12' => array(0, 0),
 	);
 	$lastdate = date('Y-m-t H:i:s', strtotime(date(($year + floor($month / 12)).'-'.(($month % 12) + 1).'-01 23:59:59') . '-1 month'));
 	$stmt4 = $pdo_request->query("
@@ -1263,6 +1328,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$res_hibouchuushou = $hibouchuushou_call + $hibouchuushou_mail;
 	$res_jikouenyou = $jikouenyou_call + $jikouenyou_mail;
 	$res_roudou = $roudou_call + $roudou_mail;
+	$res_youikuhi = $youikuhi_call + $youikuhi_mail;
 
 	#除外依頼件数の計算	
 	$req_ex_shakkin = $req_ex_call_shakkin + $req_ex_mail_shakkin;
@@ -1277,6 +1343,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$req_ex_hibouchuushou = $req_ex_call_hibouchuushou + $req_ex_mail_hibouchuushou;
 	$req_ex_jikouenyou = $req_ex_call_jikouenyou + $req_ex_mail_jikouenyou;
 	$req_ex_roudou = $req_ex_call_roudou + $req_ex_mail_roudou;
+	$req_ex_youikuhi = $req_ex_call_youikuhi + $req_ex_mail_youikuhi;
 
 	#除外件数の計算	
 	$ex_shakkin = $ex_call_shakkin + $ex_mail_shakkin;
@@ -1291,6 +1358,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$ex_hibouchuushou = $ex_call_hibouchuushou + $ex_mail_hibouchuushou;
 	$ex_jikouenyou = $ex_call_jikouenyou + $ex_mail_jikouenyou;
 	$ex_roudou = $ex_call_roudou + $ex_mail_roudou;
+	$ex_youikuhi = $ex_call_youikuhi + $ex_mail_youikuhi;
 
 	$inv_shakkin = $all_call_shakkin + $all_mail_shakkin - $res_shakkin - $ex_shakkin - $req_ex_shakkin;
 	if ($inv_shakkin > 0) {
@@ -1412,6 +1480,16 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	if ($ex_roudou > 0) {
 		$inv_tmp_roudou .= "\n労働問題サイトで弊社で除外と判断した".$ex_roudou."件";
 	}
+	$inv_youikuhi = $all_call_youikuhi + $all_mail_youikuhi - $res_youikuhi - $ex_youikuhi - $req_ex_youikuhi;
+	if ($inv_youikuhi > 0) {
+		$inv_tmp_youikuhi = "養育費回収サイトで同一電話番号の電話・メール及び".$payments['12'][0]."秒未満電話の".$inv_youikuhi."件";
+	}
+	if ($req_ex_youikuhi > 0) {
+		$inv_tmp_youikuhi .= "\n養育費回収サイトで除外依頼頂いた".$req_ex_youikuhi."件";
+	}
+	if ($ex_youikuhi > 0) {
+		$inv_tmp_youikuhi .= "\n養育費回収サイトで弊社で除外と判断した".$ex_youikuhi."件";
+	}
 
 	#有効件数生成
 	if(!empty($res_shakkin)) {
@@ -1449,6 +1527,9 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	}
 	if(!empty($res_roudou)) {
 		$va_roudou = "労働問題".$res_roudou."件・";
+	}
+	if(!empty($res_youikuhi)) {
+		$va_youikuhi = "養育費回収".$res_youikuhi."件・";
 	}
 	//////////////////
 	/////template文生成
@@ -1501,6 +1582,10 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 		$all_tmp = $all_tmp."
 ".$roudou_all_tmp;
 	}
+	if (!empty($youikuhi_all_tmp)) {
+		$all_tmp = $all_tmp."
+".$youikuhi_all_tmp;
+	}
 	#inv_tmp
 	if (!empty($inv_tmp_shakkin)) {
 		$inv_tmp = $inv_tmp."
@@ -1550,13 +1635,17 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 		$inv_tmp = $inv_tmp."
 ".$inv_tmp_roudou;
 	}
+	if (!empty($inv_tmp_youikuhi)) {
+		$inv_tmp = $inv_tmp."
+".$inv_tmp_youikuhi;
+	}
 	if (!empty($inv_tmp)) {
 		$inv_tmp = $inv_tmp."
 "."を差し引いて";
 	}
 
 	#valid_tmp
-	$va_tmp = $va_shakkin.$va_souzoku.$va_koutsujiko.$va_ninibaikyaku.$va_meigihenkou.$va_setsuritsu.$va_keijijiken.$va_rikon.$va_bgatakanen.$va_hibouchuushou.$va_jikouenyou.$va_roudou;
+	$va_tmp = $va_shakkin.$va_souzoku.$va_koutsujiko.$va_ninibaikyaku.$va_meigihenkou.$va_setsuritsu.$va_keijijiken.$va_rikon.$va_bgatakanen.$va_hibouchuushou.$va_jikouenyou.$va_roudou.$va_youikuhi;
 	$va_tmp = rtrim($va_tmp,'・');
 
 
@@ -1574,6 +1663,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 		'9' => null,
 		'10' => null,
 		'11' => null,
+		'12' => null,
 	);
 	$tofixed_costs = null;
 	$flatrate_costs = null;
@@ -1821,6 +1911,21 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 		$sheet->setCellValueByColumnAndRow(6, $i, $payments['11'][1]);
 		#合計金額
 		$sum =($roudou_call + $roudou_mail) * $payments['11'][1];
+		$i = $i + 1;
+	}
+	#養育費回収
+	if ($sg_pm_arr['12'] != null && $sg_pm_arr['12'] != '3' && $sg_pm_arr['12'] != '4' &&
+			($youikuhi_call > 0 OR $youikuhi_mail > 0)) {
+		#月
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
+		#商品名
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(養育費回収)");
+		#数量
+		$sheet->setCellValueByColumnAndRow(5, $i, $youikuhi_call+$youikuhi_mail);
+		#単価
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['12'][1]);
+		#合計金額
+		$sum =($youikuhi_call + $youikuhi_mail) * $payments['12'][1];
 		$i = $i + 1;
 	}
 
