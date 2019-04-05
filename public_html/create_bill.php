@@ -3085,6 +3085,7 @@ function get_each_ad_details_data(
 			$sheet->setCellValueByColumnAndRow(5, $i, $out['site_type_name']);
 			$sheet->setCellValueByColumnAndRow(8, $i, $out['mail_date']);
 			$sheet->setCellValueByColumnAndRow(10, $i, $out['sender_tel']);
+			$sheet->setCellValueByColumnAndRow(12, $i, $out['check_mail_dpl']);
 			$sheet->setCellValueByColumnAndRow(14, $i, $out['check_mail_dpl']);
 			$sheet->setCellValueByColumnAndRow(15, $i, $out['unit_value']);
 			$sheet->setCellValueByColumnAndRow(16, $i, $out['exclusion_reason']);
