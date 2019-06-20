@@ -1694,13 +1694,13 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	#monthを表示用数字に変更
 	$month = sprintf('%01d', $month);
 	#郵便番号
-	$sheet->setCellValueByColumnAndRow(3, 2, "〒".$bill_payer_data['postal_code']);
+	$sheet->setCellValueByColumnAndRow(1, 2, "〒".$bill_payer_data['postal_code']);
 	#住所
-	$sheet->setCellValueByColumnAndRow(3, 3, $bill_payer_data['address_1']);
-	$sheet->setCellValueByColumnAndRow(3, 4, " ".$bill_payer_data['address_2']);
+	$sheet->setCellValueByColumnAndRow(1, 3, $bill_payer_data['address_1']);
+	$sheet->setCellValueByColumnAndRow(1, 4, " ".$bill_payer_data['address_2']);
 	#貴社名/御氏名
-	$sheet->setCellValueByColumnAndRow(3, 6, $bill_payer_data['bill_payer_name']);
-	$sheet->setCellValueByColumnAndRow(3, 7, $c_name."　様");
+	$sheet->setCellValueByColumnAndRow(1, 6, $bill_payer_data['bill_payer_name']);
+	$sheet->setCellValueByColumnAndRow(1, 7, $c_name."　様");
 	#行数の定義
 	$i = 20;
 	$sheet->setCellValueByColumnAndRow(1, $i, "1");
