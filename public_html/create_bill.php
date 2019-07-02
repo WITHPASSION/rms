@@ -292,6 +292,7 @@ function get_billing_ids($year, $month) {
 				mail_ninibaikyaku is not null OR
 				mail_meigihenkou is not null OR
 				mail_setsuritsu is not null OR
+				mail_keijijiken is not null OR
 				mail_rikon is not null OR
 				mail_bgatakanen is not null OR
 				mail_hibouchuushou is not null OR
@@ -370,6 +371,7 @@ function check_valid_mail($bill_payer_id,$year,$month){
 			mail_ninibaikyaku,
 			mail_meigihenkou,
 			mail_setsuritsu,
+			mail_keijijiken,
 			mail_rikon,
 			mail_bgatakanen,
 			mail_hibouchuushou,
@@ -392,6 +394,7 @@ function check_valid_mail($bill_payer_id,$year,$month){
 		$all_mail_check += $row['mail_ninibaikyaku'];
 		$all_mail_check += $row['mail_meigihenkou'];
 		$all_mail_check += $row['mail_setsuritsu'];
+		$all_mail_check += $row['mail_keijijiken'];
 		$all_mail_check += $row['mail_rikon'];
 		$all_mail_check += $row['mail_bgatakanen'];
 		$all_mail_check += $row['mail_hibouchuushou'];
@@ -455,6 +458,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$all_mail_ninibaikyaku = null;
 	$all_mail_meigihenkou = null;
 	$all_mail_setsuritsu = null;
+	$all_mail_keijijiken = null;
 	$all_mail_rikon = null;
 	$all_mail_bgatakanen = null;
 	$all_mail_hibouchuushou = null;
@@ -468,6 +472,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$ex_mail_ninibaikyaku = null;
 	$ex_mail_meigihenkou = null;
 	$ex_mail_setsuritsu = null;
+	$ex_mail_keijijiken = null;
 	$ex_mail_rikon = null;
 	$ex_mail_bgatakanen = null;
 	$ex_mail_hibouchuushou = null;
@@ -481,6 +486,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$req_ex_mail_ninibaikyaku = null;
 	$req_ex_mail_meigihenkou = null;
 	$req_ex_mail_setsuritsu = null;
+	$req_ex_mail_keijijiken = null;
 	$req_ex_mail_rikon = null;
 	$req_ex_mail_bgatakanen = null;
 	$req_ex_mail_hibouchuushou = null;
@@ -494,6 +500,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$ninibaikyaku_mail_dt = null;
 	$meigihenkou_mail_dt = null;
 	$setsuritsu_mail_dt = null;
+	$keijijiken_mail_dt = null;
 	$rikon_mail_dt = null;
 	$bgatakanen_mail_dt = null;
 	$hibouchuushou_mail_dt = null;
@@ -554,6 +561,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$arr_ninibaikyaku_mail_dt = array();
 	$arr_meigihenkou_mail_dt = array();
 	$arr_setsuritsu_mail_dt = array();
+	$arr_keijijiken_mail_dt = array();
 	$arr_rikon_mail_dt = array();
 	$arr_bgatakanen_mail_dt = array();
 	$arr_hibouchuushou_mail_dt = array();
@@ -650,6 +658,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$ninibaikyaku_mail = $mails['3'];
 	$meigihenkou_mail = $mails['4'];
 	$setsuritsu_mail = $mails['5'];
+	$keijijiken_mail = $mails['6'];
 	$rikon_mail = $mails['7'];
 	$bgatakanen_mail = $mails['8'];
 	$hibouchuushou_mail = $mails['9'];
@@ -935,6 +944,19 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 				array_push($arr_setsuritsu_mail_dt, $mail_day);
 				asort($arr_setsuritsu_mail_dt);
 			}
+			else if ($sg == 6) { 
+				$all_mail_keijijiken++;
+				if ($ex == 1) {
+					if ($is_req == 1) {
+						$req_ex_mail_keijijiken++;
+					}
+					else {
+						$ex_mail_keijijiken++;
+					}
+				}
+				array_push($arr_keijijiken_mail_dt, $mail_day);
+				asort($arr_keijijiken_mail_dt);
+			}
 			else if ($sg == 7) { 
 				$all_mail_rikon++;
 				if ($ex == 1) {
@@ -1052,6 +1074,12 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	}
 	$setsuritsu_mail_dt = rtrim($setsuritsu_mail_dt,'・');
 	$setsuritsu_mail_dt = "(".$setsuritsu_mail_dt.")";
+	//刑事
+	foreach ($arr_keijijiken_mail_dt as $row) {
+		$keijijiken_mail_dt .= $row."日・";
+	}
+	$keijijiken_mail_dt = rtrim($keijijiken_mail_dt,'・');
+	$keijijiken_mail_dt = "(".$keijijiken_mail_dt.")";
 	//離婚
 	foreach ($arr_rikon_mail_dt as $row) {
 		$rikon_mail_dt .= $row."日・";
@@ -1185,8 +1213,14 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 		$setsuritsu_all_tmp = "";
 	}
 	#刑事事件all_tmp
-	if ($all_call_keijijiken != null){
+	if ($all_call_keijijiken != null && $all_mail_keijijiken != null) {
+		$keijijiken_all_tmp = "刑事事件サイトで".$all_call_keijijiken."件の電話と".$all_mail_keijijiken."件のメール".$keijijiken_mail_dt;
+	}
+	else if($all_call_setsuritsu != null && $all_mail_keijijiken == null) {
 		$keijijiken_all_tmp = "刑事事件サイトで".$all_call_keijijiken."件の電話";
+	}
+	else if($all_call_keijijiken == null && $all_mail_keijijiken != null){
+		$keijijiken_all_tmp = "刑事事件サイトで".$all_mail_keijijiken."件のメール".$keijijiken_mail_dt;
 	}
 	else{
 		$keijijiken_all_tmp = "";
@@ -1322,7 +1356,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$res_ninibaikyaku = $ninibaikyaku_call + $ninibaikyaku_mail;
 	$res_meigihenkou = $meigihenkou_call + $meigihenkou_mail;
 	$res_setsuritsu = $setsuritsu_call + $setsuritsu_mail;
-	$res_keijijiken = $keijijiken_call;
+	$res_keijijiken = $keijijiken_call + $keijijiken_mail;
 	$res_rikon = $rikon_call + $rikon_mail;
 	$res_bgatakanen = $bgatakanen_call + $bgatakanen_mail;
 	$res_hibouchuushou = $hibouchuushou_call + $hibouchuushou_mail;
@@ -1337,7 +1371,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$req_ex_ninibaikyaku = $req_ex_call_ninibaikyaku + $req_ex_mail_ninibaikyaku;
 	$req_ex_meigihenkou = $req_ex_call_meigihenkou + $req_ex_mail_meigihenkou;
 	$req_ex_setsuritsu = $req_ex_call_setsuritsu + $req_ex_mail_setsuritsu;
-	$req_ex_keijijiken = $req_ex_call_keijijiken;
+	$req_ex_keijijiken = $req_ex_call_keijijiken + $req_ex_mail_keijijiken;
 	$req_ex_rikon = $req_ex_call_rikon + $req_ex_mail_rikon;
 	$req_ex_bgatakanen = $req_ex_call_bgatakanen + $req_ex_mail_bgatakanen;
 	$req_ex_hibouchuushou = $req_ex_call_hibouchuushou + $req_ex_mail_hibouchuushou;
@@ -1352,7 +1386,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	$ex_ninibaikyaku = $ex_call_ninibaikyaku + $ex_mail_ninibaikyaku;
 	$ex_meigihenkou = $ex_call_meigihenkou + $ex_mail_meigihenkou;
 	$ex_setsuritsu = $ex_call_setsuritsu + $ex_mail_setsuritsu;
-	$ex_keijijiken = $ex_call_keijijiken;
+	$ex_keijijiken = $ex_call_keijijiken + $ex_mail_keijijiken;
 	$ex_rikon = $ex_call_rikon + $ex_mail_rikon;
 	$ex_bgatakanen = $ex_call_bgatakanen + $ex_mail_bgatakanen;
 	$ex_hibouchuushou = $ex_call_hibouchuushou + $ex_mail_hibouchuushou;
@@ -1420,7 +1454,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	if ($ex_setsuritsu > 0) {
 		$inv_tmp_setsuritsu .= "\n会社設立サイトで弊社で除外と判断した".$ex_setsuritsu."件";
 	}
-	$inv_keijijiken = $all_call_keijijiken - $res_keijijiken - $ex_keijijiken - $req_ex_keijijiken;
+	$inv_keijijiken = $all_call_keijijiken + $all_mail_keijijiken - $res_keijijiken - $ex_keijijiken - $req_ex_keijijiken;
 	if ($inv_keijijiken > 0){
 		$inv_tmp_keijijiken = "刑事事件サイトで同一電話番号の電話・メール及び".$payments['6'][0]."秒未満電話の".$inv_keijijiken."件";
 	}
@@ -1790,7 +1824,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 		#単価
 		$sheet->setCellValueByColumnAndRow(6, $i, $payments['3'][1]);
 		#合計金額
-		$sum =($setsuritsu_call + $setsuritsu_mail) * $payments['3'][1];
+		$sum =($ninibaikyaku_call + $ninibaikyaku_mail) * $payments['3'][1];
 		$i = $i + 1;
 	}
 	#名義変更
@@ -1825,17 +1859,17 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	}
 	#刑事事件
 	if ($sg_pm_arr['6'] != null && $sg_pm_arr['6'] != '3' && $sg_pm_arr['6'] != '4' &&
-			($keijijiken_call > 0)) {
+			($keijijiken_call > 0 || $keijijiken_mail > 0)) {
 		#月
 		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
 		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(刑事事件)");
 		#数量
-		$sheet->setCellValueByColumnAndRow(5, $i, $keijijiken_call);
+		$sheet->setCellValueByColumnAndRow(5, $i, $keijijiken_call+$keijijiken_mail);
 		#単価
 		$sheet->setCellValueByColumnAndRow(6, $i, $payments['6'][1]);
 		#合計金額
-		$sum = ($keijijiken_call) * $payments['6'][1];
+		$sum = ($keijijiken_call + $keijijiken_mail) * $payments['6'][1];
 		$i = $i + 1;
 	}
 	#離婚
