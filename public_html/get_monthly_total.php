@@ -51,7 +51,9 @@ $types = array(
 	"hibouchuushou",
 	"jikouenyou",
 	"roudou",
-	"youikuhi"
+	"youikuhi",
+	"fudousan",
+	"seinenkouken"
 );
 
 #cdrへの接続
@@ -231,6 +233,14 @@ foreach ($call_data as $call) {
 			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["youikuhi"]["call_count"] += $count;
 			$total["youikuhi"]["call_count"] += $count;
 		}
+		else if ($site_group == 13){
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["fudousan"]["call_count"] += $count;
+			$total["fudousan"]["call_count"] += $count;
+		}
+		else if ($site_group == 14){
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["seinenkouken"]["call_count"] += $count;
+			$total["seinenkouken"]["call_count"] += $count;
+		}
 		else {
 			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["call_count"] += $count;
 			$total["shakkin"]["call_count"] += $count;
@@ -318,6 +328,16 @@ foreach ($sample_call_data as $call) {
 			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["youikuhi"]["payment_method"] = $payment_method;
 			$total["youikuhi"]["sample_call_count"] += $count;
 		}
+		else if ($site_group == 13){
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["fudousan"]["sample_call_count"] += $count;
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["fudousan"]["payment_method"] = $payment_method;
+			$total["fudousan"]["sample_call_count"] += $count;
+		}
+		else if ($site_group == 14){
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["seinenkouken"]["sample_call_count"] += $count;
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["seinenkouken"]["payment_method"] = $payment_method;
+			$total["seinenkouken"]["sample_call_count"] += $count;
+		}
 		else {
 			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["sample_call_count"] += $count;
 			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["shakkin"]["payment_method"] = $payment_method;
@@ -396,6 +416,14 @@ foreach ($mail_data as $mail) {
 		else if ($group == 12){
 			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["youikuhi"]["mail_count"] += $count;
 			$total["youikuhi"]["mail_count"] += $count;
+		}
+		else if ($group == 13){
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["fudousan"]["mail_count"] += $count;
+			$total["fudousan"]["mail_count"] += $count;
+		}
+		else if ($group == 14){
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["seinenkouken"]["mail_count"] += $count;
+			$total["seinenkouken"]["mail_count"] += $count;
 		}
 	}
 }
@@ -485,6 +513,16 @@ foreach ($sample_mail_data as $mail) {
 			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["youikuhi"]["payment_method"] = $payment_method;
 			$total["youikuhi"]["sample_mail_count"] += $count;
 		}
+		else if ($group == 13){
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["fudousan"]["sample_mail_count"] += $count;
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["fudousan"]["payment_method"] = $payment_method;
+			$total["fudousan"]["sample_mail_count"] += $count;
+		}
+		else if ($group == 14){
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["seinenkouken"]["sample_mail_count"] += $count;
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["seinenkouken"]["payment_method"] = $payment_method;
+			$total["seinenkouken"]["sample_mail_count"] += $count;
+		}
 	}
 }
 
@@ -558,6 +596,14 @@ foreach ($earnings_data as $earn) {
 		else if ($group == 12){
 			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["youikuhi"]["earnings"] += $earnings;
 			$total["youikuhi"]["earnings"] += $earnings;
+		}
+		else if ($group == 13){
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["fudousan"]["earnings"] += $earnings;
+			$total["fudousan"]["earnings"] += $earnings;
+		}
+		else if ($group == 14){
+			$counts[$bill_payer_id]["ad_groups"][$ad_group_id]["advertisers"][$ad_id]["medias"]["seinenkouken"]["earnings"] += $earnings;
+			$total["seinenkouken"]["earnings"] += $earnings;
 		}
 	}
 }
