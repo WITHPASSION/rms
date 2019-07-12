@@ -191,7 +191,7 @@ function changeYM() {
 								med_name = "養育費回収";
 							}
 							else if (med_keys[z] == "fudousan") {
-								med_name = "不動産";
+								med_name = "不動産問題";
 							}
 							else if (med_keys[z] == "seinenkouken") {
 								med_name = "成年後見";
@@ -308,7 +308,7 @@ function changeYM() {
 					case 'jikouenyou': name = "時効援用"; break;
 					case 'roudou': name = "労働問題"; break;
 					case 'youikuhi': name = "養育費回収"; break;
-					case 'fudousan': name = "不動産"; break;
+					case 'fudousan': name = "不動産問題"; break;
 					case 'seinenkouken': name = "成年後見"; break;
 				}
 				html += "<tr>";

@@ -1206,7 +1206,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	}
 	$youikuhi_mail_dt = rtrim($youikuhi_mail_dt,'・');
 	$youikuhi_mail_dt = "(".$youikuhi_mail_dt.")";
-	//不動産
+	//不動産問題
 	foreach ($arr_fudousan_mail_dt as $row) {
 		$fudousan_mail_dt .= $row."日・";
 	}
@@ -1405,15 +1405,15 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	else{
 		$youikuhi_all_tmp = "";
 	}
-	#不動産	all_tmp
+	#不動産問題	all_tmp
 	if ($all_call_fudousan != null && $all_mail_fudousan != null) {
-		$fudousan_all_tmp = "不動産サイトで".$all_call_fudousan."件の電話と".$all_mail_fudousan."件のメール".$fudousan_mail_dt;
+		$fudousan_all_tmp = "不動産問題サイトで".$all_call_fudousan."件の電話と".$all_mail_fudousan."件のメール".$fudousan_mail_dt;
 	}
 	else if($all_call_fudousan != null && $all_mail_fudousan == null) {
-		$fudousan_all_tmp = "不動産サイトで".$all_call_fudousan."件の電話";
+		$fudousan_all_tmp = "不動産問題サイトで".$all_call_fudousan."件の電話";
 	}
 	else if($all_call_fudousan == null && $all_mail_fudousan != null){
-		$fudousan_all_tmp = "不動産サイトで".$all_mail_fudousan."件のメール".$fudousan_mail_dt;
+		$fudousan_all_tmp = "不動産問題サイトで".$all_mail_fudousan."件のメール".$fudousan_mail_dt;
 	}
 	else{
 		$fudousan_all_tmp = "";
@@ -1677,13 +1677,13 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	}
 	$inv_fudousan = $all_call_fudousan + $all_mail_fudousan - $res_fudousan - $ex_fudousan - $req_ex_fudousan;
 	if ($inv_fudousan > 0) {
-		$inv_tmp_fudousan = "不動産サイトで同一電話番号の電話・メール及び".$payments['13'][0]."秒未満電話の".$inv_fudousan."件";
+		$inv_tmp_fudousan = "不動産問題サイトで同一電話番号の電話・メール及び".$payments['13'][0]."秒未満電話の".$inv_fudousan."件";
 	}
 	if ($req_ex_fudousan > 0) {
-		$inv_tmp_fudousan .= "\n不動産サイトで除外依頼頂いた".$req_ex_fudousan."件";
+		$inv_tmp_fudousan .= "\n不動産問題サイトで除外依頼頂いた".$req_ex_fudousan."件";
 	}
 	if ($ex_fudousan > 0) {
-		$inv_tmp_fudousan .= "\n不動産サイトで弊社で除外と判断した".$ex_fudousan."件";
+		$inv_tmp_fudousan .= "\n不動産問題サイトで弊社で除外と判断した".$ex_fudousan."件";
 	}
 	$inv_seinenkouken = $all_call_seinenkouken + $all_mail_seinenkouken - $res_seinenkouken - $ex_seinenkouken - $req_ex_seinenkouken;
 	if ($inv_seinenkouken > 0) {
@@ -1737,7 +1737,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 		$va_youikuhi = "養育費回収".$res_youikuhi."件・";
 	}
 	if(!empty($res_fudousan)) {
-		$va_fudousan = "不動産".$res_fudousan."件・";
+		$va_fudousan = "不動産問題".$res_fudousan."件・";
 	}
 	if(!empty($res_seinenkouken)) {
 		$va_seinenkouken = "成年後見".$res_seinenkouken."件・";
@@ -2157,7 +2157,7 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 		$sum =($youikuhi_call + $youikuhi_mail) * $payments['12'][1];
 		$i = $i + 1;
 	}
-	#不動産
+	#不動産問題
 	if ($sg_pm_arr['13'] != null && $sg_pm_arr['13'] != '3' && $sg_pm_arr['13'] != '4' &&
 			($fudousan_call > 0 OR $fudousan_mail > 0)) {
 		#月
