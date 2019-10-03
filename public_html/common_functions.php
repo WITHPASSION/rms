@@ -381,7 +381,6 @@ function get_monthly_group_calls_and_price($year_month, $ad_group_id) {
 			v.ad_group_id,
 			v.site_group,
 			v.unit_price
-		WITH ROLLUP
 	");
 	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	return $res_arr;
@@ -424,7 +423,6 @@ function get_monthly_group_mails_and_price($year_month, $ad_group_id) {
 			adg.ad_group_id,
 			s.site_group,
 			gpm.unit_price
-		WITH ROLLUP
 	");
 	$res_arr = $stmt->fetchAll(PDO::FETCH_ASSOC);
 	return $res_arr;
