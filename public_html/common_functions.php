@@ -565,7 +565,7 @@ function get_flatrate_costs_for_bill($ad_group_id, $date) {
 					c.*
 				FROM
 					(
-						SELECT
+						SELECT DISTINCT
 							*
 						FROM
 							cdr.flatrate_cost
@@ -633,7 +633,7 @@ function get_tofixed_costs_for_bill($ad_group_id, $date) {
 					c.*
 				FROM
 					(
-						SELECT
+						SELECT DISTINCT
 							*
 						FROM
 							cdr.tofixed_cost
