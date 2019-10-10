@@ -2086,13 +2086,13 @@ function get_each_ad_data($spreadsheet, $bill_payer_id, $year, $month, $year_mon
 	if ($sg_pm_arr['8'] != null && $sg_pm_arr['8'] != '3' && $sg_pm_arr['8'] != '4' &&
 			($bgatakanen_call > 0 OR $bgatakanen_mail > 0)) {
 		#月
-		$sheet->setCellValueByColumnAndRow($i, 1, "$month");	
+		$sheet->setCellValueByColumnAndRow(2, $i, "$month");	
 		#商品名
-		$sheet->setCellValueByColumnAndRow($i, 2, "月掲載料金(Ｂ型肝炎)");
+		$sheet->setCellValueByColumnAndRow(3, $i, "月掲載料金(Ｂ型肝炎)");
 		#数量
-		$sheet->setCellValueByColumnAndRow($i, 4, $bgatakanen_call+$bgatakanen_mail);
+		$sheet->setCellValueByColumnAndRow(5, $i, $bgatakanen_call+$bgatakanen_mail);
 		#単価
-		$sheet->setCellValueByColumnAndRow($i, 5, $payments['8'][1]);
+		$sheet->setCellValueByColumnAndRow(6, $i, $payments['8'][1]);
 		#合計金額
 		$sum =($bgatakanen_call + $bgatakanen_mail) * $payments['8'][1];
 		$i = $i + 1;
