@@ -2558,7 +2558,7 @@ function get_all_billing_contents(
 	$sheet->setCellValueByColumnAndRow(7, $i, "=SUM(G2:G".($i-2).")");
 	$i++;
 	$sheet->setCellValueByColumnAndRow(6, $i, "消費税");
-	$sheet->setCellValueByColumnAndRow(7, $i, "=ROUNDDOWN(G".($i-1)."*0.08,0)");
+	$sheet->setCellValueByColumnAndRow(7, $i, "=ROUNDDOWN(G".($i-1)."*0.1,0)");
 	$i++;
 	$sheet->setCellValueByColumnAndRow(6, $i, "合計額 ");
 	$sheet->setCellValueByColumnAndRow(7, $i, "=G".($i-2)."+G".($i-1));
